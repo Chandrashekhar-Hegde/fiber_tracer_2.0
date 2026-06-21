@@ -39,6 +39,12 @@ def test_dice_score_non_overlapping():
     assert dice_score(a, b) == pytest.approx(0.0)
 
 
+def test_dice_score_both_empty_returns_one():
+    a = np.zeros((3, 3), dtype=bool)
+    b = np.zeros((3, 3), dtype=bool)
+    assert dice_score(a, b) == pytest.approx(1.0)
+
+
 def test_mean_angular_error_multiple():
     pred = np.array([
         [1.0, 0.0, 0.0],

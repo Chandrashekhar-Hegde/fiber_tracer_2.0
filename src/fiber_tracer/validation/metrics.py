@@ -33,6 +33,8 @@ def dice_score(pred: np.ndarray, true: np.ndarray) -> float:
     """
     pred = np.asarray(pred).astype(bool)
     true = np.asarray(true).astype(bool)
+    if np.sum(pred) + np.sum(true) == 0:
+        return 1.0
     intersection = np.sum(pred & true)
     return 2.0 * intersection / (np.sum(pred) + np.sum(true))
 
