@@ -107,3 +107,53 @@ def test_invalid_regime_raises_during_validation(tmp_path):
 
     with pytest.raises(ValueError):
         config.validate()
+
+
+def test_auto_regime_selects_marginal_and_subvoxel_by_ratio(tmp_path):
+    """Auto regime maps physical voxel/fiber ratio to marginal or subvoxel."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+
+    # Marginal: ratio = 1.0 / 2.0 = 0.5 (between 0.3 and 3.0).
+    phantom_marginal = generate_fiber_phantom(
+        shape=(48, 48, 48),
+        n_fibers=3,
+        fiber_diameter_um=2.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path_marginal = data_dir / "marginal_input.tif"
+    save_tiff_stack(stack_path_marginal, phantom_marginal.volume)
+
+    config_marginal = Config(
+        data_path=str(stack_path_marginal),
+        output_dir=str(tmp_path / "out_marginal"),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=2.0,
+        regime="auto",
+    )
+    summary_marginal = FiberAnalysisPipeline(config_marginal).run()
+    assert summary_marginal["regime"] == "marginal"
+    assert "a2_map" in summary_marginal
+
+    # Subvoxel: ratio = 5.0 / 1.0 = 5.0 (> 3.0).
+    phantom_subvoxel = generate_fiber_phantom(
+        shape=(32, 32, 32),
+        n_fibers=3,
+        fiber_diameter_um=1.0,
+        voxel_spacing_um=(5.0, 5.0, 5.0),
+        seed=43,
+    )
+    stack_path_subvoxel = data_dir / "subvoxel_input.tif"
+    save_tiff_stack(stack_path_subvoxel, phantom_subvoxel.volume)
+
+    config_subvoxel = Config(
+        data_path=str(stack_path_subvoxel),
+        output_dir=str(tmp_path / "out_subvoxel"),
+        voxel_spacing_um=VoxelSpacing(5.0, 5.0, 5.0),
+        fiber_diameter_um=1.0,
+        regime="auto",
+    )
+    summary_subvoxel = FiberAnalysisPipeline(config_subvoxel).run()
+    assert summary_subvoxel["regime"] == "subvoxel"
+    assert "a2" in summary_subvoxel
