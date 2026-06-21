@@ -1,24 +1,119 @@
-# Fiber Tracer (RAFA) v3.0.0 — Beta
+# Fiber Tracer (RAFA) v3.0.0
 
 **Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites**
 
-Created by Chandrashekhar Hegde.
+Fiber Tracer is a Python toolkit for analyzing fiber-reinforced polymer composites from 3D X-ray computed tomography (XCT) images. It selects analysis strategies automatically from the physical voxel-size to fiber-diameter ratio (resolved, marginal, or subvoxel regimes) and supports both classical image-processing methods and optional backends for machine learning and topological data analysis.
 
-Fiber Tracer is a Python toolkit for analyzing fiber-reinforced polymer composites from 3D X-ray computed tomography images. It selects analysis strategies based on the physical voxel-size to fiber-diameter ratio (resolved, marginal, or sub-voxel regimes) and supports both classical image-processing methods and optional machine-learning backends.
+> **Status:** Beta. The public API and CLI are still stabilizing. Results should be treated as experimental and validated on your own data before drawing conclusions.
 
-> **Status:** This project is currently in beta and is being actively rewritten. The public API, installation instructions, and documentation are not yet stable.
+## What the tool does
 
-## Installation and usage
+- Loads 3D XCT volumes from TIFF stacks or directories of TIFF slices.
+- Classifies each dataset into a **resolved**, **marginal**, or **subvoxel** analysis regime.
+- In the **resolved regime**: normalizes the image, thresholds the foreground, labels fibers, skeletonizes them, and reports per-fiber orientation and equivalent diameter.
+- In the **marginal** and **subvoxel** regimes: computes a gradient structure-tensor orientation field, aggregates it into the Advani–Tucker second-order orientation tensor `A2`, and reports fractional anisotropy and orientation distributions.
+- Exports results as JSON, CSV, HTML, and TIFF files.
+- Provides reproducible synthetic-phantom benchmarks and documented validation protocols.
 
-The command-line interface and installation instructions are being rewritten for the v3.0 architecture. Please check back after Phase 0 is complete, or follow [`docs/RAFA_IMPLEMENTATION_PLAN.md`](docs/RAFA_IMPLEMENTATION_PLAN.md) for the current roadmap.
+## What the tool does not do
 
-## Attribution
+- It does **not** claim peer-reviewed validation, universal accuracy, or certification for any specific material.
+- It does **not** solve differential equations; Runge–Kutta integration and Poincaré–Hopf index tracking are not part of the pipeline.
+- It does **not** ship trained machine-learning models or benchmark datasets.
+- It does **not** guarantee segmentation quality on noisy, low-contrast, or heavily touching fibers without parameter tuning.
 
-This project builds on many open-source libraries. See [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) for license notices and [`CITATIONS.md`](CITATIONS.md) for academic citations.
+## Installation
+
+The package requires Python ≥3.9.
+
+```bash
+# Core package only
+pip install -e .
+
+# With all optional backends used by the test suite and documentation examples
+pip install -e ".[structure,skeleton,ml,tda,viz,parallel,dev]"
+```
+
+The `structure`, `skeleton`, `ml`, `tda`, `viz`, and `parallel` extras install optional dependencies. You can install any subset; the core pipeline runs with only `numpy`, `scipy`, `scikit-image`, `pandas`, `matplotlib`, `tifffile`, `pyyaml`, and `tqdm`.
+
+## Quick start
+
+Generate a synthetic phantom and analyze it in the resolved regime:
+
+```bash
+python - <<'PY'
+from fiber_tracer.io import save_tiff_stack
+from fiber_tracer.validation.phantoms import generate_fiber_phantom
+
+phantom = generate_fiber_phantom(
+    shape=(64, 64, 64),
+    n_fibers=3,
+    fiber_diameter_um=4.0,
+    voxel_spacing_um=(1.0, 1.0, 1.0),
+    seed=42,
+)
+save_tiff_stack("phantom.tif", phantom.volume)
+PY
+
+fiber-tracer \
+  --data phantom.tif \
+  --output output/ \
+  --voxel-spacing 1.0 1.0 1.0 \
+  --fiber-diameter 4.0 \
+  --regime resolved
+```
+
+## Example output files
+
+After a run, the output directory contains some or all of the following:
+
+| File                | Description                                                       |
+|---------------------|-------------------------------------------------------------------|
+| `summary.json`      | Complete JSON summary including regime, metrics, config, and caveats |
+| `report.csv`        | Tabular summary for spreadsheet import                            |
+| `report.html`       | Human-readable HTML report                                        |
+| `labels.tif`        | Label image of segmented fibers (resolved regime)                 |
+| `skeleton.tif`      | Per-fiber skeleton image (resolved regime)                        |
+| `a2_map.npy`        | Windowed `A2` tensor field (marginal regime)                      |
+| `normalized_input.tif` | Intensity-normalized input volume                              |
+
+Not every file is produced in every regime; for example, `a2_map.npy` is written only for marginal analyses.
+
+## Documentation
+
+- [`docs/methodology.md`](docs/methodology.md) — Algorithms, regime selection, and limitations.
+- [`docs/validation_protocol.md`](docs/validation_protocol.md) — Phantom benchmarks, public datasets, metrics, and reproducibility.
+- [`docs/parameter_guide.md`](docs/parameter_guide.md) — Configuration options and practical guidance.
+- [`docs/RAFA_IMPLEMENTATION_PLAN.md`](docs/RAFA_IMPLEMENTATION_PLAN.md) — Original redesign plan.
+
+## Running the benchmark
+
+```bash
+python scripts/benchmark_phantoms.py
+```
+
+The script reports Dice score and mean angular error on a deterministic synthetic phantom and asserts the project acceptance thresholds.
+
+## Running the test suite
+
+```bash
+pytest tests/ -v
+```
 
 ## License
 
-This project is licensed under the MIT License — see the [`LICENSE`](LICENSE) file for details.
+This project is licensed under the MIT License — see [`LICENSE`](LICENSE) for details.
+
+## Citations
+
+If you use this software in your research, please cite the relevant methods:
+
+- Bigün, J., & Granlund, G. H. (1987). Optimal orientation detection of linear symmetry. *ICCV*.
+- Jeppesen, N., Mikkelsen, L. P., Dahl, A. B., Christensen, A. N., & Dahl, V. A. (2021). Quantifying effects of manufacturing methods on fiber orientation in unidirectional composites using structure tensor analysis. *Composites Part A*, 149, 106541. DOI:10.1016/j.compositesa.2021.106541
+- Advani, S. G., & Tucker III, C. L. (1987). The use of tensors to describe and predict fiber orientation in short fiber composites. *Journal of Rheology*, 31(8), 751–784. DOI:10.1122/1.549945
+- van der Walt, S., et al. (2014). scikit-image: Image processing in Python. *PeerJ*, 2, e453.
+
+See [`CITATIONS.md`](CITATIONS.md) and [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) for additional software and dataset attributions.
 
 ## Contact
 

@@ -5,6 +5,47 @@ All notable changes to the Fiber Tracer project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-06-21
+
+### Added
+
+- Regime-aware analysis pipeline (`resolved`, `marginal`, `subvoxel`) selected from the physical voxel/fiber ratio.
+- New modular package layout under `src/fiber_tracer/`:
+  - `config.py` — dataclass-based configuration with validation
+  - `cli.py` — command-line interface
+  - `pipeline.py` — pipeline orchestrator
+  - `preprocess.py` — normalization and physical-unit denoising
+  - `segmentation/classical.py` — Otsu thresholding, connected components, watershed
+  - `centerline/skeleton.py` and `centerline/graph.py` — skeletonization helpers
+  - `orientation/structure_tensor.py`, `orientation/pca.py`, `orientation/tensor.py` — orientation estimation and Advani–Tucker `A2`
+  - `analysis/morphometry.py` — equivalent diameter and centerline measures
+  - `reporting/json.py`, `reporting/csv.py`, `reporting/html.py` — honest report exporters with caveats
+  - `validation/phantoms.py` and `validation/metrics.py` — synthetic phantoms and validation metrics
+  - `io.py`, `regime.py`, `exceptions.py`
+- Synthetic straight-fiber phantom generator with ground-truth orientations.
+- Validation metrics: Dice score, mean angular error, orientation tensor error, fractional anisotropy.
+- `scripts/benchmark_phantoms.py` with documented acceptance thresholds.
+- Documentation: `docs/methodology.md`, `docs/validation_protocol.md`, `docs/parameter_guide.md`.
+- `pyproject.toml` with Python ≥3.9 support and optional dependency groups.
+- `CITATIONS.md` and `THIRD_PARTY_LICENSES.md` for academic and software attributions.
+
+### Changed
+
+- Package layout moved to `src/fiber_tracer/`.
+- Minimum Python version set to 3.9.
+- Project metadata rewritten to be honest and defensible (no peer-review or universal-accuracy claims).
+- CLI rewritten as `fiber-tracer` entry point.
+- Reporting outputs now include configuration, citations, and regime-specific caveats.
+
+### Removed
+
+- Dead code, monolithic scripts, and unused modules from earlier versions.
+- False or unsupported claims (peer-review badges, "official algorithms", "pure math").
+- GPL-incompatible dependencies from the default dependency set.
+- Deprecated `requirements.txt`, `environment.yml`, and old configuration examples.
+
+---
+
 ## [2.0.0] - 2025-01-08
 
 ### Added
@@ -94,73 +135,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory-efficient chunk processing
 - CSV output of fiber properties
 - Fiber classification by orientation
-
----
-
-## Upgrade Guide
-
-### From v1.0.0 to v2.0.0
-
-1. **Update Dependencies**
-   ```bash
-   pip install --upgrade -r requirements.txt
-   ```
-
-2. **Update Command Line Usage**
-   - Old: `python fiber_tracer_cli.py [args]`
-   - New: `python fiber_tracer_v2.py [args]`
-
-3. **Configuration Files**
-   - v2.0 supports configuration files
-   - Create from `config_example.yaml`
-   - Run with: `python fiber_tracer_v2.py --config my_config.yaml`
-
-4. **API Changes**
-   - Import from package: `from fiber_tracer import FiberTracer, Config`
-   - Use Config class for configuration
-   - Access results through tracer object properties
-
-5. **Output Files**
-   - New files: `statistics.json`, `fiber_3d_interactive.html`
-   - Enhanced: `summary_report.txt` with more details
-   - Same format: `fiber_properties.csv`, `volume_fraction.txt`
-
----
-
-## Future Roadmap
-
-### Version 2.1.0 (Planned)
-- [ ] Machine learning-based segmentation
-- [ ] GPU acceleration support
-- [ ] Real-time processing mode
-- [ ] Web-based user interface
-
-### Version 2.2.0 (Planned)
-- [ ] Multi-material support (CFRP + GFRP)
-- [ ] Damage detection algorithms
-- [ ] Fiber orientation tensor calculation
-- [ ] Export to FEA software formats
-
-### Version 3.0.0 (Future)
-- [ ] Cloud processing support
-- [ ] Distributed computing
-- [ ] AI-assisted parameter tuning
-- [ ] Automated report generation
-
----
-
-## Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
-
-To report bugs or request features, please use the [GitHub Issues](https://github.com/yourusername/fiber_tracer/issues) page.
-
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-*For questions or support, contact: hegde.g.chandrashekhar@gmail.com*
