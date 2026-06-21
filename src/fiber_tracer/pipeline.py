@@ -1,6 +1,5 @@
 """Pipeline orchestrator for RAFA."""
 
-import json
 import logging
 from pathlib import Path
 from typing import Optional, Tuple
@@ -165,8 +164,13 @@ class FiberAnalysisPipeline:
             "voxel_spacing_um": spacing,
             "fibers": fibers,
         }
-        with open(out / "summary.json", "w") as f:
-            json.dump(summary, f, indent=2)
+        from fiber_tracer.reporting.json import write_json_report
+        from fiber_tracer.reporting.csv import write_csv_report
+        from fiber_tracer.reporting.html import write_html_report
+
+        write_json_report(out / "summary.json", summary)
+        write_csv_report(out / "report.csv", summary)
+        write_html_report(out / "report.html", summary)
         self.volume = volume
         self.labels = labels
         return summary
@@ -180,7 +184,7 @@ class FiberAnalysisPipeline:
             empty_centers = np.zeros((0, 0, 0, 3), dtype=np.int64)
             np.save(out / "a2_map.npy", empty_map)
             np.save(out / "a2_centers.npy", empty_centers)
-            return {
+            summary = {
                 "regime": "marginal",
                 "n_voxels": 0,
                 "a2_map_shape": tuple(empty_map.shape),
@@ -188,6 +192,14 @@ class FiberAnalysisPipeline:
                 "a2_centers_file": "a2_centers.npy",
                 "a2": np.zeros((3, 3)).tolist(),
             }
+            from fiber_tracer.reporting.json import write_json_report
+            from fiber_tracer.reporting.csv import write_csv_report
+            from fiber_tracer.reporting.html import write_html_report
+
+            write_json_report(out / "summary.json", summary)
+            write_csv_report(out / "report.csv", summary)
+            write_html_report(out / "report.html", summary)
+            return summary
 
         window_size_um = self.config.orientation.window_size_um
         if window_size_um is None:
@@ -206,7 +218,7 @@ class FiberAnalysisPipeline:
         np.save(out / "a2_map.npy", a2_map)
         np.save(out / "a2_centers.npy", centers)
 
-        return {
+        summary = {
             "regime": "marginal",
             "n_voxels": int(directions.shape[0]),
             "a2_map": a2_map.tolist(),
@@ -215,6 +227,14 @@ class FiberAnalysisPipeline:
             "a2_centers_file": "a2_centers.npy",
             "a2": global_a2.tolist(),
         }
+        from fiber_tracer.reporting.json import write_json_report
+        from fiber_tracer.reporting.csv import write_csv_report
+        from fiber_tracer.reporting.html import write_html_report
+
+        write_json_report(out / "summary.json", summary)
+        write_csv_report(out / "report.csv", summary)
+        write_html_report(out / "report.html", summary)
+        return summary
 
     def _run_subvoxel(self, volume: np.ndarray, out: Path) -> dict:
         """Subvoxel-regime pipeline: global orientation tensor and distribution."""
@@ -233,7 +253,7 @@ class FiberAnalysisPipeline:
         directions, mask = self._compute_local_directions(volume, rho_um=rho_um)
 
         if directions.shape[0] == 0:
-            return {
+            summary = {
                 "regime": "subvoxel",
                 "n_voxels": 0,
                 "a2": np.zeros((3, 3)).tolist(),
@@ -244,6 +264,14 @@ class FiberAnalysisPipeline:
                     "principal_axis": [0.0, 0.0, 1.0],
                 },
             }
+            from fiber_tracer.reporting.json import write_json_report
+            from fiber_tracer.reporting.csv import write_csv_report
+            from fiber_tracer.reporting.html import write_html_report
+
+            write_json_report(out / "summary.json", summary)
+            write_csv_report(out / "report.csv", summary)
+            write_html_report(out / "report.html", summary)
+            return summary
 
         a2 = aggregate_direction_tensor(directions)
         fa = fractional_anisotropy(a2)
@@ -260,7 +288,7 @@ class FiberAnalysisPipeline:
         angles_deg = np.degrees(np.arccos(dots))
         counts, bin_edges = np.histogram(angles_deg, bins=18, range=(0.0, 90.0))
 
-        return {
+        summary = {
             "regime": "subvoxel",
             "n_voxels": int(directions.shape[0]),
             "a2": a2.tolist(),
@@ -271,3 +299,11 @@ class FiberAnalysisPipeline:
                 "principal_axis": principal_axis.tolist(),
             },
         }
+        from fiber_tracer.reporting.json import write_json_report
+        from fiber_tracer.reporting.csv import write_csv_report
+        from fiber_tracer.reporting.html import write_html_report
+
+        write_json_report(out / "summary.json", summary)
+        write_csv_report(out / "report.csv", summary)
+        write_html_report(out / "report.html", summary)
+        return summary
