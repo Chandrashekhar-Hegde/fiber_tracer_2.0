@@ -3,7 +3,7 @@
 from pathlib import Path
 from typing import Union
 
-from fiber_tracer.reporting import CITATIONS, REGIME_CAVEATS
+from fiber_tracer.reporting.citations import CITATIONS, REGIME_CAVEATS
 
 
 def write_html_report(path: Union[str, Path], summary: dict) -> None:

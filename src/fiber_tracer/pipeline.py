@@ -2,29 +2,15 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 from scipy import ndimage
 
-from fiber_tracer.config import Config
-from fiber_tracer.io import load_tiff_stack, get_shape_info, save_tiff_stack
-from fiber_tracer.preprocess import normalize_intensity, gaussian_denoise
-from fiber_tracer.reporting import (
-    write_json_report,
-    write_csv_report,
-    write_html_report,
-    CITATIONS,
-    REGIME_CAVEATS,
-)
-from fiber_tracer.regime import detect_regime
-from fiber_tracer.segmentation.classical import (
-    segment_otsu_3d,
-    segment_watershed_3d,
-    segment_connected_components_3d,
-)
+from fiber_tracer.analysis.morphometry import equivalent_diameter_from_volume, per_fiber_volumes
 from fiber_tracer.centerline.skeleton import skeletonize_label_volume
-from fiber_tracer.analysis.morphometry import per_fiber_volumes, equivalent_diameter_from_volume
+from fiber_tracer.config import Config
+from fiber_tracer.io import get_shape_info, load_tiff_stack, save_tiff_stack
 from fiber_tracer.orientation.pca import pca_orientation
 from fiber_tracer.orientation.structure_tensor import (
     compute_local_orientation_field,
@@ -32,9 +18,22 @@ from fiber_tracer.orientation.structure_tensor import (
 )
 from fiber_tracer.orientation.tensor import (
     aggregate_direction_tensor,
-    direction_tensor,
     fractional_anisotropy,
     windowed_orientation_tensor_field,
+)
+from fiber_tracer.preprocess import gaussian_denoise, normalize_intensity
+from fiber_tracer.regime import detect_regime
+from fiber_tracer.reporting import (
+    CITATIONS,
+    REGIME_CAVEATS,
+    write_csv_report,
+    write_html_report,
+    write_json_report,
+)
+from fiber_tracer.segmentation.classical import (
+    segment_connected_components_3d,
+    segment_otsu_3d,
+    segment_watershed_3d,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,7 +51,11 @@ class FiberAnalysisPipeline:
         out.mkdir(parents=True, exist_ok=True)
 
         raw = load_tiff_stack(self.config.data_path)
-        spacing = (self.config.voxel_spacing_um.z, self.config.voxel_spacing_um.y, self.config.voxel_spacing_um.x)
+        spacing = (
+            self.config.voxel_spacing_um.z,
+            self.config.voxel_spacing_um.y,
+            self.config.voxel_spacing_um.x,
+        )
         logger.info(get_shape_info(raw, spacing))
 
         if self.config.processing.normalize:
@@ -64,7 +67,9 @@ class FiberAnalysisPipeline:
             else:
                 volume = raw.astype(np.float32, copy=False)
         if self.config.processing.denoise_sigma:
-            volume = gaussian_denoise(volume, self.config.processing.denoise_sigma, self.config.voxel_spacing_um)
+            volume = gaussian_denoise(
+                volume, self.config.processing.denoise_sigma, self.config.voxel_spacing_um
+            )
 
         regime = self.config.regime if self.config.regime != "auto" else detect_regime(self.config)
         logger.info(f"Selected regime: {regime}")
@@ -82,7 +87,7 @@ class FiberAnalysisPipeline:
         self,
         volume: np.ndarray,
         rho_um: Optional[float] = None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Compute the structure-tensor orientation field and apply an Otsu foreground mask.
 
         Parameters
@@ -102,7 +107,11 @@ class FiberAnalysisPipeline:
         """
         sigma_um = self.config.orientation.sigma_um
         if sigma_um is None:
-            sigma_um = min(self.config.voxel_spacing_um.z, self.config.voxel_spacing_um.y, self.config.voxel_spacing_um.x)
+            sigma_um = min(
+                self.config.voxel_spacing_um.z,
+                self.config.voxel_spacing_um.y,
+                self.config.voxel_spacing_um.x,
+            )
 
         if rho_um is None:
             rho_um = self.config.orientation.rho_um
@@ -155,11 +164,15 @@ class FiberAnalysisPipeline:
         skeleton = skeletonize_label_volume(labels)
 
         # Per-fiber properties
-        spacing = (self.config.voxel_spacing_um.z, self.config.voxel_spacing_um.y, self.config.voxel_spacing_um.x)
+        spacing = (
+            self.config.voxel_spacing_um.z,
+            self.config.voxel_spacing_um.y,
+            self.config.voxel_spacing_um.x,
+        )
         volumes = per_fiber_volumes(labels)
-        fibers = []
+        fibers: list[dict[str, Any]] = []
         for label_id, n_voxels in volumes.items():
-            fiber = {
+            fiber: dict[str, Any] = {
                 "label": int(label_id),
                 "n_voxels": int(n_voxels),
             }
@@ -175,7 +188,7 @@ class FiberAnalysisPipeline:
         save_tiff_stack(out / "normalized_input.tif", volume)
         save_tiff_stack(out / "labels.tif", labels)
         save_tiff_stack(out / "skeleton.tif", skeleton.astype(np.uint8) * 255)
-        summary = {
+        summary: dict[str, Any] = {
             "regime": "resolved",
             "n_labels": len(fibers),
             "voxel_spacing_um": spacing,
@@ -185,7 +198,9 @@ class FiberAnalysisPipeline:
         if not self.config.analysis.compute_morphometry:
             notes.append("Morphometry disabled; equivalent diameter not computed.")
         if not self.config.analysis.compute_orientation_tensor:
-            notes.append("Orientation tensor analysis disabled; per-fiber orientation not computed.")
+            notes.append(
+                "Orientation tensor analysis disabled; per-fiber orientation not computed."
+            )
         if notes:
             summary["notes"] = " ".join(notes)
         summary["config"] = self.config.to_dict()
@@ -200,6 +215,7 @@ class FiberAnalysisPipeline:
 
     def _run_marginal(self, volume: np.ndarray, out: Path) -> dict:
         """Marginal-regime pipeline: windowed second-order orientation tensor field."""
+        summary: dict[str, Any]
         if not self.config.analysis.compute_orientation_tensor:
             mask = segment_otsu_3d(volume)
             summary = {
@@ -260,16 +276,18 @@ class FiberAnalysisPipeline:
         for window_id, (i, j, k) in enumerate(np.ndindex(a2_map.shape[:3])):
             cz, cy, cx = a2_centers[i, j, k]
             tensor = a2_map[i, j, k]
-            a2_windows.append({
-                "window_id": window_id,
-                "center_z": int(cz),
-                "center_y": int(cy),
-                "center_x": int(cx),
-                "fa": float(fractional_anisotropy(tensor)),
-                "a2_00": float(tensor[0, 0]),
-                "a2_11": float(tensor[1, 1]),
-                "a2_22": float(tensor[2, 2]),
-            })
+            a2_windows.append(
+                {
+                    "window_id": window_id,
+                    "center_z": int(cz),
+                    "center_y": int(cy),
+                    "center_x": int(cx),
+                    "fa": float(fractional_anisotropy(tensor)),
+                    "a2_00": float(tensor[0, 0]),
+                    "a2_11": float(tensor[1, 1]),
+                    "a2_22": float(tensor[2, 2]),
+                }
+            )
 
         summary = {
             "regime": "marginal",
@@ -291,6 +309,7 @@ class FiberAnalysisPipeline:
 
     def _run_subvoxel(self, volume: np.ndarray, out: Path) -> dict:
         """Subvoxel-regime pipeline: global orientation tensor and distribution."""
+        summary: dict[str, Any]
         if not self.config.analysis.compute_orientation_tensor:
             mask = segment_otsu_3d(volume)
             summary = {
@@ -349,9 +368,7 @@ class FiberAnalysisPipeline:
 
         # Orientation distribution: angles relative to the principal axis.
         # Use einsum instead of @ to avoid spurious BLAS warnings on macOS.
-        dots = np.clip(
-            np.abs(np.einsum("ij,j->i", directions, principal_axis)), 0.0, 1.0
-        )
+        dots = np.clip(np.abs(np.einsum("ij,j->i", directions, principal_axis)), 0.0, 1.0)
         angles_deg = np.degrees(np.arccos(dots))
         counts, bin_edges = np.histogram(angles_deg, bins=18, range=(0.0, 90.0))
 

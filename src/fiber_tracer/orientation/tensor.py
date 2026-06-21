@@ -6,7 +6,9 @@ import numpy as np
 def direction_tensor(directions: np.ndarray) -> np.ndarray:
     """Compute A2 = <p p^T> for an array of unit directions."""
     directions = np.atleast_2d(directions)
-    return np.mean(np.einsum('bi,bj->bij', directions, directions), axis=0)
+    return np.asarray(
+        np.mean(np.einsum("bi,bj->bij", directions, directions), axis=0), dtype=np.float64
+    )
 
 
 def fractional_anisotropy(tensor: np.ndarray) -> float:
@@ -15,7 +17,7 @@ def fractional_anisotropy(tensor: np.ndarray) -> float:
     mean = evals.mean()
     if mean == 0:
         return 0.0
-    return np.sqrt(1.5 * np.sum((evals - mean) ** 2) / np.sum(evals ** 2))
+    return float(np.sqrt(1.5 * np.sum((evals - mean) ** 2) / np.sum(evals**2)))
 
 
 def windowed_orientation_tensor_field(

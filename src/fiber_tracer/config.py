@@ -1,11 +1,11 @@
 """Configuration management with validation and units."""
 
-from dataclasses import dataclass, field, asdict, fields, is_dataclass
-from typing import Optional, Tuple, Union, get_origin, get_args
-import os
 import json
-import yaml
+import os
+from dataclasses import asdict, dataclass, field, fields, is_dataclass
+from typing import Optional, Union, get_args, get_origin
 
+import yaml  # type: ignore[import-untyped]
 
 VALID_REGIMES = ("auto", "resolved", "marginal", "subvoxel")
 
@@ -122,25 +122,15 @@ class Config:
             raise TypeError(f"expected dict, got {type(data).__name__}")
         data = dict(data)
         if "voxel_spacing_um" in data:
-            data["voxel_spacing_um"] = _dict_to_dataclass(
-                data["voxel_spacing_um"], VoxelSpacing
-            )
+            data["voxel_spacing_um"] = _dict_to_dataclass(data["voxel_spacing_um"], VoxelSpacing)
         if "processing" in data:
-            data["processing"] = _dict_to_dataclass(
-                data["processing"], ProcessingConfig
-            )
+            data["processing"] = _dict_to_dataclass(data["processing"], ProcessingConfig)
         if "segmentation" in data:
-            data["segmentation"] = _dict_to_dataclass(
-                data["segmentation"], SegmentationConfig
-            )
+            data["segmentation"] = _dict_to_dataclass(data["segmentation"], SegmentationConfig)
         if "orientation" in data:
-            data["orientation"] = _dict_to_dataclass(
-                data["orientation"], OrientationConfig
-            )
+            data["orientation"] = _dict_to_dataclass(data["orientation"], OrientationConfig)
         if "analysis" in data:
-            data["analysis"] = _dict_to_dataclass(
-                data["analysis"], AnalysisConfig
-            )
+            data["analysis"] = _dict_to_dataclass(data["analysis"], AnalysisConfig)
         return cls(**data)
 
     @classmethod

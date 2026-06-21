@@ -10,7 +10,7 @@ from skimage.segmentation import watershed
 def segment_otsu_3d(volume: np.ndarray) -> np.ndarray:
     """Global 3D Otsu thresholding."""
     threshold = filters.threshold_otsu(volume)
-    return volume > threshold
+    return np.asarray(volume > threshold, dtype=bool)
 
 
 def segment_connected_components_3d(foreground_mask: np.ndarray) -> np.ndarray:
@@ -21,7 +21,7 @@ def segment_connected_components_3d(foreground_mask: np.ndarray) -> np.ndarray:
     watershed can produce on elongated objects.
     """
     labels, _ = ndimage.label(foreground_mask)
-    return labels
+    return np.asarray(labels, dtype=np.int32)
 
 
 def segment_watershed_3d(
@@ -52,9 +52,11 @@ def segment_watershed_3d(
     local_max[tuple(peak_coords.T)] = True
     markers = ndimage.label(local_max)[0]
     labels = watershed(-distance, markers, mask=foreground_mask)
-    return labels
+    return np.asarray(labels, dtype=np.int32)
 
 
 def remove_small_objects(labels: np.ndarray, min_size_voxels: int) -> np.ndarray:
     """Remove connected components below minimum size."""
-    return morphology.remove_small_objects(labels, min_size=min_size_voxels)
+    return np.asarray(
+        morphology.remove_small_objects(labels, min_size=min_size_voxels), dtype=labels.dtype
+    )

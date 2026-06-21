@@ -1,7 +1,6 @@
 """Tests for the local gradient-based orientation field."""
 
 import numpy as np
-import pytest
 
 from fiber_tracer.config import VoxelSpacing
 from fiber_tracer.orientation.structure_tensor import (
@@ -57,12 +56,8 @@ def test_local_orientation_field_handles_anisotropic_spacing():
     # Voxel-space direction [0, 1, 1] maps to physical direction [0, 1, 1]
     # after component-wise scaling by (z=2, y=1, x=1).
     direction_voxel = np.array([0.0, 1.0, 1.0])
-    true_physical_direction = (
-        direction_voxel * np.array([spacing.z, spacing.y, spacing.x])
-    )
-    true_physical_direction = true_physical_direction / np.linalg.norm(
-        true_physical_direction
-    )
+    true_physical_direction = direction_voxel * np.array([spacing.z, spacing.y, spacing.x])
+    true_physical_direction = true_physical_direction / np.linalg.norm(true_physical_direction)
     fiber = _make_cylinder_fiber(shape, direction_voxel, radius_voxels=6.0)
 
     eigenvalues, eigenvectors = compute_local_orientation_field(
@@ -84,7 +79,9 @@ def test_local_orientation_field_handles_anisotropic_spacing():
     mean_direction = sample.mean(axis=1)
     mean_direction = mean_direction / np.linalg.norm(mean_direction)
 
-    angle_rad = np.arccos(np.clip(np.abs(np.dot(mean_direction, true_physical_direction)), 0.0, 1.0))
+    angle_rad = np.arccos(
+        np.clip(np.abs(np.dot(mean_direction, true_physical_direction)), 0.0, 1.0)
+    )
     angle_deg = np.degrees(angle_rad)
     assert angle_deg < 15.0
 

@@ -41,7 +41,7 @@ def test_angular_error_zero_vector_raises():
 def test_orientation_tensor_error():
     a = np.array([[2.0, 0.0], [0.0, 1.0]])
     b = np.array([[1.0, 0.0], [0.0, 0.0]])
-    expected = np.linalg.norm(a - b, ord='fro')
+    expected = np.linalg.norm(a - b, ord="fro")
     assert orientation_tensor_error(a, b) == pytest.approx(expected)
 
 
@@ -69,16 +69,20 @@ def test_mean_angular_error_empty_returns_zero():
 
 
 def test_mean_angular_error_multiple():
-    pred = np.array([
-        [1.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0],
-        [0.0, 0.0, 1.0],
-    ])
-    true = np.array([
-        [1.0, 0.0, 0.0],
-        [0.0, -1.0, 0.0],
-        [0.0, 0.0, -1.0],
-    ])
+    pred = np.array(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+        ]
+    )
+    true = np.array(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, -1.0, 0.0],
+            [0.0, 0.0, -1.0],
+        ]
+    )
     assert mean_angular_error(pred, true) == pytest.approx(0.0)
 
 

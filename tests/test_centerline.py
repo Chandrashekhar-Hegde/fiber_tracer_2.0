@@ -1,11 +1,12 @@
 """Tests for 3D skeletonization and optional skan graph analysis."""
 
-import numpy as np
-import pytest
 from unittest.mock import patch
 
-from fiber_tracer.centerline.skeleton import skeletonize_label_volume
+import numpy as np
+import pytest
+
 from fiber_tracer.centerline.graph import skeleton_to_skan
+from fiber_tracer.centerline.skeleton import skeletonize_label_volume
 from fiber_tracer.exceptions import BackendNotAvailableError
 
 
@@ -33,12 +34,8 @@ def test_skeletonize_label_volume_returns_boolean_same_shape():
 def test_skeletonize_label_volume_thins_each_label():
     labels = np.zeros((20, 20, 20), dtype=int)
     # Two non-touching thick cylinders.
-    labels |= _cylinder_labels(
-        (20, 20, 20), center=(10, 6, 6), radius=3, height=15, label=1
-    )
-    labels |= _cylinder_labels(
-        (20, 20, 20), center=(10, 14, 14), radius=3, height=15, label=2
-    )
+    labels |= _cylinder_labels((20, 20, 20), center=(10, 6, 6), radius=3, height=15, label=1)
+    labels |= _cylinder_labels((20, 20, 20), center=(10, 14, 14), radius=3, height=15, label=2)
 
     skeleton = skeletonize_label_volume(labels)
     original_foreground = np.sum(labels > 0)

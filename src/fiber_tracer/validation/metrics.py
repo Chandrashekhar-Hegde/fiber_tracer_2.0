@@ -17,7 +17,7 @@ def angular_error(pred: np.ndarray, true: np.ndarray) -> float:
 
 def orientation_tensor_error(pred: np.ndarray, true: np.ndarray) -> float:
     """Frobenius norm of A2 difference."""
-    return float(np.linalg.norm(pred - true, ord='fro'))
+    return float(np.linalg.norm(pred - true, ord="fro"))
 
 
 def dice_score(pred: np.ndarray, true: np.ndarray) -> float:
@@ -40,7 +40,7 @@ def dice_score(pred: np.ndarray, true: np.ndarray) -> float:
     if np.sum(pred) + np.sum(true) == 0:
         return 1.0
     intersection = np.sum(pred & true)
-    return 2.0 * intersection / (np.sum(pred) + np.sum(true))
+    return float(2.0 * intersection / (np.sum(pred) + np.sum(true)))
 
 
 def mean_angular_error(pred_directions: np.ndarray, true_directions: np.ndarray) -> float:

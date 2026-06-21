@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from fiber_tracer.validation.phantoms import (
     generate_fiber_phantom,
@@ -32,9 +31,7 @@ def test_known_orientation_helper_matches_requested_direction():
 
 
 def test_phantom_volume_within_unit_range():
-    phantom = generate_fiber_phantom(
-        shape=(32, 32, 32), n_fibers=5, fiber_diameter_um=2.0, seed=42
-    )
+    phantom = generate_fiber_phantom(shape=(32, 32, 32), n_fibers=5, fiber_diameter_um=2.0, seed=42)
     assert phantom.volume.min() >= 0.0
     assert phantom.volume.max() <= 1.0
 

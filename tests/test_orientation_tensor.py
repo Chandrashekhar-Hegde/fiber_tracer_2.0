@@ -71,9 +71,7 @@ def test_windowed_orientation_tensor_field_shapes_and_anisotropy():
     directions = rng.normal(size=(3, z_dim, y_dim, x_dim))
     directions = directions / np.linalg.norm(directions, axis=0, keepdims=True)
 
-    tensor_field, centers = windowed_orientation_tensor_field(
-        directions, window_size=3, stride=2
-    )
+    tensor_field, centers = windowed_orientation_tensor_field(directions, window_size=3, stride=2)
     expected_z = (z_dim - 3) // 2 + 1
     expected_y = (y_dim - 3) // 2 + 1
     expected_x = (x_dim - 3) // 2 + 1

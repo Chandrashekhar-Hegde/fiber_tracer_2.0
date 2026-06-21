@@ -4,7 +4,6 @@ import json
 import sys
 import tempfile
 from pathlib import Path
-from typing import Dict, Tuple
 
 import numpy as np
 
@@ -15,7 +14,9 @@ from fiber_tracer.validation.metrics import mean_angular_error, mean_dice_score
 from fiber_tracer.validation.phantoms import generate_fiber_phantom
 
 
-def _align_labels(pred_labels: np.ndarray, true_labels: np.ndarray) -> Tuple[np.ndarray, Dict[int, int]]:
+def _align_labels(
+    pred_labels: np.ndarray, true_labels: np.ndarray
+) -> tuple[np.ndarray, dict[int, int]]:
     """Remap predicted label IDs to match ground-truth IDs by overlap.
 
     Returns a relabeled prediction volume and the mapping used.  Each true
@@ -27,7 +28,7 @@ def _align_labels(pred_labels: np.ndarray, true_labels: np.ndarray) -> Tuple[np.
     true_ids = np.setdiff1d(np.unique(true_labels), [0])
     pred_ids = np.setdiff1d(np.unique(pred_labels), [0])
 
-    mapping: Dict[int, int] = {}
+    mapping: dict[int, int] = {}
     used_pred_ids: set = set()
     for true_id in true_ids:
         true_mask = true_labels == true_id
@@ -102,9 +103,7 @@ def main() -> int:
             pred_orientations.append(np.asarray(orientation_by_label[pred_id]))
             true_orientations.append(phantom.orientations[true_id - 1])
 
-        mean_angle = mean_angular_error(
-            np.array(pred_orientations), np.array(true_orientations)
-        )
+        mean_angle = mean_angular_error(np.array(pred_orientations), np.array(true_orientations))
 
         report = {
             "mean_dice": float(mean_dice),

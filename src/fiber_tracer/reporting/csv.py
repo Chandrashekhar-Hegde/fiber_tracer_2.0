@@ -1,14 +1,12 @@
 """CSV report exporter for per-fiber / per-window results."""
 
 from pathlib import Path
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 import pandas as pd
 
-from fiber_tracer.reporting import CITATIONS
 
-
-def _records_from_summary(summary: dict) -> List[Dict[str, Any]]:
+def _records_from_summary(summary: dict) -> list[dict[str, Any]]:
     """Extract tabular records from a pipeline summary."""
     records = []
     regime = summary.get("regime", "unknown")

@@ -1,7 +1,5 @@
 """Tests for the marginal-regime pipeline."""
 
-from pathlib import Path
-
 import numpy as np
 
 from fiber_tracer.config import Config, VoxelSpacing

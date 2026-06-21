@@ -1,8 +1,6 @@
 """Tests for classical 3D segmentation."""
 
 import numpy as np
-import pytest
-from scipy import ndimage
 
 from fiber_tracer.segmentation.classical import (
     remove_small_objects,

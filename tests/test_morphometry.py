@@ -1,7 +1,6 @@
 """Tests for centerline-based morphometry."""
 
 import numpy as np
-import pytest
 
 from fiber_tracer.analysis.morphometry import (
     equivalent_diameter_from_volume,
@@ -9,7 +8,6 @@ from fiber_tracer.analysis.morphometry import (
     per_fiber_volumes,
     tortuosity,
 )
-
 
 SPACING = (1.0, 1.0, 1.0)
 ANISOTROPIC_SPACING = (2.0, 1.0, 1.0)
@@ -57,7 +55,7 @@ def test_equivalent_diameter_from_volume_known_sphere():
     """A sphere with diameter 4 µm should yield equivalent diameter ~4 µm."""
     diameter_um = 4.0
     radius_um = diameter_um / 2.0
-    volume_um3 = (4.0 / 3.0) * np.pi * radius_um ** 3
+    volume_um3 = (4.0 / 3.0) * np.pi * radius_um**3
     # Under isotropic 1 µm spacing, one voxel is 1 µm³.
     n_voxels = int(round(volume_um3))
     result = equivalent_diameter_from_volume(n_voxels, SPACING)
@@ -67,10 +65,13 @@ def test_equivalent_diameter_from_volume_known_sphere():
 
 def test_per_fiber_volumes_excludes_background():
     """per_fiber_volumes excludes label 0 and returns correct counts."""
-    labels = np.array([
-        [1, 1, 0, 2],
-        [1, 0, 0, 2],
-        [3, 3, 0, 2],
-    ], dtype=np.int32)
+    labels = np.array(
+        [
+            [1, 1, 0, 2],
+            [1, 0, 0, 2],
+            [3, 3, 0, 2],
+        ],
+        dtype=np.int32,
+    )
     volumes = per_fiber_volumes(labels)
     assert volumes == {1: 3, 2: 3, 3: 2}

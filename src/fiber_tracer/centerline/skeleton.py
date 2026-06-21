@@ -1,6 +1,5 @@
 """Skeletonization and graph analysis using scikit-image and skan."""
 
-from typing import List
 import numpy as np
 from skimage.morphology import skeletonize
 

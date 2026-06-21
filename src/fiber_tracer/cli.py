@@ -3,7 +3,6 @@
 import argparse
 import logging
 import sys
-from pathlib import Path
 from typing import Optional
 
 from fiber_tracer.config import Config, VoxelSpacing
@@ -17,7 +16,9 @@ def main(argv: Optional[list] = None) -> int:
     parser.add_argument("--config", help="Path to YAML/JSON config")
     parser.add_argument("--voxel-spacing", nargs=3, type=float, metavar=("Z", "Y", "X"))
     parser.add_argument("--fiber-diameter", type=float)
-    parser.add_argument("--regime", choices=["auto", "resolved", "marginal", "subvoxel"], default="auto")
+    parser.add_argument(
+        "--regime", choices=["auto", "resolved", "marginal", "subvoxel"], default="auto"
+    )
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args(argv)
 

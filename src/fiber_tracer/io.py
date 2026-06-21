@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Any, Union
 
 import numpy as np
 import tifffile
@@ -34,7 +34,7 @@ def estimate_volume_fraction(volume: np.ndarray, threshold: float = 0.5) -> floa
     return float(np.mean(volume > threshold))
 
 
-def get_shape_info(volume: np.ndarray, voxel_spacing: Tuple[float, float, float]) -> dict:
+def get_shape_info(volume: np.ndarray, voxel_spacing: tuple[float, float, float]) -> dict:
     """Return human-readable shape and physical size info."""
     if volume.ndim != 3:
         raise ValueError(f"Expected 3D volume, got {volume.ndim}D")
@@ -92,7 +92,7 @@ def save_tiff_stack(path: Union[str, Path], volume: np.ndarray) -> None:
     if writable.dtype != volume.dtype:
         logger.info(f"Converting dtype from {volume.dtype} to {writable.dtype} for TIFF writing.")
 
-    kwargs = {}
+    kwargs: dict[str, Any] = {}
     if writable.ndim == 3 and writable.dtype in (np.uint8, np.uint16, np.float32):
         kwargs["imagej"] = True
 

@@ -1,7 +1,6 @@
 """Select analysis regime from physical voxel/fiber ratio."""
 
-from fiber_tracer.config import Config, VALID_REGIMES, validate_regime
-
+from fiber_tracer.config import VALID_REGIMES, Config, validate_regime
 
 __all__ = ["detect_regime", "VALID_REGIMES", "validate_regime"]
 

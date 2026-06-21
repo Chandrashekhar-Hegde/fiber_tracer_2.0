@@ -1,7 +1,8 @@
 """Synthetic fiber phantoms with ground truth."""
 
 from dataclasses import dataclass
-from typing import Tuple, Optional
+from typing import Optional
+
 import numpy as np
 
 
@@ -12,12 +13,12 @@ class FiberPhantom:
     orientations: np.ndarray  # Nx3 unit vectors
     diameters_um: np.ndarray
     lengths_um: np.ndarray
-    voxel_spacing_um: Tuple[float, float, float]
+    voxel_spacing_um: tuple[float, float, float]
 
 
 def generate_straight_fiber(
-    shape: Tuple[int, int, int],
-    center: Tuple[float, float, float],
+    shape: tuple[int, int, int],
+    center: tuple[float, float, float],
     direction: np.ndarray,
     radius_voxels: float,
     intensity: float = 1.0,
@@ -37,10 +38,10 @@ def generate_straight_fiber(
 
 
 def generate_fiber_phantom(
-    shape: Tuple[int, int, int] = (64, 64, 64),
+    shape: tuple[int, int, int] = (64, 64, 64),
     n_fibers: int = 10,
     fiber_diameter_um: float = 4.0,
-    voxel_spacing_um: Tuple[float, float, float] = (1.0, 1.0, 1.0),
+    voxel_spacing_um: tuple[float, float, float] = (1.0, 1.0, 1.0),
     noise_std: float = 0.02,
     seed: Optional[int] = None,
 ) -> FiberPhantom:
@@ -81,11 +82,11 @@ def generate_fiber_phantom(
 
 
 def generate_phantom_with_known_orientation(
-    shape: Tuple[int, int, int] = (64, 64, 64),
+    shape: tuple[int, int, int] = (64, 64, 64),
     direction: Optional[np.ndarray] = None,
-    center: Optional[Tuple[float, float, float]] = None,
+    center: Optional[tuple[float, float, float]] = None,
     fiber_diameter_um: float = 4.0,
-    voxel_spacing_um: Tuple[float, float, float] = (1.0, 1.0, 1.0),
+    voxel_spacing_um: tuple[float, float, float] = (1.0, 1.0, 1.0),
     intensity: float = 1.0,
 ) -> FiberPhantom:
     """Generate a deterministic phantom with a single fiber along a known direction.
@@ -105,9 +106,7 @@ def generate_phantom_with_known_orientation(
         center = tuple((np.array(shape) - 1.0) / 2.0)
 
     radius_voxels = 0.5 * fiber_diameter_um / min(voxel_spacing_um)
-    volume = generate_straight_fiber(
-        shape, center, direction, radius_voxels, intensity=intensity
-    )
+    volume = generate_straight_fiber(shape, center, direction, radius_voxels, intensity=intensity)
     labels = (volume > 0).astype(np.int32)
     length = min(shape) * min(voxel_spacing_um)
 

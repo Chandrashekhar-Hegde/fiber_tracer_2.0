@@ -1,7 +1,5 @@
 """Orientation estimation using the structure-tensor package."""
 
-from typing import Tuple
-
 import numpy as np
 from scipy import ndimage
 
@@ -13,7 +11,7 @@ def compute_structure_tensor_field(
     volume: np.ndarray,
     sigma: float,
     rho: float,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Return eigenvalues and eigenvectors of the 3D structure tensor."""
     try:
         from structure_tensor import structure_tensor_3d
@@ -32,7 +30,7 @@ def compute_local_orientation_field(
     rho_um: float,
     voxel_spacing: VoxelSpacing,
     truncate: float = 4.0,
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Return eigenvalues and eigenvectors of the 3D gradient structure tensor.
 
     Eigenvalues are sorted ascending (eigenvalues[0] = smallest).
@@ -40,9 +38,7 @@ def compute_local_orientation_field(
     Implements a gradient-based structure tensor using scipy.ndimage so it works
     without the optional structure-tensor package.
     """
-    spacing = np.array(
-        [voxel_spacing.z, voxel_spacing.y, voxel_spacing.x], dtype=float
-    )
+    spacing = np.array([voxel_spacing.z, voxel_spacing.y, voxel_spacing.x], dtype=float)
     sigma_voxels = sigma_um / spacing
     rho_voxels = rho_um / spacing
 
@@ -102,5 +98,4 @@ def compute_local_orientation_field(
 def orientation_from_smallest_eigenvector(eigenvectors: np.ndarray) -> np.ndarray:
     """Eigenvector of smallest eigenvalue points along the fiber."""
     # eigenvectors shape: (3, 3, D, H, W) where first dim is eigenvalue index (0=smallest)
-    direction = eigenvectors[0]  # (3, D, H, W)
-    return direction
+    return np.asarray(eigenvectors[0], dtype=np.float64)

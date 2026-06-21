@@ -1,12 +1,13 @@
 # tests/test_config.py
 import pytest
+
 from fiber_tracer.config import (
+    AnalysisConfig,
     Config,
-    VoxelSpacing,
+    OrientationConfig,
     ProcessingConfig,
     SegmentationConfig,
-    OrientationConfig,
-    AnalysisConfig,
+    VoxelSpacing,
 )
 
 
@@ -44,9 +45,7 @@ def test_config_round_trip_yaml(tmp_path):
             max_fiber_diameter_um=30.0,
             watershed_seed_sigma_um=2.0,
         ),
-        orientation=OrientationConfig(
-            method="pca", sigma_um=1.0, rho_um=2.0, window_size_um=3.0
-        ),
+        orientation=OrientationConfig(method="pca", sigma_um=1.0, rho_um=2.0, window_size_um=3.0),
         analysis=AnalysisConfig(
             compute_morphometry=True,
             compute_orientation_tensor=False,

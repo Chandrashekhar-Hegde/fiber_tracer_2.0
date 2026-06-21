@@ -4,8 +4,6 @@ import json
 from pathlib import Path
 from typing import Union
 
-from fiber_tracer.reporting import CITATIONS
-
 
 def write_json_report(path: Union[str, Path], summary: dict) -> None:
     """Write the analysis summary to a JSON file."""

@@ -22,4 +22,4 @@ def pca_orientation(coords: np.ndarray) -> np.ndarray:
     norm = np.linalg.norm(axis)
     if norm == 0:
         return np.array([0.0, 0.0, 1.0])
-    return axis / norm
+    return np.asarray(axis / norm, dtype=np.float64)
