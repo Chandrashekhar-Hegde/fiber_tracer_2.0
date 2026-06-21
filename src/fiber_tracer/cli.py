@@ -1,10 +1,12 @@
 """Command-line interface for fiber_tracer."""
 
 import argparse
+import logging
 import sys
 from pathlib import Path
+from typing import Optional
 
-from fiber_tracer.config import Config
+from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.pipeline import FiberAnalysisPipeline
 
 
@@ -18,6 +20,11 @@ def main(argv: Optional[list] = None) -> int:
     parser.add_argument("--regime", choices=["auto", "resolved", "marginal", "subvoxel"], default="auto")
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args(argv)
+
+    logging.basicConfig(
+        level=getattr(logging, args.log_level.upper(), logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
 
     if args.config:
         config = Config.from_file(args.config)
