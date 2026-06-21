@@ -8,11 +8,13 @@ from fiber_tracer.validation.phantoms import (
 
 
 def test_phantom_has_expected_fibers():
+    n_fibers = 3
     phantom = generate_fiber_phantom(
-        shape=(32, 32, 32), n_fibers=3, fiber_diameter_um=2.0, seed=42
+        shape=(128, 128, 128), n_fibers=n_fibers, fiber_diameter_um=2.0, seed=42
     )
-    assert phantom.volume.shape == (32, 32, 32)
-    assert len(phantom.orientations) >= 1
+    assert phantom.volume.shape == (128, 128, 128)
+    assert len(phantom.orientations) == n_fibers
+    assert len(np.unique(phantom.labels[phantom.labels > 0])) == n_fibers
     assert phantom.volume.max() <= 1.0
 
 
@@ -37,10 +39,17 @@ def test_phantom_volume_within_unit_range():
     assert phantom.volume.max() <= 1.0
 
 
-def test_phantom_labels_are_non_overlapping():
+def test_phantom_labels_are_pairwise_disjoint():
+    n_fibers = 5
     phantom = generate_fiber_phantom(
-        shape=(32, 32, 32), n_fibers=10, fiber_diameter_um=2.0, seed=42
+        shape=(128, 128, 128), n_fibers=n_fibers, fiber_diameter_um=2.0, seed=42
     )
-    nonzero = phantom.labels[phantom.labels > 0]
-    # Each voxel should have exactly one label.
-    assert len(nonzero) == phantom.labels.astype(bool).sum()
+    labels = phantom.labels
+    present_labels = np.unique(labels[labels > 0])
+    assert len(present_labels) == n_fibers
+    for i in present_labels:
+        for j in present_labels:
+            if i == j:
+                continue
+            overlap = np.logical_and(labels == i, labels == j).sum()
+            assert overlap == 0

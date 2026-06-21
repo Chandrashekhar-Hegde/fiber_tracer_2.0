@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from typing import List, Tuple, Optional
 import numpy as np
-from scipy import ndimage
 
 
 @dataclass
@@ -81,7 +80,7 @@ def generate_fiber_phantom(
 
 def generate_phantom_with_known_orientation(
     shape: Tuple[int, int, int] = (64, 64, 64),
-    direction: np.ndarray = None,
+    direction: Optional[np.ndarray] = None,
     center: Optional[Tuple[float, float, float]] = None,
     fiber_diameter_um: float = 4.0,
     voxel_spacing_um: Tuple[float, float, float] = (1.0, 1.0, 1.0),
