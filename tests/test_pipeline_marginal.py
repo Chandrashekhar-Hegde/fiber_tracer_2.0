@@ -42,3 +42,29 @@ def test_pipeline_marginal_creates_a2_map_and_centers(tmp_path):
     assert "a2_map_shape" in summary
     assert (out_dir / "a2_map.npy").exists()
     assert (out_dir / "a2_centers.npy").exists()
+
+
+def test_pipeline_marginal_constant_volume_returns_gracefully(tmp_path):
+    """A constant (fiber-less) volume yields a zero-voxel marginal summary."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    stack_path = data_dir / "constant.tif"
+    save_tiff_stack(stack_path, np.full((32, 32, 32), 128, dtype=np.uint8))
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=1.0,
+        regime="marginal",
+    )
+
+    pipeline = FiberAnalysisPipeline(config)
+    summary = pipeline.run()
+
+    assert summary["regime"] == "marginal"
+    assert summary["n_voxels"] == 0
+    assert (out_dir / "a2_map.npy").exists()
+    assert (out_dir / "a2_centers.npy").exists()

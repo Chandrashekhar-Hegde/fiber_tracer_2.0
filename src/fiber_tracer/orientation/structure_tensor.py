@@ -47,6 +47,9 @@ def compute_local_orientation_field(
     rho_voxels = rho_um / spacing
 
     # Gaussian derivatives (gradient) along each axis.
+    # Divide by the physical voxel spacing so derivatives are in intensity per
+    # physical unit; this gives structure-tensor components consistent units
+    # under anisotropic spacing.
     derivatives = []
     for axis in range(3):
         derivative = ndimage.gaussian_filter1d(
@@ -57,6 +60,7 @@ def compute_local_orientation_field(
             mode="nearest",
             truncate=truncate,
         )
+        derivative = derivative / spacing[axis]
         derivatives.append(derivative)
 
     # Structure-tensor components: outer product of gradients.

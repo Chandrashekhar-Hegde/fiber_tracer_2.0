@@ -51,20 +51,42 @@ def test_local_orientation_field_aligns_with_fiber_direction():
 
 
 def test_local_orientation_field_handles_anisotropic_spacing():
-    """The function accepts anisotropic voxel spacing without crashing."""
-    shape = (32, 32, 32)
-    direction = np.array([1.0, 0.0, 0.0])
-    fiber = _make_cylinder_fiber(shape, direction, radius_voxels=4.0)
+    """Anisotropic spacing preserves the true physical fiber direction."""
+    shape = (64, 64, 64)
+    spacing = VoxelSpacing(2.0, 1.0, 1.0)
+    # Voxel-space direction [0, 1, 1] maps to physical direction [0, 1, 1]
+    # after component-wise scaling by (z=2, y=1, x=1).
+    direction_voxel = np.array([0.0, 1.0, 1.0])
+    true_physical_direction = (
+        direction_voxel * np.array([spacing.z, spacing.y, spacing.x])
+    )
+    true_physical_direction = true_physical_direction / np.linalg.norm(
+        true_physical_direction
+    )
+    fiber = _make_cylinder_fiber(shape, direction_voxel, radius_voxels=6.0)
 
     eigenvalues, eigenvectors = compute_local_orientation_field(
         fiber,
         sigma_um=2.0,
         rho_um=4.0,
-        voxel_spacing=VoxelSpacing(2.0, 1.0, 1.0),
+        voxel_spacing=spacing,
     )
 
     assert eigenvalues.shape == (3,) + shape
     assert eigenvectors.shape == (3, 3) + shape
+
+    direction_field = orientation_from_smallest_eigenvector(eigenvectors)
+
+    # Sample near the center of the cylinder, away from edges.
+    cx, cy, cz = shape[2] // 2, shape[1] // 2, shape[0] // 2
+    sample = direction_field[:, cz - 5 : cz + 5, cy - 5 : cy + 5, cx - 5 : cx + 5]
+    sample = sample.reshape(3, -1)
+    mean_direction = sample.mean(axis=1)
+    mean_direction = mean_direction / np.linalg.norm(mean_direction)
+
+    angle_rad = np.arccos(np.clip(np.abs(np.dot(mean_direction, true_physical_direction)), 0.0, 1.0))
+    angle_deg = np.degrees(angle_rad)
+    assert angle_deg < 15.0
 
 
 def test_local_orientation_eigenvectors_are_unit_vectors():

@@ -65,8 +65,19 @@ class FiberAnalysisPipeline:
         else:
             raise ValueError(f"unsupported regime: {regime}")
 
-    def _compute_local_directions(self, volume: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def _compute_local_directions(
+        self,
+        volume: np.ndarray,
+        rho_um: Optional[float] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Compute the structure-tensor orientation field and apply an Otsu foreground mask.
+
+        Parameters
+        ----------
+        rho_um :
+            Optional integration scale in micrometres. When ``None``, falls back
+            to ``self.config.orientation.rho_um`` and then to half the fiber
+            diameter.
 
         Returns
         -------
@@ -80,7 +91,8 @@ class FiberAnalysisPipeline:
         if sigma_um is None:
             sigma_um = min(self.config.voxel_spacing_um.z, self.config.voxel_spacing_um.y, self.config.voxel_spacing_um.x)
 
-        rho_um = self.config.orientation.rho_um
+        if rho_um is None:
+            rho_um = self.config.orientation.rho_um
         if rho_um is None:
             rho_um = self.config.fiber_diameter_um / 2.0
 
@@ -217,13 +229,8 @@ class FiberAnalysisPipeline:
         )
         rho_um = max(original_rho_um, 3.0 * min_spacing)
 
-        # Temporarily override rho for local direction computation.
-        saved_rho = self.config.orientation.rho_um
-        self.config.orientation.rho_um = rho_um
-        try:
-            directions, mask = self._compute_local_directions(volume)
-        finally:
-            self.config.orientation.rho_um = saved_rho
+        # Pass the larger integration scale directly instead of mutating config.
+        directions, mask = self._compute_local_directions(volume, rho_um=rho_um)
 
         if directions.shape[0] == 0:
             return {
