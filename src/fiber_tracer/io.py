@@ -1,4 +1,4 @@
-"""I/O for TIFF stacks, HDF5, and metadata."""
+"""I/O for TIFF stacks and volume metadata."""
 
 import logging
 from pathlib import Path
@@ -8,6 +8,13 @@ import numpy as np
 import tifffile
 
 logger = logging.getLogger(__name__)
+
+__all__ = [
+    "load_tiff_stack",
+    "save_tiff_stack",
+    "estimate_volume_fraction",
+    "get_shape_info",
+]
 
 
 def load_tiff_stack(path: Union[str, Path]) -> np.ndarray:
@@ -29,6 +36,8 @@ def estimate_volume_fraction(volume: np.ndarray, threshold: float = 0.5) -> floa
 
 def get_shape_info(volume: np.ndarray, voxel_spacing: Tuple[float, float, float]) -> dict:
     """Return human-readable shape and physical size info."""
+    if volume.ndim != 3:
+        raise ValueError(f"Expected 3D volume, got {volume.ndim}D")
     dz, dy, dx = voxel_spacing
     z, y, x = volume.shape
     return {
@@ -51,9 +60,13 @@ def _safe_to_writable_dtype(volume: np.ndarray) -> np.ndarray:
         return volume
 
     if np.issubdtype(volume.dtype, np.integer):
-        if volume.min() >= 0 and volume.max() <= np.iinfo(np.uint16).max:
+        if volume.min() < 0:
+            raise ValueError(
+                "Negative intensities cannot be safely written as TIFF; normalize or cast manually."
+            )
+        if volume.max() <= np.iinfo(np.uint16).max:
             return volume.astype(np.uint16)
-        # Values do not fit in uint16; fall back to float32.
+        # Values do not fit in uint16; fall back to normalized float32.
         scaled = volume.astype(np.float32)
         max_val = scaled.max()
         if max_val > 0:
@@ -75,6 +88,9 @@ def save_tiff_stack(path: Union[str, Path], volume: np.ndarray) -> None:
     """
     path = Path(path)
     writable = _safe_to_writable_dtype(volume)
+
+    if writable.dtype != volume.dtype:
+        logger.info(f"Converting dtype from {volume.dtype} to {writable.dtype} for TIFF writing.")
 
     kwargs = {}
     if writable.ndim == 3 and writable.dtype in (np.uint8, np.uint16, np.float32):
