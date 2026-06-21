@@ -8,7 +8,6 @@ import pytest
 from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.io import save_tiff_stack
 from fiber_tracer.pipeline import FiberAnalysisPipeline
-from fiber_tracer.regime import validate_regime
 from fiber_tracer.validation.phantoms import generate_fiber_phantom
 
 
@@ -106,12 +105,5 @@ def test_invalid_regime_raises_during_validation(tmp_path):
         regime="invalid",
     )
 
-    def validate_with_regime(self):
-        validate_regime(self.regime)
-        if not self.data_path or not Path(self.data_path).exists():
-            raise ValueError(f"data_path does not exist: {self.data_path}")
-
-    with patch.object(Config, "validate", validate_with_regime):
-        pipeline = FiberAnalysisPipeline(config)
-        with pytest.raises(ValueError):
-            pipeline.run()
+    with pytest.raises(ValueError):
+        config.validate()

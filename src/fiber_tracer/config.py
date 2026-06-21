@@ -7,6 +7,15 @@ import json
 import yaml
 
 
+VALID_REGIMES = ("auto", "resolved", "marginal", "subvoxel")
+
+
+def validate_regime(regime: str) -> None:
+    """Raise ValueError if *regime* is not a valid regime identifier."""
+    if regime not in VALID_REGIMES:
+        raise ValueError(f"invalid regime {regime!r}; expected one of {VALID_REGIMES}")
+
+
 @dataclass
 class VoxelSpacing:
     z: float
@@ -67,6 +76,7 @@ class Config:
         for s in (self.voxel_spacing_um.z, self.voxel_spacing_um.y, self.voxel_spacing_um.x):
             if s <= 0:
                 raise ValueError("voxel spacing must be positive")
+        validate_regime(self.regime)
 
     def to_dict(self) -> dict:
         return asdict(self)

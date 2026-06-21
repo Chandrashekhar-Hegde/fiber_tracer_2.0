@@ -1,8 +1,8 @@
 # tests/test_regime.py
 import pytest
 
-from fiber_tracer.config import Config, VoxelSpacing
-from fiber_tracer.regime import detect_regime, validate_regime
+from fiber_tracer.config import Config, VoxelSpacing, validate_regime
+from fiber_tracer.regime import detect_regime
 
 
 def test_detect_regime_resolved():
