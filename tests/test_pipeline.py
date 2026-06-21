@@ -5,6 +5,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
+from fiber_tracer.cli import main
 from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.io import save_tiff_stack
 from fiber_tracer.pipeline import FiberAnalysisPipeline
@@ -222,3 +223,38 @@ def test_resolved_pipeline_respects_normalize_flag(tmp_path):
     summary = pipeline.run()
     assert summary["n_labels"] > 0
     assert pipeline.volume.max() == pytest.approx(raw_max, rel=1e-5)
+
+
+def test_pipeline_runs_with_config_file_only(tmp_path):
+    """CLI can run with --config alone when data_path and output_dir are in the file."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+    )
+    config_path = tmp_path / "config.yaml"
+    config.save(config_path)
+
+    rc = main(["--config", str(config_path)])
+
+    assert rc == 0
+    assert (out_dir / "summary.json").exists()
+    assert (out_dir / "labels.tif").exists()
+    assert (out_dir / "skeleton.tif").exists()
+    assert (out_dir / "normalized_input.tif").exists()

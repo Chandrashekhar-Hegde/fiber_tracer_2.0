@@ -134,4 +134,4 @@ Save this as `config.yaml` and run:
 fiber-tracer --config config.yaml --data path/to/stack.tif --output results/
 ```
 
-> **Note:** `--data` and `--output` are always required. They can be supplied either on the command line or in the configuration file.
+> **Note:** `--data` and `--output` may be provided on the command line or in the configuration file. If both are provided, the command-line value overrides the config file value.

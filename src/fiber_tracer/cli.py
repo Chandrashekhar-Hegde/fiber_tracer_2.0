@@ -12,8 +12,8 @@ from fiber_tracer.pipeline import FiberAnalysisPipeline
 
 def main(argv: Optional[list] = None) -> int:
     parser = argparse.ArgumentParser(description="RAFA fiber analysis")
-    parser.add_argument("--data", required=True, help="Path to TIFF stack or directory")
-    parser.add_argument("--output", required=True, help="Output directory")
+    parser.add_argument("--data", required=False, help="Path to TIFF stack or directory")
+    parser.add_argument("--output", required=False, help="Output directory")
     parser.add_argument("--config", help="Path to YAML/JSON config")
     parser.add_argument("--voxel-spacing", nargs=3, type=float, metavar=("Z", "Y", "X"))
     parser.add_argument("--fiber-diameter", type=float)
@@ -27,9 +27,29 @@ def main(argv: Optional[list] = None) -> int:
     )
 
     if args.config:
-        config = Config.from_file(args.config)
+        file_config = Config.from_file(args.config)
     else:
-        config = Config(data_path=args.data, output_dir=args.output)
+        file_config = Config()
+
+    data_path = args.data or file_config.data_path
+    output_dir = args.output or file_config.output_dir
+
+    if not data_path:
+        raise ValueError("data_path must be provided via --data or the configuration file")
+    if not output_dir:
+        raise ValueError("output_dir must be provided via --output or the configuration file")
+
+    config = Config(
+        data_path=data_path,
+        output_dir=output_dir,
+        voxel_spacing_um=file_config.voxel_spacing_um,
+        fiber_diameter_um=file_config.fiber_diameter_um,
+        regime=file_config.regime,
+        processing=file_config.processing,
+        segmentation=file_config.segmentation,
+        orientation=file_config.orientation,
+        analysis=file_config.analysis,
+    )
 
     if args.voxel_spacing:
         config.voxel_spacing_um = VoxelSpacing(*args.voxel_spacing)
