@@ -6,7 +6,7 @@
 
 **Architecture:** A plugin-based core (`fiber_tracer/`) stays MIT-licensed and imports only permissive dependencies. Heavy/optional backends (PyTorch/nnU-Net, gudhi/ripser) are lazy-loaded through adapter modules. Three analysis regimes (resolved / marginal / sub-voxel) select algorithms automatically from physical voxel/fiber ratio. All outputs are validated against synthetic phantoms and public datasets.
 
-**Tech Stack:** Python ≥3.10; `numpy`, `scipy`, `scikit-image` (BSD), `pandas`, `tifffile`, `pyyaml`; optional `structure-tensor` (MIT), `skan` (BSD-3), `torch`/`scikit-learn` (BSD-3), `gudhi` ≥3.9 (MIT Python modules), `ripser` (MIT). **Excluded:** `kimimaro` (GPL-3, license-incompatible).
+**Tech Stack:** Python ≥3.9; `numpy`, `scipy`, `scikit-image` (BSD), `pandas`, `tifffile`, `pyyaml`; optional `structure-tensor` (MIT), `skan` (BSD-3), `torch`/`scikit-learn` (BSD-3), `gudhi` ≥3.9 (MIT Python modules), `ripser` (MIT). **Excluded:** `kimimaro` (GPL-3, license-incompatible).
 
 ---
 

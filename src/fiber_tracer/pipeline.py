@@ -66,7 +66,7 @@ class FiberAnalysisPipeline:
             save_tiff_stack(out / "skeleton.tif", skeleton.astype(np.uint8) * 255)
             summary = {
                 "regime": regime,
-                "n_labels": int(np.max(labels)),
+                "n_labels": len(fibers),
                 "voxel_spacing_um": spacing,
                 "fibers": fibers,
             }

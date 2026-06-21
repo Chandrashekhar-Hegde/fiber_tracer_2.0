@@ -1,13 +1,40 @@
 """Configuration management with validation and units."""
 
-from dataclasses import dataclass, field, asdict
-from typing import Optional, Tuple
+from dataclasses import dataclass, field, asdict, fields, is_dataclass
+from typing import Optional, Tuple, Union, get_origin, get_args
 import os
 import json
 import yaml
 
 
 VALID_REGIMES = ("auto", "resolved", "marginal", "subvoxel")
+
+
+def _dict_to_dataclass(data, cls):
+    """Recursively convert a dict into *cls* when *cls* is a dataclass."""
+    if data is None:
+        return None
+    if isinstance(data, cls):
+        return data
+    if not isinstance(data, dict):
+        raise TypeError(f"expected dict or {cls.__name__}, got {type(data).__name__}")
+
+    coerced = {}
+    for f in fields(cls):
+        if f.name not in data:
+            continue
+        field_type = f.type
+        origin = get_origin(field_type)
+        if origin is Union:
+            for arg in get_args(field_type):
+                if arg is not type(None) and is_dataclass(arg):
+                    field_type = arg
+                    break
+        if is_dataclass(field_type):
+            coerced[f.name] = _dict_to_dataclass(data[f.name], field_type)
+        else:
+            coerced[f.name] = data[f.name]
+    return cls(**coerced)
 
 
 def validate_regime(regime: str) -> None:
@@ -82,6 +109,7 @@ class Config:
         return asdict(self)
 
     def save(self, path: str) -> None:
+        path = str(path)
         with open(path, "w") as f:
             if path.endswith((".yaml", ".yml")):
                 yaml.safe_dump(self.to_dict(), f)
@@ -89,10 +117,38 @@ class Config:
                 json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
+    def from_dict(cls, data: dict) -> "Config":
+        if not isinstance(data, dict):
+            raise TypeError(f"expected dict, got {type(data).__name__}")
+        data = dict(data)
+        if "voxel_spacing_um" in data:
+            data["voxel_spacing_um"] = _dict_to_dataclass(
+                data["voxel_spacing_um"], VoxelSpacing
+            )
+        if "processing" in data:
+            data["processing"] = _dict_to_dataclass(
+                data["processing"], ProcessingConfig
+            )
+        if "segmentation" in data:
+            data["segmentation"] = _dict_to_dataclass(
+                data["segmentation"], SegmentationConfig
+            )
+        if "orientation" in data:
+            data["orientation"] = _dict_to_dataclass(
+                data["orientation"], OrientationConfig
+            )
+        if "analysis" in data:
+            data["analysis"] = _dict_to_dataclass(
+                data["analysis"], AnalysisConfig
+            )
+        return cls(**data)
+
+    @classmethod
     def from_file(cls, path: str) -> "Config":
+        path = str(path)
         with open(path) as f:
             if path.endswith((".yaml", ".yml")):
                 data = yaml.safe_load(f)
             else:
                 data = json.load(f)
-        return cls(**data)
+        return cls.from_dict(data)

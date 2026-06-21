@@ -53,3 +53,22 @@ def test_phantom_labels_are_pairwise_disjoint():
                 continue
             overlap = np.logical_and(labels == i, labels == j).sum()
             assert overlap == 0
+
+
+def test_phantom_ground_truth_alignment():
+    phantom = generate_fiber_phantom(
+        shape=(32, 32, 32),
+        n_fibers=20,
+        fiber_diameter_um=4.0,
+        seed=42,
+    )
+    present_labels = np.unique(phantom.labels)
+    # Drop background label 0.
+    placed_labels = present_labels[present_labels > 0]
+    n_placed = len(placed_labels)
+
+    assert n_placed >= 1
+    assert len(phantom.orientations) == n_placed
+    assert len(phantom.diameters_um) == n_placed
+    assert len(phantom.lengths_um) == n_placed
+    assert np.array_equal(placed_labels, np.arange(1, n_placed + 1))

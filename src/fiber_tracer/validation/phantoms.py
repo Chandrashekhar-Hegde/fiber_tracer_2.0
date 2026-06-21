@@ -52,8 +52,9 @@ def generate_fiber_phantom(
     orientations = []
     diameters = []
     lengths = []
+    next_label = 1
 
-    for i in range(n_fibers):
+    for _i in range(n_fibers):
         center = rng.uniform(radius_voxels * 2, np.array(shape) - radius_voxels * 2)
         direction = rng.normal(size=3)
         direction = direction / np.linalg.norm(direction)
@@ -61,7 +62,8 @@ def generate_fiber_phantom(
         mask = fiber > 0
         if np.any(labels[mask] > 0):
             continue
-        labels[mask] = i + 1
+        labels[mask] = next_label
+        next_label += 1
         volume += fiber
         orientations.append(direction)
         diameters.append(fiber_diameter_um)
