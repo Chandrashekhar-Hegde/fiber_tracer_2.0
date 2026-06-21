@@ -1,0 +1,1 @@
+fcf7dbe docs: add RAFA implementation plan (Phase 0-6) with license and architecture decisions
