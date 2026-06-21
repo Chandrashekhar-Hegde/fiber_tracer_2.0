@@ -4,157 +4,85 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fiber-tracer"
-version = "2.0.0"
-description = "Advanced 3D Analysis Tool for Fiber-Reinforced Polymer Composites"
-readme = "README_V2.md"
+version = "3.0.0"
+description = "Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites"
+readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Mr Sweet", email = "hegde.g.chandrashekhar@gmail.com"}
+    {name = "Chandrashekhar Hegde", email = "hegde.g.chandrashekhar@gmail.com"}
 ]
-maintainers = [
-    {name = "Mr Sweet", email = "hegde.g.chandrashekhar@gmail.com"}
-]
+requires-python = ">=3.10"
 keywords = [
     "fiber analysis",
     "composite materials",
-    "GFRP",
-    "CFRP",
     "X-ray CT",
     "image processing",
-    "3D reconstruction",
-    "scientific computing"
+    "structure tensor",
+    "fiber orientation"
 ]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "Topic :: Scientific/Engineering :: Image Processing",
-    "Topic :: Scientific/Engineering :: Physics",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Image Processing",
 ]
-requires-python = ">=3.8"
 dependencies = [
-    "numpy>=1.21.0,<2.0.0",
-    "scipy>=1.7.0,<2.0.0",
-    "scikit-image>=0.19.0,<1.0.0",
-    "opencv-python>=4.5.0,<5.0.0",
-    "pandas>=1.3.0,<3.0.0",
-    "matplotlib>=3.5.0,<4.0.0",
-    "seaborn>=0.11.0,<1.0.0",
-    "tqdm>=4.62.0,<5.0.0",
-    "pyyaml>=5.4.0,<7.0.0",
-    "openpyxl>=3.0.0,<4.0.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "scikit-image>=0.21.0,<0.27.0",
+    "pandas>=2.0.0",
+    "matplotlib>=3.7.0",
+    "tifffile>=2023.0.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.65.0",
 ]
 
 [project.optional-dependencies]
-viz = [
-    "plotly>=5.3.0,<6.0.0",
-]
-dev = [
-    "pytest>=7.0.0",
-    "pytest-cov>=3.0.0",
-    "black>=22.0.0",
-    "flake8>=4.0.0",
-    "mypy>=0.950",
-    "sphinx>=4.5.0",
-    "sphinx-rtd-theme>=1.0.0",
-]
-all = [
-    "fiber-tracer[viz,dev]",
-]
-
-[project.urls]
-Homepage = "https://github.com/yourusername/fiber_tracer"
-Documentation = "https://fiber-tracer.readthedocs.io"
-Repository = "https://github.com/yourusername/fiber_tracer.git"
-Issues = "https://github.com/yourusername/fiber_tracer/issues"
-Changelog = "https://github.com/yourusername/fiber_tracer/blob/main/CHANGELOG.md"
+structure = ["structure-tensor>=0.3.0"]
+skeleton = ["skan>=0.13.0"]
+ml = ["torch>=2.0.0", "torchvision", "scikit-learn>=1.3.0"]
+unet = ["nnunetv2>=2.4.0"]
+tda = ["gudhi>=3.9.0", "ripser>=0.6.0"]
+viz = ["plotly>=5.18.0", "napari>=0.4.18"]
+parallel = ["zarr>=2.16.0", "dask>=2023.0.0"]
+dev = ["pytest>=7.4.0", "pytest-cov", "black", "ruff", "mypy"]
+all = ["fiber-tracer[structure,skeleton,ml,unet,tda,viz,parallel,dev]"]
 
 [project.scripts]
 fiber-tracer = "fiber_tracer.cli:main"
-fiber-tracer-test = "test_fiber_tracer:main"
 
-[tool.setuptools]
-packages = ["fiber_tracer"]
-package-dir = {"" = "."}
+[project.urls]
+Homepage = "https://github.com/llMr-Sweetll/fiber_tracer_2.0"
+Documentation = "https://github.com/llMr-Sweetll/fiber_tracer_2.0#readme"
+Repository = "https://github.com/llMr-Sweetll/fiber_tracer_2.0.git"
+Issues = "https://github.com/llMr-Sweetll/fiber_tracer_2.0/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-data]
 fiber_tracer = ["*.yaml", "*.yml", "*.json"]
 
 [tool.black]
 line-length = 100
-target-version = ['py38', 'py39', 'py310', 'py311']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-    \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-)/
-'''
+target-version = ['py310', 'py311', 'py312']
 
-[tool.isort]
-profile = "black"
-line_length = 100
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-ensure_newline_before_comments = true
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W", "UP"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = false
-disallow_any_generics = false
 ignore_missing_imports = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-check_untyped_defs = true
 
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "7.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
 addopts = "-ra -q --strict-markers"
-testpaths = [
-    "tests",
-]
-python_files = [
-    "test_*.py",
-    "*_test.py",
-]
-
-[tool.coverage.run]
-source = ["fiber_tracer"]
-omit = [
-    "*/tests/*",
-    "*/test_*.py",
-    "*/__init__.py",
-]
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "if __name__ == .__main__.:",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if False:",
-    "pass",
-]
