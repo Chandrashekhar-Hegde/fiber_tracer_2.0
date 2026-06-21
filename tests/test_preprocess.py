@@ -33,6 +33,7 @@ def test_gaussian_denoise_preserves_shape_and_reduces_noise():
     spacing = VoxelSpacing(1.0, 1.0, 1.0)
     denoised = gaussian_denoise(volume, sigma_um=2.0, voxel_spacing=spacing)
     assert denoised.shape == volume.shape
+    assert denoised.dtype == np.float32
     assert denoised.std() < volume.std()
 
 
@@ -44,6 +45,7 @@ def test_gaussian_denoise_preserves_shape_with_anisotropic_spacing():
     spacing = VoxelSpacing(2.0, 1.0, 1.5)
     denoised = gaussian_denoise(volume, sigma_um=2.0, voxel_spacing=spacing)
     assert denoised.shape == volume.shape
+    assert denoised.dtype == np.float32
     assert np.isfinite(denoised).all()
     assert denoised.std() < volume.std()
 
@@ -62,4 +64,20 @@ def test_resample_to_isotropic_reduces_spacing_and_changes_shape():
         int(round(volume.shape[2] * spacing.x / new_spacing.x)),
     )
     assert resampled.shape == expected_shape
+    assert resampled.dtype == np.float32
     assert expected_shape == (40, 30, 60)
+
+
+def test_integer_inputs_produce_float32_outputs_and_change_values():
+    rng = np.random.default_rng(42)
+    int_volume = rng.integers(0, 100, size=(16, 16, 16), dtype=np.int16)
+    spacing = VoxelSpacing(2.0, 1.0, 1.5)
+
+    denoised = gaussian_denoise(int_volume, sigma_um=2.0, voxel_spacing=spacing)
+    assert denoised.dtype == np.float32
+    assert not np.array_equal(denoised, int_volume)
+
+    resampled, new_spacing = resample_to_isotropic(int_volume, spacing)
+    assert resampled.dtype == np.float32
+    assert not np.array_equal(resampled, int_volume)
+    assert new_spacing.is_isotropic()

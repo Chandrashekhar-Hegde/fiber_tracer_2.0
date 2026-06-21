@@ -21,7 +21,7 @@ def gaussian_denoise(volume: np.ndarray, sigma_um: float, voxel_spacing: VoxelSp
         sigma_um / voxel_spacing.y,
         sigma_um / voxel_spacing.x,
     )
-    return ndimage.gaussian_filter(volume, sigma=sigma_voxels)
+    return ndimage.gaussian_filter(volume.astype(np.float32, copy=False), sigma=sigma_voxels)
 
 
 def resample_to_isotropic(
@@ -36,5 +36,5 @@ def resample_to_isotropic(
         voxel_spacing.y / target,
         voxel_spacing.x / target,
     )
-    resampled = ndimage.zoom(volume, zoom, order=order)
+    resampled = ndimage.zoom(volume.astype(np.float32, copy=False), zoom, order=order)
     return resampled, VoxelSpacing(target, target, target)
