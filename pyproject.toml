@@ -11,7 +11,7 @@ license = {text = "MIT"}
 authors = [
     {name = "Chandrashekhar Hegde", email = "hegde.g.chandrashekhar@gmail.com"}
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 keywords = [
     "fiber analysis",
     "composite materials",
