@@ -59,7 +59,6 @@ class FiberAnalysisPipeline:
 
             # Per-fiber properties
             volumes = per_fiber_volumes(labels)
-            spacing = (self.config.voxel_spacing_um.z, self.config.voxel_spacing_um.y, self.config.voxel_spacing_um.x)
             fibers = []
             for label_id, n_voxels in volumes.items():
                 coords = np.argwhere(labels == label_id).astype(np.float32)

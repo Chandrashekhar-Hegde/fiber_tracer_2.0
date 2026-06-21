@@ -1,7 +1,6 @@
 """Validation metrics against ground truth."""
 
 import numpy as np
-from scipy.spatial.distance import cdist
 
 
 def angular_error(pred: np.ndarray, true: np.ndarray) -> float:
@@ -18,6 +17,22 @@ def orientation_tensor_error(pred: np.ndarray, true: np.ndarray) -> float:
 
 
 def dice_score(pred: np.ndarray, true: np.ndarray) -> float:
+    """Dice coefficient between two binary masks.
+
+    Parameters
+    ----------
+    pred : np.ndarray
+        Predicted binary mask. Should be a boolean array or contain only 0/1.
+    true : np.ndarray
+        Ground-truth binary mask. Should be a boolean array or contain only 0/1.
+
+    Returns
+    -------
+    float
+        Dice coefficient.
+    """
+    pred = np.asarray(pred).astype(bool)
+    true = np.asarray(true).astype(bool)
     intersection = np.sum(pred & true)
     return 2.0 * intersection / (np.sum(pred) + np.sum(true))
 
