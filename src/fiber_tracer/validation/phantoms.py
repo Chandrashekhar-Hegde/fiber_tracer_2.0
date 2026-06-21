@@ -1,7 +1,7 @@
 """Synthetic fiber phantoms with ground truth."""
 
 from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from typing import Tuple, Optional
 import numpy as np
 
 
