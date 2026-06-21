@@ -131,5 +131,7 @@ analysis:
 Save this as `config.yaml` and run:
 
 ```bash
-fiber-tracer --config config.yaml
+fiber-tracer --config config.yaml --data path/to/stack.tif --output results/
 ```
+
+> **Note:** `--data` and `--output` are always required. They can be supplied either on the command line or in the configuration file.

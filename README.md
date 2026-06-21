@@ -11,7 +11,7 @@ Fiber Tracer is a Python toolkit for analyzing fiber-reinforced polymer composit
 - Loads 3D XCT volumes from TIFF stacks or directories of TIFF slices.
 - Classifies each dataset into a **resolved**, **marginal**, or **subvoxel** analysis regime.
 - In the **resolved regime**: normalizes the image, thresholds the foreground, labels fibers, skeletonizes them, and reports per-fiber orientation and equivalent diameter.
-- In the **marginal** and **subvoxel** regimes: computes a gradient structure-tensor orientation field, aggregates it into the Advani–Tucker second-order orientation tensor `A2`, and reports fractional anisotropy and orientation distributions.
+- In the **marginal** and **subvoxel** regimes: computes a gradient structure-tensor orientation field, aggregates it into the Advani–Tucker second-order orientation tensor `A2`, and reports fractional anisotropy (marginal and subvoxel) and orientation distributions (subvoxel).
 - Exports results as JSON, CSV, HTML, and TIFF files.
 - Provides reproducible synthetic-phantom benchmarks and documented validation protocols.
 

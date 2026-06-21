@@ -95,7 +95,7 @@ FA = sqrt(1.5 * Σ(λi - λ̄)^2 / Σλi^2)
 
 - Phantoms are deterministic when a seed is supplied.
 - The benchmark script fixes the random seed.
-- Dependency versions are pinned in `pyproject.toml`.
+- Dependency versions are constrained in `pyproject.toml` (lower bounds and a scikit-image upper bound).
 - For full reproducibility, install the package in a clean virtual environment with `pip install -e ".[dev]"` and run the benchmark.
 
 ## How to run
