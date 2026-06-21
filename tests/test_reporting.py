@@ -132,6 +132,40 @@ def test_pipeline_summary_json_contains_config_and_citations(tmp_path):
     assert summary["citations"] == CITATIONS
 
 
+def test_pipeline_summary_json_contains_caveats_after_resolved_run(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(32, 32, 32),
+        n_fibers=2,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+    )
+    summary = FiberAnalysisPipeline(config).run()
+
+    with open(out_dir / "summary.json") as f:
+        disk_summary = json.load(f)
+
+    assert "caveats" in disk_summary
+    assert isinstance(disk_summary["caveats"], str)
+    assert len(disk_summary["caveats"]) > 0
+    assert "caveats" in summary
+    assert summary["caveats"] == disk_summary["caveats"]
+
+
 def test_marginal_csv_contains_per_window_columns(tmp_path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()

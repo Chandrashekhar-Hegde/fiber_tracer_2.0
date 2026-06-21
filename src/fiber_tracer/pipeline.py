@@ -15,6 +15,7 @@ from fiber_tracer.reporting import (
     write_csv_report,
     write_html_report,
     CITATIONS,
+    REGIME_CAVEATS,
 )
 from fiber_tracer.regime import detect_regime
 from fiber_tracer.segmentation.classical import (
@@ -172,6 +173,7 @@ class FiberAnalysisPipeline:
         }
         summary["config"] = self.config.to_dict()
         summary["citations"] = CITATIONS
+        summary["caveats"] = REGIME_CAVEATS.get(summary["regime"], "No specific caveats.")
         write_json_report(out / "summary.json", summary)
         write_csv_report(out / "report.csv", summary)
         write_html_report(out / "report.html", summary)
@@ -199,6 +201,7 @@ class FiberAnalysisPipeline:
             }
             summary["config"] = self.config.to_dict()
             summary["citations"] = CITATIONS
+            summary["caveats"] = REGIME_CAVEATS.get(summary["regime"], "No specific caveats.")
             write_json_report(out / "summary.json", summary)
             write_csv_report(out / "report.csv", summary)
             write_html_report(out / "report.html", summary)
@@ -248,6 +251,7 @@ class FiberAnalysisPipeline:
         }
         summary["config"] = self.config.to_dict()
         summary["citations"] = CITATIONS
+        summary["caveats"] = REGIME_CAVEATS.get(summary["regime"], "No specific caveats.")
         write_json_report(out / "summary.json", summary)
         write_csv_report(out / "report.csv", summary)
         write_html_report(out / "report.html", summary)
@@ -283,6 +287,7 @@ class FiberAnalysisPipeline:
             }
             summary["config"] = self.config.to_dict()
             summary["citations"] = CITATIONS
+            summary["caveats"] = REGIME_CAVEATS.get(summary["regime"], "No specific caveats.")
             write_json_report(out / "summary.json", summary)
             write_csv_report(out / "report.csv", summary)
             write_html_report(out / "report.html", summary)
@@ -316,6 +321,7 @@ class FiberAnalysisPipeline:
         }
         summary["config"] = self.config.to_dict()
         summary["citations"] = CITATIONS
+        summary["caveats"] = REGIME_CAVEATS.get(summary["regime"], "No specific caveats.")
         write_json_report(out / "summary.json", summary)
         write_csv_report(out / "report.csv", summary)
         write_html_report(out / "report.html", summary)

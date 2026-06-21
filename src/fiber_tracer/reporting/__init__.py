@@ -6,6 +6,21 @@ CITATIONS = [
     "van der Walt et al. (2014). scikit-image: Image processing in Python. PeerJ, 2, e453.",
 ]
 
+REGIME_CAVEATS = {
+    "resolved": (
+        "Resolved-regime results depend on successful segmentation and skeletonization. "
+        "Overlapping or sub-voxel fibers may be misclassified."
+    ),
+    "marginal": (
+        "Marginal-regime results are computed from a local structure-tensor field. "
+        "Accuracy degrades when the fiber diameter is close to the voxel size."
+    ),
+    "subvoxel": (
+        "Subvoxel-regime results aggregate orientations over large windows because individual fibers are not resolved. "
+        "Only population-level orientation statistics are reliable."
+    ),
+}
+
 from fiber_tracer.reporting.json import write_json_report
 from fiber_tracer.reporting.csv import write_csv_report
 from fiber_tracer.reporting.html import write_html_report
@@ -15,4 +30,5 @@ __all__ = [
     "write_csv_report",
     "write_html_report",
     "CITATIONS",
+    "REGIME_CAVEATS",
 ]
