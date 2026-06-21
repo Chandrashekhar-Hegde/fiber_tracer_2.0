@@ -5,6 +5,10 @@ import numpy as np
 
 def angular_error(pred: np.ndarray, true: np.ndarray) -> float:
     """Smallest angle between two directions in degrees."""
+    pred = np.asarray(pred)
+    true = np.asarray(true)
+    if np.linalg.norm(pred) == 0 or np.linalg.norm(true) == 0:
+        raise ValueError("Direction vector must be non-zero")
     pred = pred / np.linalg.norm(pred)
     true = true / np.linalg.norm(true)
     dot = np.clip(np.abs(np.dot(pred, true)), 0, 1)
@@ -60,6 +64,8 @@ def mean_angular_error(pred_directions: np.ndarray, true_directions: np.ndarray)
         raise ValueError("pred_directions and true_directions must have the same shape")
     if pred_directions.ndim != 2 or pred_directions.shape[1] != 3:
         raise ValueError("expected arrays of shape (N, 3)")
+    if pred_directions.shape[0] == 0:
+        return 0.0
     errors = [angular_error(p, t) for p, t in zip(pred_directions, true_directions)]
     return float(np.mean(errors))
 
@@ -87,7 +93,8 @@ def mean_dice_score(pred_labels: np.ndarray, true_labels: np.ndarray) -> float:
     true_labels = np.asarray(true_labels)
     true_foreground = np.setdiff1d(np.unique(true_labels), [0])
     if len(true_foreground) == 0:
-        raise ValueError("true_labels contains no foreground labels")
+        pred_foreground = np.setdiff1d(np.unique(pred_labels), [0])
+        return 1.0 if len(pred_foreground) == 0 else 0.0
     scores = []
     for label in true_foreground:
         pred_mask = pred_labels == label
