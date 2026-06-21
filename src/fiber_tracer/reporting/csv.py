@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Union
 
 import pandas as pd
 
+from fiber_tracer.reporting import CITATIONS
+
 
 def _records_from_summary(summary: dict) -> List[Dict[str, Any]]:
     """Extract tabular records from a pipeline summary."""

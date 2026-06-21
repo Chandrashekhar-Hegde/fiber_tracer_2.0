@@ -3,6 +3,8 @@
 from pathlib import Path
 from typing import Union
 
+from fiber_tracer.reporting import CITATIONS
+
 
 def write_html_report(path: Union[str, Path], summary: dict) -> None:
     """Write a human-readable HTML report with caveats and citations."""
@@ -23,6 +25,8 @@ def write_html_report(path: Union[str, Path], summary: dict) -> None:
             "Only population-level orientation statistics are reliable."
         ),
     }
+    citations = summary.get("citations", CITATIONS)
+    citation_items = "".join(f"    <li>{citation}</li>\n" for citation in citations)
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -39,10 +43,7 @@ def write_html_report(path: Union[str, Path], summary: dict) -> None:
   <pre>{summary}</pre>
   <h2>Citations</h2>
   <ul>
-    <li>Advani, S. G., & Tucker III, C. L. (1987). The use of tensors to describe and predict fiber orientation in short fiber composites. <em>Journal of Rheology</em>, 31(8), 751–784.</li>
-    <li>Jeppesen, N., et al. (2021). Quantifying effects of manufacturing methods on fiber orientation in unidirectional composites using structure tensor analysis. <em>Composites Part A</em>, 149, 106541.</li>
-    <li>van der Walt et al. (2014). scikit-image: Image processing in Python. <em>PeerJ</em>, 2, e453.</li>
-  </ul>
+{citation_items}  </ul>
 </body>
 </html>"""
     with open(path, "w") as f:

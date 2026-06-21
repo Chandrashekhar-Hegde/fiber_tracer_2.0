@@ -1,13 +1,21 @@
-"""Tests for reporting exporters."""
+"""Tests for reporting exporters and pipeline report contents."""
 
 import json
 
+import numpy as np
 import pandas as pd
 import pytest
 
-from fiber_tracer.reporting.csv import write_csv_report
-from fiber_tracer.reporting.html import write_html_report
-from fiber_tracer.reporting.json import write_json_report
+from fiber_tracer.config import Config, VoxelSpacing
+from fiber_tracer.io import save_tiff_stack
+from fiber_tracer.pipeline import FiberAnalysisPipeline
+from fiber_tracer.reporting import (
+    CITATIONS,
+    write_csv_report,
+    write_html_report,
+    write_json_report,
+)
+from fiber_tracer.validation.phantoms import generate_fiber_phantom
 
 
 @pytest.fixture
@@ -78,3 +86,77 @@ def test_write_html_report_contains_regime_and_caveat(tmp_path, regime, caveat_s
     html = path.read_text()
     assert regime in html
     assert caveat_snippet in html
+
+
+def test_write_html_report_contains_citation(tmp_path):
+    summary = {"regime": "resolved", "n_labels": 3}
+    path = tmp_path / "report.html"
+    write_html_report(path, summary)
+    assert path.exists()
+    html = path.read_text()
+    assert CITATIONS[0] in html
+
+
+def test_pipeline_summary_json_contains_config_and_citations(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(32, 32, 32),
+        n_fibers=2,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+    )
+    summary = FiberAnalysisPipeline(config).run()
+
+    with open(out_dir / "summary.json") as f:
+        disk_summary = json.load(f)
+
+    assert "config" in disk_summary
+    assert disk_summary["config"] == config.to_dict()
+    assert "citations" in disk_summary
+    assert disk_summary["citations"] == CITATIONS
+    assert summary["config"] == config.to_dict()
+    assert summary["citations"] == CITATIONS
+
+
+def test_marginal_csv_contains_per_window_columns(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(48, 48, 48),
+        n_fibers=3,
+        fiber_diameter_um=2.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=2.0,
+        regime="marginal",
+    )
+    FiberAnalysisPipeline(config).run()
+
+    df = pd.read_csv(out_dir / "report.csv")
+    expected_columns = {"regime", "window_id", "center_z", "center_y", "center_x", "fa"}
+    assert expected_columns.issubset(set(df.columns))
+    assert len(df) > 0

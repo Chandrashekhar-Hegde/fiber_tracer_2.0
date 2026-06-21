@@ -10,6 +10,12 @@ from scipy import ndimage
 from fiber_tracer.config import Config
 from fiber_tracer.io import load_tiff_stack, get_shape_info, save_tiff_stack
 from fiber_tracer.preprocess import normalize_intensity, gaussian_denoise
+from fiber_tracer.reporting import (
+    write_json_report,
+    write_csv_report,
+    write_html_report,
+    CITATIONS,
+)
 from fiber_tracer.regime import detect_regime
 from fiber_tracer.segmentation.classical import (
     segment_otsu_3d,
@@ -164,10 +170,8 @@ class FiberAnalysisPipeline:
             "voxel_spacing_um": spacing,
             "fibers": fibers,
         }
-        from fiber_tracer.reporting.json import write_json_report
-        from fiber_tracer.reporting.csv import write_csv_report
-        from fiber_tracer.reporting.html import write_html_report
-
+        summary["config"] = self.config.to_dict()
+        summary["citations"] = CITATIONS
         write_json_report(out / "summary.json", summary)
         write_csv_report(out / "report.csv", summary)
         write_html_report(out / "report.html", summary)
@@ -191,11 +195,10 @@ class FiberAnalysisPipeline:
                 "a2_map_file": "a2_map.npy",
                 "a2_centers_file": "a2_centers.npy",
                 "a2": np.zeros((3, 3)).tolist(),
+                "a2_windows": [],
             }
-            from fiber_tracer.reporting.json import write_json_report
-            from fiber_tracer.reporting.csv import write_csv_report
-            from fiber_tracer.reporting.html import write_html_report
-
+            summary["config"] = self.config.to_dict()
+            summary["citations"] = CITATIONS
             write_json_report(out / "summary.json", summary)
             write_csv_report(out / "report.csv", summary)
             write_html_report(out / "report.html", summary)
@@ -210,13 +213,28 @@ class FiberAnalysisPipeline:
         direction_field = np.zeros((3,) + volume.shape, dtype=np.float64)
         direction_field[:, mask] = directions.T
 
-        a2_map, centers = windowed_orientation_tensor_field(
+        a2_map, a2_centers = windowed_orientation_tensor_field(
             direction_field, window_size=window_size
         )
         global_a2 = aggregate_direction_tensor(directions)
 
         np.save(out / "a2_map.npy", a2_map)
-        np.save(out / "a2_centers.npy", centers)
+        np.save(out / "a2_centers.npy", a2_centers)
+
+        a2_windows = []
+        for window_id, (i, j, k) in enumerate(np.ndindex(a2_map.shape[:3])):
+            cz, cy, cx = a2_centers[i, j, k]
+            tensor = a2_map[i, j, k]
+            a2_windows.append({
+                "window_id": window_id,
+                "center_z": int(cz),
+                "center_y": int(cy),
+                "center_x": int(cx),
+                "fa": float(fractional_anisotropy(tensor)),
+                "a2_00": float(tensor[0, 0]),
+                "a2_11": float(tensor[1, 1]),
+                "a2_22": float(tensor[2, 2]),
+            })
 
         summary = {
             "regime": "marginal",
@@ -226,11 +244,10 @@ class FiberAnalysisPipeline:
             "a2_map_file": "a2_map.npy",
             "a2_centers_file": "a2_centers.npy",
             "a2": global_a2.tolist(),
+            "a2_windows": a2_windows,
         }
-        from fiber_tracer.reporting.json import write_json_report
-        from fiber_tracer.reporting.csv import write_csv_report
-        from fiber_tracer.reporting.html import write_html_report
-
+        summary["config"] = self.config.to_dict()
+        summary["citations"] = CITATIONS
         write_json_report(out / "summary.json", summary)
         write_csv_report(out / "report.csv", summary)
         write_html_report(out / "report.html", summary)
@@ -264,10 +281,8 @@ class FiberAnalysisPipeline:
                     "principal_axis": [0.0, 0.0, 1.0],
                 },
             }
-            from fiber_tracer.reporting.json import write_json_report
-            from fiber_tracer.reporting.csv import write_csv_report
-            from fiber_tracer.reporting.html import write_html_report
-
+            summary["config"] = self.config.to_dict()
+            summary["citations"] = CITATIONS
             write_json_report(out / "summary.json", summary)
             write_csv_report(out / "report.csv", summary)
             write_html_report(out / "report.html", summary)
@@ -299,10 +314,8 @@ class FiberAnalysisPipeline:
                 "principal_axis": principal_axis.tolist(),
             },
         }
-        from fiber_tracer.reporting.json import write_json_report
-        from fiber_tracer.reporting.csv import write_csv_report
-        from fiber_tracer.reporting.html import write_html_report
-
+        summary["config"] = self.config.to_dict()
+        summary["citations"] = CITATIONS
         write_json_report(out / "summary.json", summary)
         write_csv_report(out / "report.csv", summary)
         write_html_report(out / "report.html", summary)
