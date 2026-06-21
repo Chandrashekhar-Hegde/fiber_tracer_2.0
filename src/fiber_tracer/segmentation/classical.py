@@ -13,6 +13,17 @@ def segment_otsu_3d(volume: np.ndarray) -> np.ndarray:
     return volume > threshold
 
 
+def segment_connected_components_3d(foreground_mask: np.ndarray) -> np.ndarray:
+    """Label each connected component of the foreground mask with a unique ID.
+
+    This is useful for the resolved regime when fibers are already well
+    separated; it avoids the over-segmentation that distance-transform
+    watershed can produce on elongated objects.
+    """
+    labels, _ = ndimage.label(foreground_mask)
+    return labels
+
+
 def segment_watershed_3d(
     foreground_mask: np.ndarray,
     min_distance_voxels: int = 3,

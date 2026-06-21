@@ -6,12 +6,17 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
+from scipy import ndimage
 
 from fiber_tracer.config import Config
 from fiber_tracer.io import load_tiff_stack, get_shape_info, save_tiff_stack
 from fiber_tracer.preprocess import normalize_intensity, gaussian_denoise
 from fiber_tracer.regime import detect_regime
-from fiber_tracer.segmentation.classical import segment_otsu_3d, segment_watershed_3d
+from fiber_tracer.segmentation.classical import (
+    segment_otsu_3d,
+    segment_watershed_3d,
+    segment_connected_components_3d,
+)
 from fiber_tracer.centerline.skeleton import skeletonize_label_volume
 from fiber_tracer.analysis.morphometry import per_fiber_volumes, equivalent_diameter_from_volume
 from fiber_tracer.orientation.pca import pca_orientation
@@ -43,7 +48,13 @@ class FiberAnalysisPipeline:
 
         if regime == "resolved":
             mask = segment_otsu_3d(volume)
-            labels = segment_watershed_3d(mask)
+            # Remove small spurious foreground voxels and smooth boundaries while
+            # keeping well-separated fibers distinct.
+            mask = ndimage.binary_opening(mask, structure=ndimage.generate_binary_structure(3, 1))
+            if self.config.segmentation.method == "watershed":
+                labels = segment_watershed_3d(mask)
+            else:
+                labels = segment_connected_components_3d(mask)
             skeleton = skeletonize_label_volume(labels)
 
             # Per-fiber properties
