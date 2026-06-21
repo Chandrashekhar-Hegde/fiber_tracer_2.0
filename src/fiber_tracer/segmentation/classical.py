@@ -1,0 +1,37 @@
+"""Classical segmentation: thresholding and watershed separation."""
+
+import numpy as np
+from scipy import ndimage
+from skimage import filters, morphology
+from skimage.feature import peak_local_max
+from skimage.segmentation import watershed
+
+
+def segment_otsu_3d(volume: np.ndarray) -> np.ndarray:
+    """Global 3D Otsu thresholding."""
+    threshold = filters.threshold_otsu(volume)
+    return volume > threshold
+
+
+def segment_watershed_3d(
+    volume: np.ndarray,
+    foreground_mask: np.ndarray,
+    min_distance_voxels: int = 3,
+) -> np.ndarray:
+    """3D marker-controlled watershed on distance transform."""
+    distance = ndimage.distance_transform_edt(foreground_mask)
+    peak_coords = peak_local_max(
+        distance,
+        min_distance=min_distance_voxels,
+        exclude_border=False,
+    )
+    local_max = np.zeros_like(distance, dtype=bool)
+    local_max[tuple(peak_coords.T)] = True
+    markers = ndimage.label(local_max)[0]
+    labels = watershed(-distance, markers, mask=foreground_mask)
+    return labels
+
+
+def remove_small_objects(labels: np.ndarray, min_size_voxels: int) -> np.ndarray:
+    """Remove connected components below minimum size."""
+    return morphology.remove_small_objects(labels, min_size=min_size_voxels)
