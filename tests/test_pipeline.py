@@ -157,3 +157,68 @@ def test_auto_regime_selects_marginal_and_subvoxel_by_ratio(tmp_path):
     summary_subvoxel = FiberAnalysisPipeline(config_subvoxel).run()
     assert summary_subvoxel["regime"] == "subvoxel"
     assert "a2" in summary_subvoxel
+
+
+def test_resolved_pipeline_respects_analysis_flags(tmp_path):
+    """Resolved pipeline skips per-fiber morphometry/orientation when flags are False."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+    )
+    config.analysis.compute_morphometry = False
+    config.analysis.compute_orientation_tensor = False
+
+    summary = FiberAnalysisPipeline(config).run()
+    assert summary["n_labels"] > 0
+    for fiber in summary["fibers"]:
+        assert "equivalent_diameter_um" not in fiber
+        assert "orientation" not in fiber
+
+
+def test_resolved_pipeline_respects_normalize_flag(tmp_path):
+    """Resolved pipeline respects processing.normalize=False by preserving raw scale."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    raw_max = phantom.volume.max()
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+    )
+    config.processing.normalize = False
+
+    pipeline = FiberAnalysisPipeline(config)
+    summary = pipeline.run()
+    assert summary["n_labels"] > 0
+    assert pipeline.volume.max() == pytest.approx(raw_max, rel=1e-5)

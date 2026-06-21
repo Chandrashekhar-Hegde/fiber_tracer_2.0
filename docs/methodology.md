@@ -33,7 +33,7 @@ When fibers are resolved, the tool extracts individual fibers with a conventiona
    - `segmentation.method = "watershed"`: marker-controlled watershed on the distance transform with `peak_local_max` markers and `min_distance=3` voxels.
 6. **Skeletonization** — each labeled fiber is skeletonized independently with `skimage.morphology.skeletonize_3d` to avoid bridging separate fibers.
 7. **Per-fiber orientation** — principal-component analysis (PCA) on the voxel coordinates of each label (`fiber_tracer.orientation.pca`).
-8. **Morphometry** — equivalent spherical diameter from the label volume; additional centerline-derived measures use the physical voxel spacing.
+8. **Morphometry** — equivalent spherical diameter from the label volume; the skeleton is saved for visualization; path-length and tortuosity measures are implemented in `analysis.morphometry` but are not yet integrated into the default pipeline output.
 
 ## Marginal and subvoxel pipeline
 
@@ -48,7 +48,7 @@ A 3D gradient structure tensor is computed at each voxel. The fallback implement
 3. Forms the outer product of the gradient vector with itself.
 4. Smooths each tensor component with a Gaussian of outer scale `rho`.
 
-If the optional `structure-tensor` package is installed, it may be used as an alternative backend.
+The optional `structure-tensor` package backend is exposed in `orientation/structure_tensor.py` but the pipeline currently uses the scipy-based `compute_local_orientation_field` fallback.
 
 Scales default to:
 

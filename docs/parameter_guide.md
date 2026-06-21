@@ -39,7 +39,7 @@ Physical standard deviation of a 3D Gaussian smoothing kernel applied before ana
 
 ### `normalize`
 
-Boolean. If `True` (default), the input volume is min–max normalized to `[0, 1]` before segmentation. Recommended unless the input is already normalized.
+Boolean. Defaults to `True`. If `True`, the input volume is min–max normalized to `[0, 1]` before segmentation; if `False`, the raw volume is cast to `np.float32` and divided by its maximum so the pipeline still receives a float array in a known range. The pipeline respects this flag.
 
 ## Segmentation parameters (`segmentation`)
 
@@ -84,15 +84,15 @@ Size of the cubic window used to compute the marginal-regime `A2` map. Defaults 
 
 ### `compute_morphometry`
 
-If `True`, compute per-fiber geometric descriptors such as equivalent diameter. Used mainly in the resolved regime.
+Boolean. Defaults to `True`. If `True`, the resolved-regime pipeline computes per-fiber geometric descriptors such as equivalent diameter. If `False`, the label image and skeleton are still produced, but per-fiber diameter values are omitted.
 
 ### `compute_orientation_tensor`
 
-If `True`, compute the Advani–Tucker `A2` tensor and fractional anisotropy where applicable (marginal/subvoxel regimes).
+Boolean. Defaults to `True`. If `True`, the resolved-regime pipeline computes per-fiber PCA orientation, and the marginal/subvoxel pipelines compute the Advani–Tucker `A2` tensor, fractional anisotropy, and orientation distributions. If `False`, these analyses are skipped and a note is recorded in the summary.
 
 ### `compute_tda_descriptors`
 
-If `True`, compute optional topological data analysis descriptors. Requires the `tda` extras (`gudhi`, `ripser`).
+Boolean. Defaults to `False`. This flag is reserved/planned for topological data analysis descriptors; it is not yet wired into the pipeline.
 
 ## Practical guidance by regime
 

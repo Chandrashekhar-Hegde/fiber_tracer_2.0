@@ -1,8 +1,8 @@
 # Fiber Tracer (RAFA) v3.0.0
 
-**Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites**
+**Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites, with optional structure-tensor and skeleton backends.**
 
-Fiber Tracer is a Python toolkit for analyzing fiber-reinforced polymer composites from 3D X-ray computed tomography (XCT) images. It selects analysis strategies automatically from the physical voxel-size to fiber-diameter ratio (resolved, marginal, or subvoxel regimes) and supports both classical image-processing methods and optional backends for machine learning and topological data analysis.
+Fiber Tracer is a Python toolkit for analyzing fiber-reinforced polymer composites from 3D X-ray computed tomography (XCT) images. It selects analysis strategies automatically from the physical voxel-size to fiber-diameter ratio (resolved, marginal, or subvoxel regimes) and supports classical image-processing methods with optional structure-tensor and skeleton backends.
 
 > **Status:** Beta. The public API and CLI are still stabilizing. Results should be treated as experimental and validated on your own data before drawing conclusions.
 
@@ -30,11 +30,11 @@ The package requires Python ≥3.9.
 # Core package only
 pip install -e .
 
-# With all optional backends used by the test suite and documentation examples
-pip install -e ".[structure,skeleton,ml,tda,viz,parallel,dev]"
+# Recommended install for tests and examples
+pip install -e ".[structure,skeleton,dev]"
 ```
 
-The `structure`, `skeleton`, `ml`, `tda`, `viz`, and `parallel` extras install optional dependencies. You can install any subset; the core pipeline runs with only `numpy`, `scipy`, `scikit-image`, `pandas`, `matplotlib`, `tifffile`, `pyyaml`, and `tqdm`.
+The `structure` and `skeleton` extras install optional backends used by the test suite and documentation examples. Other extras are defined in `pyproject.toml` but are not required for the current tests.
 
 ## Quick start
 

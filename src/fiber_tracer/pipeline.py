@@ -55,7 +55,14 @@ class FiberAnalysisPipeline:
         spacing = (self.config.voxel_spacing_um.z, self.config.voxel_spacing_um.y, self.config.voxel_spacing_um.x)
         logger.info(get_shape_info(raw, spacing))
 
-        volume = normalize_intensity(raw)
+        if self.config.processing.normalize:
+            volume = normalize_intensity(raw)
+        else:
+            raw_max = raw.max()
+            if raw_max > 0:
+                volume = raw.astype(np.float32, copy=False) / raw_max
+            else:
+                volume = raw.astype(np.float32, copy=False)
         if self.config.processing.denoise_sigma:
             volume = gaussian_denoise(volume, self.config.processing.denoise_sigma, self.config.voxel_spacing_um)
 
@@ -152,15 +159,18 @@ class FiberAnalysisPipeline:
         volumes = per_fiber_volumes(labels)
         fibers = []
         for label_id, n_voxels in volumes.items():
-            coords = np.argwhere(labels == label_id).astype(np.float32)
-            orientation = pca_orientation(coords)
-            diameter = equivalent_diameter_from_volume(n_voxels, spacing)
-            fibers.append({
+            fiber = {
                 "label": int(label_id),
                 "n_voxels": int(n_voxels),
-                "equivalent_diameter_um": float(diameter),
-                "orientation": orientation.tolist(),
-            })
+            }
+            if self.config.analysis.compute_orientation_tensor:
+                coords = np.argwhere(labels == label_id).astype(np.float32)
+                orientation = pca_orientation(coords)
+                fiber["orientation"] = orientation.tolist()
+            if self.config.analysis.compute_morphometry:
+                diameter = equivalent_diameter_from_volume(n_voxels, spacing)
+                fiber["equivalent_diameter_um"] = float(diameter)
+            fibers.append(fiber)
 
         save_tiff_stack(out / "normalized_input.tif", volume)
         save_tiff_stack(out / "labels.tif", labels)
@@ -171,6 +181,13 @@ class FiberAnalysisPipeline:
             "voxel_spacing_um": spacing,
             "fibers": fibers,
         }
+        notes = []
+        if not self.config.analysis.compute_morphometry:
+            notes.append("Morphometry disabled; equivalent diameter not computed.")
+        if not self.config.analysis.compute_orientation_tensor:
+            notes.append("Orientation tensor analysis disabled; per-fiber orientation not computed.")
+        if notes:
+            summary["notes"] = " ".join(notes)
         summary["config"] = self.config.to_dict()
         summary["citations"] = CITATIONS
         summary["caveats"] = REGIME_CAVEATS.get(summary["regime"], "No specific caveats.")
@@ -183,6 +200,21 @@ class FiberAnalysisPipeline:
 
     def _run_marginal(self, volume: np.ndarray, out: Path) -> dict:
         """Marginal-regime pipeline: windowed second-order orientation tensor field."""
+        if not self.config.analysis.compute_orientation_tensor:
+            mask = segment_otsu_3d(volume)
+            summary = {
+                "regime": "marginal",
+                "n_voxels": int(mask.sum()),
+                "note": "Orientation tensor analysis disabled; A2/FA/distribution not computed.",
+            }
+            summary["config"] = self.config.to_dict()
+            summary["citations"] = CITATIONS
+            summary["caveats"] = REGIME_CAVEATS.get(summary["regime"], "No specific caveats.")
+            write_json_report(out / "summary.json", summary)
+            write_csv_report(out / "report.csv", summary)
+            write_html_report(out / "report.html", summary)
+            return summary
+
         directions, mask = self._compute_local_directions(volume)
 
         if directions.shape[0] == 0:
@@ -259,6 +291,21 @@ class FiberAnalysisPipeline:
 
     def _run_subvoxel(self, volume: np.ndarray, out: Path) -> dict:
         """Subvoxel-regime pipeline: global orientation tensor and distribution."""
+        if not self.config.analysis.compute_orientation_tensor:
+            mask = segment_otsu_3d(volume)
+            summary = {
+                "regime": "subvoxel",
+                "n_voxels": int(mask.sum()),
+                "note": "Orientation tensor analysis disabled; A2/FA/distribution not computed.",
+            }
+            summary["config"] = self.config.to_dict()
+            summary["citations"] = CITATIONS
+            summary["caveats"] = REGIME_CAVEATS.get(summary["regime"], "No specific caveats.")
+            write_json_report(out / "summary.json", summary)
+            write_csv_report(out / "report.csv", summary)
+            write_html_report(out / "report.html", summary)
+            return summary
+
         # Use a larger integration scale for the subvoxel regime.
         original_rho_um = self.config.orientation.rho_um
         if original_rho_um is None:
