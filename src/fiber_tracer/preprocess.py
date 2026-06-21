@@ -10,7 +10,7 @@ def normalize_intensity(volume: np.ndarray) -> np.ndarray:
     """Min-max normalize to [0, 1]."""
     vmin, vmax = volume.min(), volume.max()
     if vmax == vmin:
-        return np.zeros_like(volume, dtype=float)
+        return np.zeros_like(volume, dtype=np.float32)
     return ((volume - vmin) / (vmax - vmin)).astype(np.float32)
 
 
