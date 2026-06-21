@@ -2,7 +2,6 @@
 
 from typing import Tuple
 import numpy as np
-from scipy import ndimage
 
 
 def ordered_path_length(path: np.ndarray, voxel_spacing: Tuple[float, float, float]) -> float:
