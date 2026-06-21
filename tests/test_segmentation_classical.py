@@ -24,18 +24,20 @@ def _sphere(shape, center, radius, intensity=1.0):
 
 
 def test_segment_otsu_3d_returns_boolean_same_shape():
-    volume = np.random.rand(16, 16, 16)
+    rng = np.random.default_rng(42)
+    volume = rng.random((16, 16, 16))
     mask = segment_otsu_3d(volume)
     assert mask.shape == volume.shape
     assert mask.dtype == bool
 
 
 def test_segment_otsu_3d_separates_bimodal_sphere():
+    rng = np.random.default_rng(42)
     shape = (32, 32, 32)
     background = np.zeros(shape, dtype=float)
     foreground = _sphere(shape, center=(16, 16, 16), radius=6, intensity=0.9)
     volume = background + foreground
-    volume = np.clip(volume + np.random.normal(0, 0.02, shape), 0, 1)
+    volume = np.clip(volume + rng.normal(0, 0.02, shape), 0, 1)
 
     mask = segment_otsu_3d(volume)
 
@@ -56,7 +58,7 @@ def test_segment_watershed_3d_splits_touching_spheres():
     sphere_b = _sphere(shape, center=(32, 24, 30), radius=8, intensity=1.0)
     foreground = ((sphere_a + sphere_b) > 0).astype(bool)
 
-    labels = segment_watershed_3d(foreground.astype(float), foreground, min_distance_voxels=3)
+    labels = segment_watershed_3d(foreground, min_distance_voxels=3)
 
     # There should be at least two distinct foreground labels.
     unique_labels = np.unique(labels[labels > 0])

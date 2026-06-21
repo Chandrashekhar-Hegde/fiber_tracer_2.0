@@ -14,11 +14,23 @@ def segment_otsu_3d(volume: np.ndarray) -> np.ndarray:
 
 
 def segment_watershed_3d(
-    volume: np.ndarray,
     foreground_mask: np.ndarray,
     min_distance_voxels: int = 3,
 ) -> np.ndarray:
-    """3D marker-controlled watershed on distance transform."""
+    """3D marker-controlled watershed on distance transform.
+
+    Parameters
+    ----------
+    foreground_mask : np.ndarray
+        Binary 3D mask of the foreground object(s).
+    min_distance_voxels : int, optional
+        Minimum distance (in voxels) between watershed markers, by default 3.
+
+    Returns
+    -------
+    np.ndarray
+        Label image with separated foreground objects.
+    """
     distance = ndimage.distance_transform_edt(foreground_mask)
     peak_coords = peak_local_max(
         distance,
