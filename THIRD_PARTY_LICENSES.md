@@ -9,7 +9,7 @@
 - **Matplotlib** — PSF-based license — https://matplotlib.org/
 - **tifffile** — BSD-3-Clause — https://pypi.org/project/tifffile/
 - **PyYAML** — MIT — https://pyyaml.org/
-- **tqdm** — MIT — https://tqdm.github.io/
+- **tqdm** — MPL-2.0 AND MIT — https://tqdm.github.io/
 
 ## Optional dependencies
 

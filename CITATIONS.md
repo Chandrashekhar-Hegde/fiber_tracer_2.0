@@ -12,6 +12,17 @@
 
 - van der Walt et al. (2014). scikit-image: Image processing in Python. *PeerJ*, 2, e453.
 
+### Core runtime libraries
+
+- NumPy — Harris et al. (2020). Array programming with NumPy. *Nature*, 585, 357–362.
+- SciPy — Virtanen et al. (2020). SciPy 1.0: Fundamental algorithms for scientific computing in Python. *Nature Methods*, 17, 261–272.
+- Matplotlib — Hunter (2007). Matplotlib: A 2D graphics environment. *Computing in Science & Engineering*, 9(3), 90–95.
+- pandas — McKinney (2010). Data Structures for Statistical Computing in Python. *Proceedings of the 9th Python in Science Conference*, 56–61.
+- tifffile — Gohlke. tifffile.
+- zarr — Miles et al. zarr-python.
+- dask — Dask Development Team. Dask.
+- h5py — h5py contributors. h5py.
+
 ### Optional backends
 
 - GUDHI project. GUDHI: Geometry Understanding in Higher Dimensions. https://gudhi.inria.fr/
