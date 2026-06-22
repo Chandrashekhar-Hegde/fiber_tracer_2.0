@@ -55,14 +55,14 @@ Regime selector (resolved / marginal / subvoxel)
     ↓
 Regime-specific pipeline
     ↓
-Outputs: summary.json, report.csv, report.html, labels.tif, skeleton.tif, a2_map.npy
+Outputs: summary.json, report.csv, report.html, labels.tif, skeleton.tif, normalized_input.tif, a2_map.npy, a2_centers.npy
 ```
 
 The pipeline always writes `summary.json`, `report.csv`, and `report.html`. Regime-specific files are produced only when relevant:
 
-- `labels.tif` and `skeleton.tif` are produced in the resolved regime.
+- `labels.tif`, `skeleton.tif`, and `normalized_input.tif` are produced in the resolved regime.
 - `a2_map.npy` and `a2_centers.npy` are produced in the marginal regime.
-- `normalized_input.tif` is written for all regimes.
+- In the marginal and subvoxel regimes, the normalized volume is kept in memory but not saved by default.
 
 ## Regime-specific pipelines
 
