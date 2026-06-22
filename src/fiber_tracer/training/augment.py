@@ -34,7 +34,7 @@ def augment_patch(
     # Random gamma intensity scaling.
     if rng.random() > 0.5:
         gamma = rng.uniform(0.8, 1.2)
-        volume = np.clip(volume ** gamma, 0.0, 1.0)
+        volume = np.clip(volume**gamma, 0.0, 1.0)
 
     # Random additive Gaussian noise.
     if rng.random() > 0.5:
