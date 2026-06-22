@@ -187,6 +187,8 @@ test_output/
 output/
 results/
 logs/
+benchmark_results/
+profile_tmp/
 
 # Temporary files
 *.tmp
