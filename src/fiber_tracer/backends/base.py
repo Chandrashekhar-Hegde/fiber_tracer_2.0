@@ -1,0 +1,14 @@
+"""Backend adapter base classes."""
+
+from abc import ABC, abstractmethod
+from typing import Any
+import numpy as np
+
+
+class SegmentationBackend(ABC):
+    """Abstract base class for optional segmentation backends."""
+
+    @abstractmethod
+    def segment(self, volume: np.ndarray) -> np.ndarray:
+        """Return a binary or labeled segmentation for the input volume."""
+        ...
