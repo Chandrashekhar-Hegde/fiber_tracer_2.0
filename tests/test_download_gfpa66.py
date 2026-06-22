@@ -49,10 +49,11 @@ def test_download_with_accept_license_writes_file(tmp_path, fake_metadata):
         mock.iter_content = MagicMock(return_value=[b"a" * 21, b"b" * 21])
         return mock
 
-    with (
-        patch.object(download_gfpa66, "fetch_record_metadata", return_value=fake_metadata),
-        patch.object(download_gfpa66.requests, "get", side_effect=fake_get),
-    ):
+    mock_metadata = patch.object(
+        download_gfpa66, "fetch_record_metadata", return_value=fake_metadata
+    )
+    mock_get = patch.object(download_gfpa66.requests, "get", side_effect=fake_get)
+    with mock_metadata, mock_get:
         exit_code = download_gfpa66.main(
             [
                 "--output-dir",

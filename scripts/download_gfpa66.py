@@ -77,16 +77,14 @@ def download_file(
         raise RuntimeError(f"Unexpected HTTP status {response.status_code} while downloading {url}")
 
     total = expected_size or int(response.headers.get("content-length", 0))
-    with (
-        open(dest, mode) as f,
-        tqdm(
-            total=total,
-            unit="B",
-            unit_scale=True,
-            desc=dest.name,
-            initial=existing_size,
-        ) as bar,
-    ):
+    tqdm_kwargs = dict(
+        total=total,
+        unit="B",
+        unit_scale=True,
+        desc=dest.name,
+        initial=existing_size,
+    )
+    with open(dest, mode) as f, tqdm(**tqdm_kwargs) as bar:
         for chunk in response.iter_content(chunk_size=chunk_size):
             if chunk:
                 f.write(chunk)
