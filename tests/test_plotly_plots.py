@@ -5,6 +5,8 @@ import json
 import numpy as np
 import pytest
 
+pytest.importorskip("plotly")
+
 from fiber_tracer.viz.plotly_plots import (
     generate_interactive_report,
     plot_a2_ellipsoid,
