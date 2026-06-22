@@ -9,8 +9,8 @@ from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.pipeline import FiberAnalysisPipeline
 
 
-def main(argv: Optional[list] = None) -> int:
-    parser = argparse.ArgumentParser(description="RAFA fiber analysis")
+def _add_pipeline_args(parser: argparse.ArgumentParser) -> None:
+    """Add RAFA pipeline arguments to *parser*."""
     parser.add_argument("--data", required=False, help="Path to TIFF stack or directory")
     parser.add_argument("--output", required=False, help="Output directory")
     parser.add_argument("--config", help="Path to YAML/JSON config")
@@ -19,14 +19,34 @@ def main(argv: Optional[list] = None) -> int:
     parser.add_argument(
         "--regime", choices=["auto", "resolved", "marginal", "subvoxel"], default="auto"
     )
+
+
+def _add_view_args(parser: argparse.ArgumentParser) -> None:
+    """Add visualization arguments to *parser*."""
+    parser.add_argument("--data", required=True, help="Path to TIFF stack or directory")
+    parser.add_argument("--output", required=True, help="Output directory")
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="RAFA fiber analysis")
     parser.add_argument("--log-level", default="INFO")
-    args = parser.parse_args(argv)
 
-    logging.basicConfig(
-        level=getattr(logging, args.log_level.upper(), logging.INFO),
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
+    # Keep top-level pipeline arguments for backward compatibility.
+    _add_pipeline_args(parser)
 
+    subparsers = parser.add_subparsers(dest="command")
+
+    run_parser = subparsers.add_parser("run", help="Run the RAFA pipeline", aliases=["analyze"])
+    _add_pipeline_args(run_parser)
+
+    view_parser = subparsers.add_parser("view", help="Visualize results in napari")
+    _add_view_args(view_parser)
+
+    return parser
+
+
+def _run_pipeline(args: argparse.Namespace) -> int:
+    """Run the RAFA pipeline from parsed CLI arguments."""
     if args.config:
         file_config = Config.from_file(args.config)
     else:
@@ -63,6 +83,31 @@ def main(argv: Optional[list] = None) -> int:
     pipeline = FiberAnalysisPipeline(config)
     pipeline.run()
     return 0
+
+
+def _run_view(args: argparse.Namespace) -> int:
+    """Launch the napari viewer with RAFA results."""
+    from fiber_tracer.viz.napari_viewer import run_napari_viewer
+
+    return run_napari_viewer(args.data, args.output)
+
+
+def main(argv: Optional[list] = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+
+    logging.basicConfig(
+        level=getattr(logging, args.log_level.upper(), logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
+    if args.command is None or args.command in ("run", "analyze"):
+        return _run_pipeline(args)
+    if args.command == "view":
+        return _run_view(args)
+
+    parser.print_help()
+    return 1
 
 
 if __name__ == "__main__":
