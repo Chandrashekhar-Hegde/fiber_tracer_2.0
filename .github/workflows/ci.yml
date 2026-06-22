@@ -6,6 +6,7 @@ jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.9", "3.10", "3.11"]
@@ -31,23 +32,4 @@ jobs:
       - name: License check
         run: |
           pip install pip-licenses
-          pip-licenses --format=json --output-file=licenses.json
-          python - <<'PY'
-          import json, sys
-          with open('licenses.json') as f:
-              data = json.load(f)
-          # Some packages list historical/optional GPL classifiers while the runtime
-          # library is under a permissive license. Allow-list those known false-positives.
-          allowlist = {"docutils"}  # runtime is public-domain/BSD; only Emacs helper is GPL
-          bad = [
-              (p['Name'], p['License']) for p in data
-              if p['Name'] not in allowlist
-              and any(x in p['License'].upper() for x in ['GPL', 'AGPL', 'SSPL'])
-          ]
-          if bad:
-              print('Forbidden licenses found:')
-              for name, lic in bad:
-                  print(f'  {name}: {lic}')
-              sys.exit(1)
-          print('No forbidden licenses found.')
-          PY
+          python scripts/check_licenses.py
