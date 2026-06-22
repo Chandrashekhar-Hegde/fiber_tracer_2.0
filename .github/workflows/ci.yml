@@ -19,7 +19,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[structure,skeleton,dev]"
       - name: Test
-        run: pytest tests/ -v
+        run: pytest tests/ -v --ignore=tests/test_benchmark_regression.py
       - name: Benchmark regression
         run: pytest tests/test_benchmark_regression.py -v
       - name: Upload benchmark results
