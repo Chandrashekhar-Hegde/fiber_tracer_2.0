@@ -46,24 +46,57 @@ def download_file(
     expected_size: Optional[int] = None,
     chunk_size: int = 1024 * 1024,
 ) -> None:
-    """Download a file with a progress bar."""
-    response = requests.get(url, stream=True, timeout=30)
-    response.raise_for_status()
-    total = expected_size or int(response.headers.get("content-length", 0))
+    """Download a file with a progress bar.
+
+    Supports resuming partial downloads when the server accepts byte ranges.
+    After the transfer finishes, the on-disk size is verified against
+    ``expected_size`` when provided.
+    """
     dest.parent.mkdir(parents=True, exist_ok=True)
+
+    existing_size = 0
+    headers: dict[str, str] = {}
+    mode = "wb"
+
+    if expected_size is not None and dest.exists() and 0 < dest.stat().st_size < expected_size:
+        existing_size = dest.stat().st_size
+        headers["Range"] = f"bytes={existing_size}-"
+        mode = "ab"
+
+    response = requests.get(url, stream=True, headers=headers, timeout=30)
+    response.raise_for_status()
+
+    if response.status_code == 206:
+        # Server resumed the partial download; keep append mode.
+        pass
+    elif response.status_code == 200:
+        # Server ignored the Range header; restart from scratch.
+        mode = "wb"
+        existing_size = 0
+    else:
+        raise RuntimeError(f"Unexpected HTTP status {response.status_code} while downloading {url}")
+
+    total = expected_size or int(response.headers.get("content-length", 0))
     with (
-        open(dest, "wb") as f,
+        open(dest, mode) as f,
         tqdm(
             total=total,
             unit="B",
             unit_scale=True,
             desc=dest.name,
+            initial=existing_size,
         ) as bar,
     ):
         for chunk in response.iter_content(chunk_size=chunk_size):
             if chunk:
                 f.write(chunk)
                 bar.update(len(chunk))
+
+    if expected_size is not None and dest.stat().st_size != expected_size:
+        raise RuntimeError(
+            f"Downloaded file size {dest.stat().st_size} does not match expected "
+            f"{expected_size} for {dest}"
+        )
 
 
 def main(argv=None):

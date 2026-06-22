@@ -43,6 +43,7 @@ def test_download_with_accept_license_writes_file(tmp_path, fake_metadata):
 
     def fake_get(url, **kwargs):
         mock = MagicMock()
+        mock.status_code = 200
         mock.raise_for_status = MagicMock()
         mock.headers = {"content-length": "42"}
         mock.iter_content = MagicMock(return_value=[b"a" * 21, b"b" * 21])
@@ -87,3 +88,51 @@ def test_list_prints_file_names(capsys, fake_metadata):
     captured = capsys.readouterr().out
     assert "pa66_volumes.h5" in captured
     assert "readme.txt" in captured
+
+
+def test_download_file_resumes_partial(tmp_path):
+    dest = tmp_path / "partial.bin"
+    existing = b"partial"
+    dest.write_bytes(existing)
+    full = b"partial-download-complete"
+    expected_size = len(full)
+    remaining = full[len(existing) :]
+
+    def fake_get(url, **kwargs):
+        assert kwargs.get("headers", {}).get("Range") == f"bytes={len(existing)}-"
+        mock = MagicMock()
+        mock.status_code = 206
+        mock.raise_for_status = MagicMock()
+        mock.headers = {"content-length": str(len(remaining))}
+        mock.iter_content = MagicMock(return_value=[remaining])
+        return mock
+
+    with patch.object(download_gfpa66.requests, "get", side_effect=fake_get):
+        download_gfpa66.download_file(
+            "https://zenodo.org/api/files/fake/partial.bin",
+            dest,
+            expected_size=expected_size,
+        )
+
+    assert dest.read_bytes() == full
+
+
+def test_download_file_verifies_size(tmp_path):
+    dest = tmp_path / "short.bin"
+    expected_size = 42
+
+    def fake_get(url, **kwargs):
+        mock = MagicMock()
+        mock.status_code = 200
+        mock.raise_for_status = MagicMock()
+        mock.headers = {"content-length": "20"}
+        mock.iter_content = MagicMock(return_value=[b"a" * 20])
+        return mock
+
+    with patch.object(download_gfpa66.requests, "get", side_effect=fake_get):
+        with pytest.raises(RuntimeError):
+            download_gfpa66.download_file(
+                "https://zenodo.org/api/files/fake/short.bin",
+                dest,
+                expected_size=expected_size,
+            )
