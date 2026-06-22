@@ -16,7 +16,8 @@ processing:
   normalize: true
 
 segmentation:
-  method: "otsu"
+  method: "otsu"  # "otsu", "watershed", or "unet"
+  # model_path: "models/fiber_unet.pt"  # required when method is "unet"
 
 orientation:
   sigma_um: 1.0

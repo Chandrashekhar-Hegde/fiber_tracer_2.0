@@ -19,6 +19,8 @@ def _add_pipeline_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--regime", choices=["auto", "resolved", "marginal", "subvoxel"], default="auto"
     )
+    parser.add_argument("--segmentation-method", choices=["otsu", "watershed", "unet"])
+    parser.add_argument("--model-path", help="Path to a PyTorch checkpoint for method='unet'")
 
 
 def _add_view_args(parser: argparse.ArgumentParser) -> None:
@@ -97,6 +99,10 @@ def _run_pipeline(args: argparse.Namespace) -> int:
         config.fiber_diameter_um = args.fiber_diameter
     if args.regime:
         config.regime = args.regime
+    if args.segmentation_method:
+        config.segmentation.method = args.segmentation_method
+    if args.model_path:
+        config.segmentation.model_path = args.model_path
 
     config.validate()
     pipeline = FiberAnalysisPipeline(config)

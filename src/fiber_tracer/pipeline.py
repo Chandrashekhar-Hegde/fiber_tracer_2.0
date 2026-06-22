@@ -156,7 +156,7 @@ class FiberAnalysisPipeline:
     def _run_resolved(self, volume: np.ndarray, out: Path) -> dict:
         """Resolved-regime pipeline: segmentation, labeling, skeletonization."""
         if self.config.segmentation.method == "unet":
-            backend = MLSegmentationBackend(model_path=None)
+            backend = MLSegmentationBackend(model_path=self.config.segmentation.model_path)
             segmentation = backend.segment(volume)
             # Ensure binary mask
             if segmentation.dtype != bool:

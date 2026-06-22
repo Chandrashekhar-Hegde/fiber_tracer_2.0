@@ -92,7 +92,7 @@ Optional extras:
 |--------------|---------------------------------------------------------------------|
 | `structure`  | Optional `structure-tensor` backend for orientation estimation.     |
 | `skeleton`   | `skan`-based skeleton-graph adapter.                                |
-| `ml`         | PyTorch/scikit-learn support for the `MLSegmentationBackend`.       |
+| `ml`         | PyTorch/scikit-learn support; enables the custom 3D U-Net backend (`unet` segmentation method). |
 | `unet`       | `nnunetv2` backend (Linux only).                                    |
 | `tda`        | `gudhi` backend for Betti numbers and persistence summaries.        |
 | `viz`        | `napari` viewer and `plotly` HTML reports.                          |
@@ -320,7 +320,7 @@ In the marginal and subvoxel regimes the normalized volume is kept in memory but
 Configuration can be supplied as YAML or JSON and overridden from the command line. Command-line values take precedence over configuration-file values. The full option set is documented in [`docs/parameter_guide.md`](docs/parameter_guide.md); key groups include:
 
 - `processing`: denoising sigma, normalization.
-- `segmentation`: method (`otsu` or `watershed`).
+- `segmentation`: method (`otsu`, `watershed`, or `unet`), plus `model_path` for the custom U-Net backend.
 - `orientation`: structure-tensor inner scale `sigma_um`, integration scale `rho_um`, marginal window size.
 - `analysis`: morphometry, orientation tensor, and optional topological descriptors.
 
@@ -354,6 +354,19 @@ fiber-tracer --config config.yaml --data path/to/stack.tif --output results/
 ```
 
 A ready-to-use copy of this example is provided in [`config_example.yaml`](config_example.yaml). The batch equivalent is in [`batch_example.yaml`](batch_example.yaml).
+
+### Optional backends
+
+Set `segmentation.method: "unet"` to use the lightweight 3D U-Net implemented in `fiber_tracer.backends.unet3d`. This requires the `ml` extra and a trained checkpoint:
+
+```bash
+pip install -e ".[ml]"
+python scripts/train_unet_phantoms.py --epochs 30 --output models/fiber_unet.pt
+fiber-tracer --data stack.tif --output results/ \
+  --segmentation-method unet --model-path models/fiber_unet.pt
+```
+
+Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persistence summaries with `gudhi` (requires the `tda` extra).
 
 ## Documentation index
 

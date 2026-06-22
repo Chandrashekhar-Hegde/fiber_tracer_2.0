@@ -93,6 +93,11 @@ See `docs/architecture.md` and `src/fiber_tracer/chunked.py` for the full API an
 
 - `"otsu"` (default): threshold with Otsu, then label connected components. Best when fibers are already well separated.
 - `"watershed"`: marker-controlled watershed on the distance transform. Useful for touching fibers, but can over-segment elongated objects.
+- `"unet"`: lightweight custom 3D U-Net backend. Requires the `ml` extra and a trained checkpoint via `model_path`.
+
+### `model_path`
+
+Path to a PyTorch checkpoint produced by `scripts/train_unet_phantoms.py`. Required when `method` is `"unet"`; ignored otherwise.
 
 ### `min_fiber_diameter_um` / `max_fiber_diameter_um`
 
@@ -144,7 +149,7 @@ Boolean. Defaults to `False`. If `True`, the resolved-regime pipeline computes B
 
 | Regime    | `regime` value | Typical `sigma_um` | Typical `rho_um` | Typical `window_size_um` | Notes |
 |-----------|----------------|--------------------|------------------|--------------------------|-------|
-| Resolved  | `"resolved"`   | —                  | —                | —                        | Use `"otsu"` for separated fibers; `"watershed"` for touching fibers. Ensure `fiber_diameter_um` is correct. |
+| Resolved  | `"resolved"`   | —                  | —                | —                        | Use `"otsu"` for separated fibers; `"watershed"` for touching fibers; `"unet"` with a trained checkpoint for learned segmentation. Ensure `fiber_diameter_um` is correct. |
 | Marginal  | `"marginal"`   | `min(spacing)`     | `fiber_diameter / 2` | `fiber_diameter`     | Window size trades resolution versus noise. |
 | Subvoxel  | `"subvoxel"`   | `min(spacing)`     | auto-enlarged    | —                        | Only population-level orientation statistics are reliable. |
 

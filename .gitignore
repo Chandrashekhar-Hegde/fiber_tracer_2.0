@@ -230,7 +230,9 @@ full_volume.dat
 
 # Checkpoint files
 *.ckpt
+*.pt
 checkpoint/
+models/
 
 # Profiling files
 *.prof

@@ -64,6 +64,7 @@ class ProcessingConfig:
 @dataclass
 class SegmentationConfig:
     method: str = "otsu"  # otsu, watershed, unet
+    model_path: Optional[str] = None  # path to PyTorch checkpoint for method="unet"
     min_fiber_diameter_um: float = 10.0
     max_fiber_diameter_um: float = 50.0
     watershed_seed_sigma_um: Optional[float] = None

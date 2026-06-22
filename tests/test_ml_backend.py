@@ -2,6 +2,7 @@
 """Tests for the optional ML segmentation backend adapter."""
 
 import builtins
+import importlib.util
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -32,10 +33,47 @@ def test_ml_backend_raises_when_torch_unavailable():
             MLSegmentationBackend()
 
 
-def test_ml_backend_segment_raises_when_model_not_loaded():
+def test_ml_backend_segment_raises_when_no_checkpoint_configured():
     with patch.object(builtins, "__import__", side_effect=_fake_torch_import):
         backend = MLSegmentationBackend()
 
     volume = np.zeros((8, 8, 8), dtype=np.float32)
-    with pytest.raises(NotImplementedError, match="No model is loaded"):
+    with pytest.raises(RuntimeError, match="No model checkpoint"):
         backend.segment(volume)
+
+
+@pytest.mark.skipif(importlib.util.find_spec("torch") is None, reason="torch not installed")
+def test_unet3d_forward_shape():
+    import torch
+
+    from fiber_tracer.backends.unet3d import UNet3D
+
+    model = UNet3D(in_channels=1, out_channels=1, features=(8, 16, 32))
+    x = torch.randn(1, 1, 32, 32, 32)
+    y = model(x)
+    assert y.shape == (1, 1, 32, 32, 32)
+
+
+@pytest.mark.skipif(importlib.util.find_spec("torch") is None, reason="torch not installed")
+def test_ml_backend_loads_checkpoint_and_segments(tmp_path):
+    import torch
+
+    from fiber_tracer.backends.unet3d import UNet3D
+
+    checkpoint = tmp_path / "model.pt"
+    model = UNet3D(in_channels=1, out_channels=1, features=(8, 16, 32))
+    torch.save(
+        {
+            "model_state_dict": model.state_dict(),
+            "features": (8, 16, 32),
+            "patch_size": (16, 16, 16),
+        },
+        checkpoint,
+    )
+
+    backend = MLSegmentationBackend.from_checkpoint(checkpoint)
+    volume = np.random.rand(32, 32, 32).astype(np.float32)
+    mask = backend.segment(volume)
+    assert mask.shape == volume.shape
+    assert mask.dtype == np.uint8
+    assert set(np.unique(mask)).issubset({0, 1})

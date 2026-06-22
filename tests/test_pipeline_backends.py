@@ -1,4 +1,5 @@
 # tests/test_pipeline_backends.py
+import importlib.util
 from unittest.mock import patch
 
 import numpy as np
@@ -43,6 +44,54 @@ def test_unet_method_routes_to_ml_backend(tmp_path):
     mock_backend_cls.return_value.segment.assert_called_once()
     assert summary["n_labels"] > 0
     assert summary["regime"] == "resolved"
+
+
+@pytest.mark.skipif(importlib.util.find_spec("torch") is None, reason="torch not installed")
+def test_unet_pipeline_with_real_checkpoint(tmp_path):
+    import torch
+
+    from fiber_tracer.backends.unet3d import UNet3D
+
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    checkpoint = tmp_path / "model.pt"
+    model = UNet3D(in_channels=1, out_channels=1, features=(4, 8, 16))
+    torch.save(
+        {
+            "model_state_dict": model.state_dict(),
+            "features": (4, 8, 16),
+            "patch_size": (32, 32, 32),
+        },
+        checkpoint,
+    )
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+    )
+    config.segmentation.method = "unet"
+    config.segmentation.model_path = str(checkpoint)
+
+    pipeline = FiberAnalysisPipeline(config)
+    summary = pipeline.run()
+    assert summary["regime"] == "resolved"
+    assert (out_dir / "labels.tif").exists()
+    assert (out_dir / "summary.json").exists()
 
 
 def test_invalid_segmentation_method_raises(tmp_path):

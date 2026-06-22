@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Lightweight 3D U-Net segmentation backend (`segmentation.method: "unet"`) with `scripts/train_unet_phantoms.py` for synthetic-phantom training.
+- `fiber_tracer.backends.unet3d.UNet3D` and sliding-window `predict_volume` inference.
+- Topological data analysis backend (`analysis.compute_tda_descriptors: true`) using `gudhi` distance-transform persistence diagrams, Betti numbers, and persistence summaries.
+- CLI flags `--segmentation-method` and `--model-path` for selecting the U-Net backend from the command line.
+- Regression tests for the ML segmentation backend and TDA descriptors.
 - `docs/USER_GUIDE.md` with beginner-to-intermediate workflow guidance.
 - `docs/CLI_REFERENCE.md` generated from the live `fiber-tracer` CLI help.
 - `docs/INSTALL.md` with platform-specific installation and verification instructions.
