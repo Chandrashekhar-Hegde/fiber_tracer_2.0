@@ -6,27 +6,46 @@ includes ``dask`` for higher-level distributed workflows, but the helpers
 here are zarr-backed.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Callable, Optional, Union
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import tifffile
-import zarr
+
+from fiber_tracer.exceptions import BackendNotAvailableError
+
+if TYPE_CHECKING:
+    import zarr
 
 
-def load_zarr(path: Union[str, Path]) -> zarr.Array:
+def _import_zarr():
+    try:
+        import zarr
+
+        return zarr
+    except ImportError as exc:
+        raise BackendNotAvailableError(
+            "Install parallel extra: pip install fiber-tracer[parallel]"
+        ) from exc
+
+
+def load_zarr(path: str | Path) -> zarr.Array:
     """Open an existing zarr array (read-only)."""
+    zarr = _import_zarr()
     store = zarr.DirectoryStore(str(path))
     return zarr.open_array(store, mode="r")
 
 
 def save_zarr(
-    path: Union[str, Path],
+    path: str | Path,
     data: np.ndarray,
-    chunks: Optional[tuple[int, int, int]] = None,
-    dtype: Optional[np.dtype] = None,
+    chunks: tuple[int, int, int] | None = None,
+    dtype: np.dtype | None = None,
 ) -> zarr.Array:
     """Save a numpy array to a zarr array with the given chunk size."""
+    zarr = _import_zarr()
     path = Path(path)
     path.mkdir(parents=True, exist_ok=True)
     store = zarr.DirectoryStore(str(path))
@@ -41,8 +60,8 @@ def save_zarr(
 
 
 def tiff_to_zarr(
-    tiff_path: Union[str, Path],
-    zarr_path: Union[str, Path],
+    tiff_path: str | Path,
+    zarr_path: str | Path,
     chunks: tuple[int, int, int] = (64, 64, 64),
 ) -> zarr.Array:
     """Convert a TIFF stack to a chunked zarr array without loading it fully into RAM."""
@@ -62,8 +81,8 @@ def _pad_slice(start: int, stop: int, size: int, overlap: int):
 
 
 def process_chunks(
-    input_array: Union[np.ndarray, zarr.Array],
-    output_array: Union[np.ndarray, zarr.Array],
+    input_array: np.ndarray | zarr.Array,
+    output_array: np.ndarray | zarr.Array,
     func: Callable[[np.ndarray], np.ndarray],
     chunk_shape: tuple[int, int, int],
     overlap: int = 0,
@@ -107,8 +126,8 @@ def process_chunks(
 
 
 def normalize_intensity_chunked(
-    input_array: Union[np.ndarray, zarr.Array],
-    output_array: Union[np.ndarray, zarr.Array],
+    input_array: np.ndarray | zarr.Array,
+    output_array: np.ndarray | zarr.Array,
     chunk_shape: tuple[int, int, int] = (64, 64, 64),
 ) -> None:
     """Two-pass min-max normalization on chunked arrays."""
@@ -136,8 +155,8 @@ def normalize_intensity_chunked(
 
 
 def gaussian_denoise_chunked(
-    input_array: Union[np.ndarray, zarr.Array],
-    output_array: Union[np.ndarray, zarr.Array],
+    input_array: np.ndarray | zarr.Array,
+    output_array: np.ndarray | zarr.Array,
     sigma_voxels: tuple[float, float, float],
     chunk_shape: tuple[int, int, int] = (64, 64, 64),
 ) -> None:

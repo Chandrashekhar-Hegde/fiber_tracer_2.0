@@ -3,6 +3,8 @@
 import numpy as np
 import pytest
 
+pytest.importorskip("zarr")
+
 from fiber_tracer.chunked import (
     gaussian_denoise_chunked,
     load_zarr,
