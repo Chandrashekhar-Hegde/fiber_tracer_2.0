@@ -5,6 +5,24 @@ All notable changes to the Fiber Tracer project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `docs/USER_GUIDE.md` with beginner-to-intermediate workflow guidance.
+- `docs/CLI_REFERENCE.md` generated from the live `fiber-tracer` CLI help.
+- `docs/INSTALL.md` with platform-specific installation and verification instructions.
+- `docs/TROUBLESHOOTING.md` covering common errors and fixes.
+- `config_example.yaml` and `batch_example.yaml` as copy-pasteable configuration templates.
+- BibTeX entries in `CITATIONS.md`.
+
+### Changed
+- `README.md` now links to the new user guide, CLI reference, install guide, and troubleshooting docs.
+- `docs/parameter_guide.md` now documents the accepted `[z, y, x]` list form of `voxel_spacing_um`.
+- `docs/validation_protocol.md` now explains the GF-PA66 validation helper and optional `--dataset` flag.
+
+### Fixed
+- `Config.from_dict` now accepts `voxel_spacing_um` as a 3-element list or tuple (e.g. `[1.0, 1.0, 1.0]`), matching the batch config and README examples.
+
 ## [3.2.0] - 2026-06-21
 
 ### Added

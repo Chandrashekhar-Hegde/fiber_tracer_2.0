@@ -1,0 +1,27 @@
+# Example batch configuration for fiber-tracer.
+# Usage: fiber-tracer batch --config batch_example.yaml --aggregate-csv batch_summary.csv
+#
+# Settings in the "common" block are shared by every volume. Each entry in
+# "volumes" can override any common value.
+
+common:
+  voxel_spacing_um: [1.0, 1.0, 1.0]
+  fiber_diameter_um: 6.0
+  regime: "auto"
+  processing:
+    denoise_sigma: 0.8
+    normalize: true
+  segmentation:
+    method: "otsu"
+  analysis:
+    compute_morphometry: true
+    compute_orientation_tensor: true
+
+volumes:
+  - data_path: sample_a.tif
+    output_dir: results/sample_a
+
+  - data_path: sample_b.tif
+    output_dir: results/sample_b
+    fiber_diameter_um: 4.0
+    regime: "resolved"

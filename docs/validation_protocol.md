@@ -59,6 +59,14 @@ Download the GF-PA66 volume file (accepting the CC BY-SA 4.0 license):
 python scripts/download_gfpa66.py --file pa66_volumes.h5 --output-dir data/ --accept-license
 ```
 
+Run the validation helper:
+
+```bash
+python scripts/validate_gfpa66.py --data data/pa66_volumes.h5 --output results/gfpa66/
+```
+
+`validate_gfpa66.py` converts the HDF5 volume to a temporary TIFF stack and runs the RAFA pipeline. The HDF5 dataset is auto-detected when the file contains a single dataset or a common name (`data`, `image`, `volume`, `XCT`). Use `--dataset <name>` only if auto-detection fails.
+
 ## Metric definitions
 
 ### Dice score

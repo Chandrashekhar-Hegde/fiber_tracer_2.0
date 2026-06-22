@@ -36,3 +36,67 @@
 ## Validation data
 
 - Bertoldo J.P.C. et al. (2021). A Modular U-Net for Automated Segmentation of X-Ray Tomography Images in Composite Materials. *Front. Mater.* 8:761229. DOI:10.3389/fmats.2021.761229
+
+---
+
+## BibTeX
+
+If you use `fiber-tracer` or the methods above in your research, the following BibTeX entries may be useful.
+
+```bibtex
+@software{fiber_tracer,
+  author = {Hegde, Chandrashekhar},
+  title = {Fiber Tracer (RAFA): Regime-aware 3D fiber analysis for X-ray CT},
+  url = {https://github.com/llMr-Sweetll/fiber_tracer_2.0},
+  license = {MIT},
+  year = {2026},
+}
+
+@inproceedings{bigun1987orientation,
+  author = {Bigün, Johan and Granlund, Gösta H.},
+  title = {Optimal Orientation Detection of Linear Symmetry},
+  booktitle = {Proceedings of the First International Conference on Computer Vision (ICCV)},
+  year = {1987},
+}
+
+@article{advani1987tensors,
+  author = {Advani, Suresh G. and Tucker III, Charles L.},
+  title = {The Use of Tensors to Describe and Predict Fiber Orientation in Short Fiber Composites},
+  journal = {Journal of Rheology},
+  volume = {31},
+  number = {8},
+  pages = {751--784},
+  year = {1987},
+  doi = {10.1122/1.549945},
+}
+
+@article{jeppesen2021structure,
+  author = {Jeppesen, Niels and Mikkelsen, Lars P. and Dahl, Anders B. and Christensen, Anders N. and Dahl, Vedrana A.},
+  title = {Quantifying Effects of Manufacturing Methods on Fiber Orientation in Unidirectional Composites Using Structure Tensor Analysis},
+  journal = {Composites Part A: Applied Science and Manufacturing},
+  volume = {149},
+  pages = {106541},
+  year = {2021},
+  doi = {10.1016/j.compositesa.2021.106541},
+}
+
+@article{skimage2014,
+  author = {van der Walt, Stéfan and Schönberger, Johannes L. and Nunez-Iglesias, Juan and Boulogne, François and Warner, Joshua D. and Yager, Neil and Gouillart, Emmanuelle and Yu, Tony},
+  title = {scikit-image: Image processing in Python},
+  journal = {PeerJ},
+  volume = {2},
+  pages = {e453},
+  year = {2014},
+  doi = {10.7717/peerj.453},
+}
+
+@article{bertoldo2021unet,
+  author = {Bertoldo, J. P. C. and others},
+  title = {A Modular {U-Net} for Automated Segmentation of {X-Ray} Tomography Images in Composite Materials},
+  journal = {Frontiers in Materials},
+  volume = {8},
+  pages = {761229},
+  year = {2021},
+  doi = {10.3389/fmats.2021.761229},
+}
+```

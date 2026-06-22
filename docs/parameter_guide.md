@@ -31,6 +31,7 @@ This installs napari (for the `view` subcommand) and Plotly (for `report-viz`). 
 Physical size of one voxel in `(z, y, x)` order. This is required for every run because it converts voxel measurements to physical units and drives regime selection.
 
 - Must be positive for all axes.
+- May be supplied as a dict `{z: ..., y: ..., x: ...}` or a 3-element list/tuple `[z, y, x]`. Both forms are equivalent after loading.
 - Anisotropic spacing is supported, but accuracy degrades for large anisotropy ratios. Consider resampling to isotropic voxels when ratios exceed ~2–3.
 
 ### `fiber_diameter_um`
@@ -215,3 +216,5 @@ fiber-tracer --config config.yaml --data path/to/stack.tif --output results/
 ```
 
 > **Note:** `--data` and `--output` may be provided on the command line or in the configuration file. If both are provided, the command-line value overrides the config file value.
+>
+> A ready-to-use single-volume example is in [`config_example.yaml`](../config_example.yaml) and a batch example is in [`batch_example.yaml`](../batch_example.yaml).
