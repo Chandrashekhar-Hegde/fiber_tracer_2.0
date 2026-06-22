@@ -47,7 +47,17 @@ The GF-PA66 3D XCT dataset is used as a public reference for benchmarking:
 
 The dataset is used for benchmarking only. It is not redistributed with this package. Users who create and redistribute derived works based on this dataset must comply with the CC BY-SA 4.0 share-alike terms.
 
-This dataset is documented here as a reference protocol. Automated benchmarking against GF-PA66 is not yet implemented; users must download the data and run their own evaluation.
+An automatic downloader is provided in `scripts/download_gfpa66.py`. List available files:
+
+```bash
+python scripts/download_gfpa66.py --list
+```
+
+Download the GF-PA66 volume file (accepting the CC BY-SA 4.0 license):
+
+```bash
+python scripts/download_gfpa66.py --file pa66_volumes.h5 --output-dir data/ --accept-license
+```
 
 ## Metric definitions
 

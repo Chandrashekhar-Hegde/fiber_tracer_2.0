@@ -2,6 +2,28 @@
 
 This guide explains the main configuration options for `fiber-tracer`. All physical lengths are in micrometres (`µm`) unless otherwise noted.
 
+## CLI subcommands
+
+`fiber-tracer` provides the following subcommands:
+
+- `run` (default) — Run the RAFA pipeline on a single volume. Equivalent to calling with no subcommand for backward compatibility.
+- `analyze` — Alias for `run`.
+- `view` — Launch a napari viewer with the raw volume and pipeline outputs (`labels.tif`, `skeleton.tif`, `summary.json`). Requires the `viz` extra.
+- `report-viz` — Generate an interactive HTML report from a `summary.json` file using Plotly. Requires the `viz` extra.
+- `batch` — Process multiple volumes described by a YAML or JSON batch config.
+
+Top-level flags such as `--data`, `--output`, `--config`, `--voxel-spacing`, `--fiber-diameter`, and `--regime` are still accepted for backward compatibility.
+
+## `viz` extra
+
+Interactive visualizations require the `viz` optional dependency group:
+
+```bash
+pip install -e ".[viz]"
+```
+
+This installs napari (for the `view` subcommand) and Plotly (for `report-viz`). The `viz` extra is not required for batch processing or core analysis.
+
 ## Global parameters
 
 ### `voxel_spacing_um`
@@ -62,6 +84,8 @@ output_zarr = zarr.open_array("normalized.zarr", mode="w", shape=input_zarr.shap
 normalize_intensity_chunked(input_zarr, output_zarr, chunk_shape=(64, 64, 64))
 ```
 
+See `docs/architecture.md` and `src/fiber_tracer/chunked.py` for the full API and design notes.
+
 ## Segmentation parameters (`segmentation`)
 
 ### `method`
@@ -113,7 +137,7 @@ Boolean. Defaults to `True`. If `True`, the resolved-regime pipeline computes pe
 
 ### `compute_tda_descriptors`
 
-Boolean. Defaults to `False`. This flag is reserved/planned for topological data analysis descriptors; it is not yet wired into the pipeline.
+Boolean. Defaults to `False`. If `True`, the resolved-regime pipeline computes Betti numbers and a persistence summary on the cleaned binary mask using the optional `gudhi` backend and includes them in `summary.json`. Requires the `tda` extra.
 
 ## Practical guidance by regime
 
@@ -122,6 +146,41 @@ Boolean. Defaults to `False`. This flag is reserved/planned for topological data
 | Resolved  | `"resolved"`   | —                  | —                | —                        | Use `"otsu"` for separated fibers; `"watershed"` for touching fibers. Ensure `fiber_diameter_um` is correct. |
 | Marginal  | `"marginal"`   | `min(spacing)`     | `fiber_diameter / 2` | `fiber_diameter`     | Window size trades resolution versus noise. |
 | Subvoxel  | `"subvoxel"`   | `min(spacing)`     | auto-enlarged    | —                        | Only population-level orientation statistics are reliable. |
+
+## Batch configuration
+
+The `batch` subcommand processes multiple volumes from a single YAML or JSON config. The config has a `common` block shared by all entries and a `volumes` list with per-volume overrides.
+
+```yaml
+common:
+  voxel_spacing_um: [1.0, 1.0, 1.0]
+  fiber_diameter_um: 4.0
+  regime: auto
+  processing:
+    denoise_sigma: 0.8
+    normalize: true
+  segmentation:
+    method: otsu
+  analysis:
+    compute_morphometry: true
+    compute_orientation_tensor: true
+
+volumes:
+  - data_path: sample_a.tif
+    output_dir: results/sample_a
+  - data_path: sample_b.tif
+    output_dir: results/sample_b
+    regime: resolved
+    fiber_diameter_um: 6.0
+```
+
+Run the batch:
+
+```bash
+fiber-tracer batch --config batch.yaml --aggregate-csv batch_summary.csv
+```
+
+The aggregate CSV contains one row per volume with `data_path`, `output_dir`, `regime`, `n_labels`, and `elapsed_s`.
 
 ## Example configuration
 
