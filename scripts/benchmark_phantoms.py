@@ -1,5 +1,8 @@
 """Benchmark all three RAFA regimes against a synthetic phantom."""
 
+from __future__ import annotations
+
+import argparse
 import json
 import sys
 import tempfile
@@ -153,7 +156,22 @@ def _print_markdown_table(results: list[dict[str, Any]]) -> None:
         print("| " + " | ".join(row) + " |")
 
 
-def main() -> int:
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Benchmark all three RAFA regimes against a synthetic phantom."
+    )
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="benchmark_results",
+        help="Directory to write benchmark_results.json to (default: benchmark_results).",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
+
     phantom = generate_fiber_phantom(
         shape=(96, 96, 96),
         n_fibers=5,
@@ -162,27 +180,30 @@ def main() -> int:
         seed=42,
     )
 
+    output_dir = Path(args.output)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     with tempfile.TemporaryDirectory() as tmpdir:
-        output_dir = Path(tmpdir) / "benchmark"
-        output_dir.mkdir(parents=True, exist_ok=True)
+        tmp_output_dir = Path(tmpdir) / "benchmark"
+        tmp_output_dir.mkdir(parents=True, exist_ok=True)
 
         results = [
-            run_resolved_benchmark(phantom, output_dir / "resolved"),
-            run_marginal_benchmark(phantom, output_dir / "marginal"),
-            run_subvoxel_benchmark(phantom, output_dir / "subvoxel"),
+            run_resolved_benchmark(phantom, tmp_output_dir / "resolved"),
+            run_marginal_benchmark(phantom, tmp_output_dir / "marginal"),
+            run_subvoxel_benchmark(phantom, tmp_output_dir / "subvoxel"),
         ]
 
-        results_path = output_dir / "benchmark_results.json"
-        with open(results_path, "w") as f:
-            json.dump(results, f, indent=2)
+    results_path = output_dir / "benchmark_results.json"
+    with open(results_path, "w") as f:
+        json.dump(results, f, indent=2)
 
-        _print_markdown_table(results)
+    _print_markdown_table(results)
 
-        resolved = results[0]
-        assert resolved["mean_dice"] > 0.85, f"mean_dice {resolved['mean_dice']:.4f} <= 0.85"
-        assert (
-            resolved["mean_angular_error_deg"] < 5.0
-        ), f"mean_angular_error {resolved['mean_angular_error_deg']:.4f} >= 5.0"
+    resolved = results[0]
+    assert resolved["mean_dice"] > 0.85, f"mean_dice {resolved['mean_dice']:.4f} <= 0.85"
+    assert (
+        resolved["mean_angular_error_deg"] < 5.0
+    ), f"mean_angular_error {resolved['mean_angular_error_deg']:.4f} >= 5.0"
 
     return 0
 

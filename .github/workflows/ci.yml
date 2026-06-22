@@ -20,6 +20,15 @@ jobs:
           pip install -e ".[structure,skeleton,dev]"
       - name: Test
         run: pytest tests/ -v
+      - name: Benchmark regression
+        run: pytest tests/test_benchmark_regression.py -v
+      - name: Run phantom benchmark
+        run: python scripts/benchmark_phantoms.py
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: benchmark_results/benchmark_results.json
       - name: License check
         run: |
           pip install pip-licenses
