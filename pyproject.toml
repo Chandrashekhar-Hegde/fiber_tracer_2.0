@@ -58,6 +58,7 @@ dev = [
     "mypy",
     "h5py>=3.0",
     "hypothesis>=6.0",
+    "requests>=2.25",
 ]
 all = ["fiber-tracer[structure,skeleton,ml,unet,tda,viz,parallel,dev]"]
 

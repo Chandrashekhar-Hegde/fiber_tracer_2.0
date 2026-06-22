@@ -41,12 +41,18 @@ def synthetic_h5(tmp_path):
     return h5_path
 
 
-def test_download_gfpa66_main_prints_metadata(capsys):
-    download_gfpa66.main()
+def test_download_gfpa66_main_prints_metadata(capsys, monkeypatch):
+    fake_metadata = {
+        "files": [
+            {"key": "pa66_volumes.h5", "size": 1024, "links": {"self": "http://example.com/fake"}}
+        ]
+    }
+    monkeypatch.setattr(download_gfpa66, "fetch_record_metadata", lambda: fake_metadata)
+    download_gfpa66.main([])
     captured = capsys.readouterr().out
-    assert download_gfpa66.ZENODO_RECORD_URL in captured
+    assert download_gfpa66.ZENODO_RECORD_URL.replace("/api/", "/") in captured
     assert "CC BY-SA 4.0" in captured
-    assert "GF-PA66_3D_XCT.h5" in captured
+    assert "pa66_volumes.h5" in captured
 
 
 def test_validate_gfpa66_main_runs_pipeline(synthetic_h5, tmp_path):

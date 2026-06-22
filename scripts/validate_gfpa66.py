@@ -8,12 +8,39 @@ Citation: Bertoldo et al., Front. Mater. 2021, DOI:10.3389/fmats.2021.761229
 import argparse
 import sys
 import tempfile
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Optional
 
 from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.io import save_tiff_stack
 from fiber_tracer.pipeline import FiberAnalysisPipeline
+
+DEFAULT_DATASET_NAMES: Sequence[str] = (
+    "pa66_volumes.h5",
+    "GF-PA66_3D_XCT.h5",
+)
+
+
+def find_dataset_path(hint: Optional[str] = None) -> Path:
+    """Locate the GF-PA66 HDF5 dataset.
+
+    If ``hint`` is provided, return it as a Path. Otherwise search the current
+    working directory for the default dataset filenames.
+    """
+    if hint is not None:
+        return Path(hint)
+
+    for name in DEFAULT_DATASET_NAMES:
+        candidate = Path(name)
+        if candidate.is_file():
+            return candidate
+
+    raise FileNotFoundError(
+        "Could not auto-detect GF-PA66 dataset. "
+        f"Looked for {list(DEFAULT_DATASET_NAMES)} in the current directory. "
+        "Use --data to specify the path to pa66_volumes.h5."
+    )
 
 
 def load_hdf5_volume(path: str, dataset: Optional[str] = None):
@@ -38,7 +65,11 @@ def load_hdf5_volume(path: str, dataset: Optional[str] = None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Validate RAFA on GF-PA66")
-    parser.add_argument("--data", required=True, help="Path to GF-PA66 HDF5 file")
+    parser.add_argument(
+        "--data",
+        default=None,
+        help="Path to GF-PA66 HDF5 file (default: auto-detect pa66_volumes.h5)",
+    )
     parser.add_argument("--dataset", default=None, help="HDF5 dataset name")
     parser.add_argument("--output", required=True, help="Output directory")
     parser.add_argument("--voxel-spacing", nargs=3, type=float, default=[1.0, 1.0, 1.0])
@@ -49,7 +80,16 @@ def main(argv=None):
     parser.add_argument("--log-level", default="INFO")
     args = parser.parse_args(argv)
 
-    volume = load_hdf5_volume(args.data, args.dataset)
+    data_path = find_dataset_path(args.data)
+    if not data_path.is_file():
+        print(f"ERROR: Dataset not found at {data_path}")
+        print(
+            "Download it with: python scripts/download_gfpa66.py "
+            "--file pa66_volumes.h5 --accept-license"
+        )
+        return 1
+
+    volume = load_hdf5_volume(str(data_path), args.dataset)
 
     # The RAFA pipeline loads data via load_tiff_stack. Convert the HDF5 volume
     # to a temporary multi-page TIFF stack and point Config.data_path at it.
