@@ -3,7 +3,7 @@
 import argparse
 import logging
 import sys
-from typing import Optional
+from typing import Any, Optional
 
 from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.pipeline import FiberAnalysisPipeline
@@ -27,6 +27,13 @@ def _add_view_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--output", required=True, help="Output directory")
 
 
+def _build_report_viz_parser(subparsers: Any) -> None:
+    parser = subparsers.add_parser("report-viz", help="Generate interactive Plotly visualizations")
+    parser.add_argument("--summary", required=True, help="Path to summary.json")
+    parser.add_argument("--output", required=True, help="Output HTML report")
+    parser.set_defaults(func=_run_report_viz)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="RAFA fiber analysis")
     parser.add_argument("--log-level", default="INFO")
@@ -41,6 +48,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
     view_parser = subparsers.add_parser("view", help="Visualize results in napari")
     _add_view_args(view_parser)
+
+    _build_report_viz_parser(subparsers)
 
     return parser
 
@@ -92,6 +101,18 @@ def _run_view(args: argparse.Namespace) -> int:
     return run_napari_viewer(args.data, args.output)
 
 
+def _run_report_viz(args: argparse.Namespace) -> int:
+    """Generate an interactive Plotly report from a summary.json."""
+    import json
+
+    from fiber_tracer.viz.plotly_plots import generate_interactive_report
+
+    with open(args.summary) as f:
+        summary = json.load(f)
+    generate_interactive_report(summary, args.output)
+    return 0
+
+
 def main(argv: Optional[list] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
@@ -105,6 +126,8 @@ def main(argv: Optional[list] = None) -> int:
         return _run_pipeline(args)
     if args.command == "view":
         return _run_view(args)
+    if args.command == "report-viz":
+        return _run_report_viz(args)
 
     parser.print_help()
     return 1

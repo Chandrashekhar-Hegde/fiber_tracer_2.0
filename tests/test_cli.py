@@ -1,3 +1,4 @@
+import json
 from unittest.mock import MagicMock
 
 from fiber_tracer.cli import main
@@ -91,3 +92,25 @@ def test_cli_run_subcommand_runs_pipeline(tmp_path):
 
     assert rc == 0
     assert (out_dir / "run_out" / "summary.json").exists()
+
+
+def test_report_viz_command(tmp_path, monkeypatch):
+    summary = {"regime": "resolved", "fibers": []}
+    summary_path = tmp_path / "summary.json"
+    summary_path.write_text(json.dumps(summary))
+
+    mock_generate = MagicMock(return_value=None)
+    monkeypatch.setattr("fiber_tracer.viz.plotly_plots.generate_interactive_report", mock_generate)
+
+    rc = main(
+        [
+            "report-viz",
+            "--summary",
+            str(summary_path),
+            "--output",
+            str(tmp_path / "report.html"),
+        ]
+    )
+
+    assert rc == 0
+    mock_generate.assert_called_once_with(summary, str(tmp_path / "report.html"))
