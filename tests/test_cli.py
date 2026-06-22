@@ -114,3 +114,26 @@ def test_report_viz_command(tmp_path, monkeypatch):
 
     assert rc == 0
     mock_generate.assert_called_once_with(summary, str(tmp_path / "report.html"))
+
+
+def test_batch_command(tmp_path, monkeypatch):
+    config_path = tmp_path / "batch.yaml"
+    config_path.write_text("dummy")
+
+    mock_process = MagicMock(return_value=[])
+    monkeypatch.setattr("fiber_tracer.batch.process_batch", mock_process)
+
+    rc = main(
+        [
+            "batch",
+            "--config",
+            str(config_path),
+            "--aggregate-csv",
+            str(tmp_path / "aggregate.csv"),
+        ]
+    )
+
+    assert rc == 0
+    mock_process.assert_called_once_with(
+        str(config_path), aggregate_csv=str(tmp_path / "aggregate.csv")
+    )

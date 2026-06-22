@@ -34,6 +34,15 @@ def _build_report_viz_parser(subparsers: Any) -> None:
     parser.set_defaults(func=_run_report_viz)
 
 
+def _build_batch_parser(subparsers: Any) -> None:
+    parser = subparsers.add_parser("batch", help="Process multiple volumes from a batch config")
+    parser.add_argument("--config", required=True, help="Path to YAML/JSON batch config")
+    parser.add_argument(
+        "--aggregate-csv", default="batch_summary.csv", help="Aggregate CSV output path"
+    )
+    parser.set_defaults(func=_run_batch)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="RAFA fiber analysis")
     parser.add_argument("--log-level", default="INFO")
@@ -50,6 +59,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_view_args(view_parser)
 
     _build_report_viz_parser(subparsers)
+    _build_batch_parser(subparsers)
 
     return parser
 
@@ -113,6 +123,14 @@ def _run_report_viz(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_batch(args: argparse.Namespace) -> int:
+    """Process multiple volumes from a batch config."""
+    from fiber_tracer.batch import process_batch
+
+    process_batch(args.config, aggregate_csv=args.aggregate_csv)
+    return 0
+
+
 def main(argv: Optional[list] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
@@ -128,6 +146,8 @@ def main(argv: Optional[list] = None) -> int:
         return _run_view(args)
     if args.command == "report-viz":
         return _run_report_viz(args)
+    if args.command == "batch":
+        return _run_batch(args)
 
     parser.print_help()
     return 1
