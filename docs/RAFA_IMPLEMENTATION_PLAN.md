@@ -4,9 +4,9 @@
 
 **Goal:** Rebuild `fiber_tracer_2.0` as a cross-platform, honest, regime-aware fiber-analysis tool with classical + optional ML backends, optional TDA descriptors, and reproducible validation on public data.
 
-**Architecture:** A plugin-based core (`fiber_tracer/`) stays MIT-licensed and imports only permissive dependencies. Heavy/optional backends (PyTorch/nnU-Net, gudhi/ripser) are lazy-loaded through adapter modules. Three analysis regimes (resolved / marginal / sub-voxel) select algorithms automatically from physical voxel/fiber ratio. All outputs are validated against synthetic phantoms and public datasets.
+**Architecture:** A plugin-based core (`fiber_tracer/`) stays MIT-licensed and imports only permissive dependencies. Heavy/optional backends (PyTorch/nnU-Net, gudhi) are lazy-loaded through adapter modules. Three analysis regimes (resolved / marginal / sub-voxel) select algorithms automatically from physical voxel/fiber ratio. All outputs are validated against synthetic phantoms and public datasets.
 
-**Tech Stack:** Python ≥3.9; `numpy`, `scipy`, `scikit-image` (BSD), `pandas`, `tifffile`, `pyyaml`; optional `structure-tensor` (MIT), `skan` (BSD-3), `torch`/`scikit-learn` (BSD-3), `gudhi` ≥3.9 (MIT Python modules), `ripser` (MIT). **Excluded:** `kimimaro` (GPL-3, license-incompatible).
+**Tech Stack:** Python ≥3.9; `numpy`, `scipy`, `scikit-image` (BSD), `pandas`, `tifffile`, `pyyaml`; optional `structure-tensor` (MIT), `skan` (BSD-3), `torch`/`torchvision`/`scikit-learn` (BSD-3), `gudhi` ≥3.9 (MIT Python modules). **Excluded:** `ripser` and `kimimaro` (GPL-3, license-incompatible).
 
 ---
 
@@ -136,9 +136,9 @@ dependencies = [
 [project.optional-dependencies]
 structure = ["structure-tensor>=0.3.0"]
 skeleton = ["skan>=0.13.0"]
-ml = ["torch>=2.0.0", "torchvision", "scikit-learn>=1.3.0"]
+ml = ["torch>=2.0.0", "torchvision>=0.15.0", "scikit-learn>=1.3.0"]
 unet = ["nnunetv2>=2.4.0"]
-tda = ["gudhi>=3.9.0", "ripser>=0.6.0"]
+tda = ["gudhi>=3.9.0"]
 viz = ["plotly>=5.18.0", "napari>=0.4.18"]
 parallel = ["zarr>=2.16.0", "dask>=2023.0.0"]
 dev = ["pytest>=7.4.0", "pytest-cov", "black", "ruff", "mypy"]
@@ -202,7 +202,7 @@ addopts = "-ra -q --strict-markers"
 - **PyTorch** — BSD-3-Clause — Copyright PyTorch contributors — https://pytorch.org/
 - **nnU-Net** — Apache-2.0 — Copyright DKFZ — https://github.com/MIC-DKFZ/nnUNet
 - **GUDHI** — MIT (Python modules ≥3.9.0) — https://gudhi.inria.fr/
-- **Ripser.py** — MIT — https://ripser.scikit-tda.org/
+
 
 ## Datasets used for validation
 
@@ -1146,13 +1146,13 @@ git commit -m "feat: add optional ML segmentation backend with lazy imports"
 ### Task 4.2: TDA descriptor backend (lazy import)
 
 **Files:**
-- Create: `src/fiber_tracer/backends/tda_gudhi.py`, `src/fiber_tracer/backends/tda_ripser.py`
+- Create: `src/fiber_tracer/backends/tda_gudhi.py`
 - Test: `tests/test_tda_backend.py`
 
 - [ ] **Step 1: Implement Betti numbers and persistence summaries**
 
 ```python
-"""Optional TDA descriptors using gudhi/ripser."""
+"""Optional TDA descriptors using gudhi."""
 
 from fiber_tracer.exceptions import BackendNotAvailableError
 

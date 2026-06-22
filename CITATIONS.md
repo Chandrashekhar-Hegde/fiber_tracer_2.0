@@ -8,9 +8,19 @@
 
 ## Software
 
+### Core
+
 - van der Walt et al. (2014). scikit-image: Image processing in Python. *PeerJ*, 2, e453.
-- Nunez-Iglesias, J. & skan contributors. skan: skeleton analysis in Python.
-- Vedrana Andersen Dahl and Niels Jeppesen. structure-tensor.
+
+### Optional backends
+
+- GUDHI project. GUDHI: Geometry Understanding in Higher Dimensions. https://gudhi.inria.fr/
+- Nunez-Iglesias, J. & skan contributors. skan: skeleton analysis in Python. https://github.com/jni/skan
+- Vedrana Andersen Dahl and Niels Jeppesen. structure-tensor. https://github.com/Skielex/structure-tensor
+- Paszke et al. PyTorch. https://pytorch.org/
+- Pedregosa et al. scikit-learn. https://scikit-learn.org/
+- plotly contributors. plotly. https://plotly.com/python/
+- napari contributors. napari. https://napari.org/
 
 ## Validation data
 

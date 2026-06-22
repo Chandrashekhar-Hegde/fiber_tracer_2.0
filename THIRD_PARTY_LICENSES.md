@@ -9,19 +9,39 @@
 - **Matplotlib** — PSF-based license — https://matplotlib.org/
 - **tifffile** — BSD-3-Clause — https://pypi.org/project/tifffile/
 - **PyYAML** — MIT — https://pyyaml.org/
+- **tqdm** — MIT — https://tqdm.github.io/
 
 ## Optional dependencies
 
-- **structure-tensor** — MIT — Copyright Vedrana Andersen Dahl and Niels Jeppesen — https://github.com/Skielex/structure-tensor
-- **skan** — BSD-3-Clause — Copyright Juan Nunez-Iglesias — https://github.com/jni/skan
-- **PyTorch** — BSD-3-Clause — Copyright PyTorch contributors — https://pytorch.org/
-- **nnU-Net** — Apache-2.0 — Copyright DKFZ — https://github.com/MIC-DKFZ/nnUNet
-- **GUDHI** — MIT (Python modules ≥3.9.0) — https://gudhi.inria.fr/
-- **Ripser.py** — MIT — https://ripser.scikit-tda.org/
+- **structure-tensor** — MIT — https://github.com/Skielex/structure-tensor
+- **skan** — BSD-3-Clause — https://github.com/jni/skan
+- **torch** — BSD-3-Clause — https://pytorch.org/
+- **torchvision** — BSD-3-Clause — https://pytorch.org/vision/
+- **scikit-learn** — BSD-3-Clause — https://scikit-learn.org/
+- **nnunetv2** — Apache-2.0 — Linux-only extra due to transitive build constraints — https://github.com/MIC-DKFZ/nnUNet
+- **gudhi** — MIT (Python modules ≥3.9.0) — https://gudhi.inria.fr/
+- **plotly** — MIT — https://plotly.com/python/
+- **napari** — BSD-3-Clause — https://napari.org/
+- **zarr** — MIT — https://zarr.dev/
+- **dask** — BSD-3-Clause — https://www.dask.org/
 - **h5py** — BSD-3-Clause — https://www.h5py.org/
+
+## Development / test dependencies
+
+- **pytest** — MIT — https://pytest.org/
+- **pytest-cov** — MIT — https://pytest-cov.readthedocs.io/
+- **black** — MIT — https://black.readthedocs.io/
+- **ruff** — MIT — https://docs.astral.sh/ruff/
+- **mypy** — MIT — https://mypy-lang.org/
 
 ## Datasets used for validation
 
 - **GF-PA66 3D XCT** — CC BY-SA 4.0 — DOI:10.5281/zenodo.4587827 — Bertoldo et al., Front. Mater. 2021.
+
+## Notes
+
+`pip install -e ".[all]"` no longer installs `ripser` because its transitive
+dependency `hopcroftkarp` is GPLv3. Users who need Ripser persistence must
+install it separately and comply with its license.
 
 See `CITATIONS.md` for academic citations.
