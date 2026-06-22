@@ -234,6 +234,11 @@ full_volume.dat
 checkpoint/
 models/
 
+# Training data
+/data/raw/
+/data/processed/
+/data/datasets.json
+
 # Profiling files
 *.prof
 *.lprof
