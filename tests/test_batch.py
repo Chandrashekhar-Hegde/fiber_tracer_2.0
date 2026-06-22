@@ -1,5 +1,5 @@
 import pytest
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from fiber_tracer.batch import load_batch_config, process_batch
 from fiber_tracer.io import save_tiff_stack
