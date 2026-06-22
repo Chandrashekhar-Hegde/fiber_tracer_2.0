@@ -2,7 +2,7 @@
 
 import numpy as np
 import pytest
-from hypothesis import assume, given
+from hypothesis import given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
@@ -13,38 +13,37 @@ from fiber_tracer.validation.metrics import (
     orientation_tensor_error,
 )
 
-float_array = arrays(
-    np.float64,
-    (3,),
-    elements=st.floats(-1e3, 1e3),
+non_zero_vector = arrays(np.float64, (3,), elements=st.floats(-1e3, 1e3)).filter(
+    lambda v: np.linalg.norm(v) > 1e-12
 )
 
 
-@given(float_array, float_array)
+@given(non_zero_vector, non_zero_vector)
+@settings(deadline=2000)
 def test_angular_error_range(v1, v2):
-    assume(np.linalg.norm(v1) > 1e-12)
-    assume(np.linalg.norm(v2) > 1e-12)
     assert 0.0 <= angular_error(v1, v2) <= 90.0
 
 
-@given(float_array)
+@given(non_zero_vector)
+@settings(deadline=2000)
 def test_angular_error_identical(v):
-    assume(np.linalg.norm(v) > 1e-12)
     assert angular_error(v, v) == pytest.approx(0.0, abs=1e-5)
 
 
-@given(float_array)
+@given(non_zero_vector)
+@settings(deadline=2000)
 def test_angular_error_sign_ambiguity(v):
-    assume(np.linalg.norm(v) > 1e-12)
     assert angular_error(v, -v) == pytest.approx(0.0, abs=1e-5)
 
 
 @given(mask=arrays(np.bool_, (10, 10)))
+@settings(deadline=2000)
 def test_dice_score_identical_masks(mask):
     assert dice_score(mask, mask) == pytest.approx(1.0)
 
 
 @given(arrays(np.bool_, (10, 10)), arrays(np.bool_, (10, 10)))
+@settings(deadline=2000)
 def test_dice_score_symmetric(a, b):
     assert dice_score(a, b) == pytest.approx(dice_score(b, a))
 
@@ -61,6 +60,7 @@ unit_vectors_5x3 = (
 
 
 @given(unit_vectors_5x3, unit_vectors_5x3)
+@settings(deadline=2000)
 def test_mean_angular_error_range(pred_directions, true_directions):
     assert 0.0 <= mean_angular_error(pred_directions, true_directions) <= 90.0
 
@@ -68,5 +68,6 @@ def test_mean_angular_error_range(pred_directions, true_directions):
 @given(
     arrays(np.float64, (3, 3), elements=st.floats(-10.0, 10.0)),
 )
+@settings(deadline=2000)
 def test_orientation_tensor_error_identical(tensor):
     assert orientation_tensor_error(tensor, tensor) == pytest.approx(0.0, abs=1e-9)

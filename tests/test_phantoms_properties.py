@@ -2,7 +2,7 @@
 
 import numpy as np
 import pytest
-from hypothesis import given, settings
+from hypothesis import assume, given, settings
 from hypothesis import strategies as st
 
 from fiber_tracer.validation.phantoms import generate_fiber_phantom
@@ -62,6 +62,5 @@ def test_phantom_labels_are_nonnegative_integers(shape, n_fibers):
 def test_phantom_max_label_equals_placed_fiber_count(shape, n_fibers):
     phantom = generate_fiber_phantom(shape=shape, n_fibers=n_fibers, seed=42)
     placed = phantom.orientations.shape[0]
-    if placed == 0:
-        pytest.skip("no fibers placed")
+    assume(len(phantom.orientations) > 0)
     assert phantom.labels.max() == placed
