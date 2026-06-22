@@ -12,18 +12,28 @@ import torch.nn as nn
 
 
 class _ConvBlock(nn.Module):
-    """Two 3×3×3 convolutions with ReLU activations."""
+    """Two 3×3×3 convolutions with normalization and ReLU."""
 
-    def __init__(self, in_channels: int, out_channels: int) -> None:
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        dropout: float = 0.0,
+        norm: str = "batch",
+    ) -> None:
         super().__init__()
-        self.conv = nn.Sequential(
+        Norm = nn.BatchNorm3d if norm == "batch" else nn.InstanceNorm3d
+        layers: list[nn.Module] = [
             nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm3d(out_channels),
+            Norm(out_channels),
             nn.ReLU(inplace=True),
             nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
-            nn.BatchNorm3d(out_channels),
+            Norm(out_channels),
             nn.ReLU(inplace=True),
-        )
+        ]
+        if dropout > 0.0:
+            layers.append(nn.Dropout3d(dropout))
+        self.conv = nn.Sequential(*layers)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.conv(x)  # type: ignore[no-any-return]
@@ -40,6 +50,10 @@ class UNet3D(nn.Module):
         Number of output channels (1 for binary foreground probability).
     features : Sequence[int]
         Number of features at each encoder level, e.g. ``(8, 16, 32)``.
+    dropout : float
+        Spatial dropout probability applied after each conv block (0 to disable).
+    norm : str
+        Normalization layer: ``"batch"`` or ``"instance"``.
     """
 
     def __init__(
@@ -47,6 +61,8 @@ class UNet3D(nn.Module):
         in_channels: int = 1,
         out_channels: int = 1,
         features: Sequence[int] = (8, 16, 32),
+        dropout: float = 0.0,
+        norm: str = "batch",
     ) -> None:
         super().__init__()
         self.encoder_blocks = nn.ModuleList()
@@ -54,10 +70,10 @@ class UNet3D(nn.Module):
 
         current = in_channels
         for feature in features:
-            self.encoder_blocks.append(_ConvBlock(current, feature))
+            self.encoder_blocks.append(_ConvBlock(current, feature, dropout=dropout, norm=norm))
             current = feature
 
-        self.bottleneck = _ConvBlock(features[-1], features[-1] * 2)
+        self.bottleneck = _ConvBlock(features[-1], features[-1] * 2, dropout=dropout, norm=norm)
 
         self.up_convs = nn.ModuleList()
         self.decoder_blocks = nn.ModuleList()
@@ -66,7 +82,7 @@ class UNet3D(nn.Module):
             in_feat = reversed_features[i] * 2 if i == 0 else reversed_features[i - 1]
             out_feat = reversed_features[i]
             self.up_convs.append(nn.ConvTranspose3d(in_feat, out_feat, kernel_size=2, stride=2))
-            self.decoder_blocks.append(_ConvBlock(out_feat * 2, out_feat))
+            self.decoder_blocks.append(_ConvBlock(out_feat * 2, out_feat, dropout=dropout, norm=norm))
 
         self.final_conv = nn.Conv3d(features[0], out_channels, kernel_size=1)
 

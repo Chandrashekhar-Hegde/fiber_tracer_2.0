@@ -55,6 +55,18 @@ def test_unet3d_forward_shape():
 
 
 @pytest.mark.skipif(importlib.util.find_spec("torch") is None, reason="torch not installed")
+def test_unet3d_large_forward_shape():
+    import torch
+
+    from fiber_tracer.backends.unet3d import UNet3D
+
+    model = UNet3D(in_channels=1, out_channels=1, features=(16, 32, 64, 128))
+    x = torch.randn(1, 1, 64, 64, 64)
+    y = model(x)
+    assert y.shape == (1, 1, 64, 64, 64)
+
+
+@pytest.mark.skipif(importlib.util.find_spec("torch") is None, reason="torch not installed")
 def test_ml_backend_loads_checkpoint_and_segments(tmp_path):
     import torch
 
