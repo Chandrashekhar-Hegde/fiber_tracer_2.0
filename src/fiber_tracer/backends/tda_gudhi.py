@@ -18,12 +18,12 @@ def betti_numbers(binary_volume: np.ndarray) -> dict[str, int]:
     """Compute Betti numbers b0, b1, b2 of a binary 3D volume.
 
     Uses a cubical complex with foreground voxels at filtration value 0
-    and background at value 1.
+    and background at infinity.
     """
     gudhi = _import_gudhi()
     if binary_volume.ndim != 3:
         raise ValueError(f"Expected 3D binary volume, got {binary_volume.ndim}D")
-    filtration = np.where(binary_volume, 0.0, 1.0).astype(np.float64).flatten()
+    filtration = np.where(binary_volume, 0.0, np.inf).astype(np.float64).flatten()
     cc = gudhi.CubicalComplex(
         dimensions=binary_volume.shape,
         top_dimensional_cells=filtration,
@@ -42,7 +42,7 @@ def persistence_summary(binary_volume: np.ndarray) -> dict[str, float]:
     gudhi = _import_gudhi()
     if binary_volume.ndim != 3:
         raise ValueError(f"Expected 3D binary volume, got {binary_volume.ndim}D")
-    filtration = np.where(binary_volume, 0.0, 1.0).astype(np.float64).flatten()
+    filtration = np.where(binary_volume, 0.0, np.inf).astype(np.float64).flatten()
     cc = gudhi.CubicalComplex(
         dimensions=binary_volume.shape,
         top_dimensional_cells=filtration,
