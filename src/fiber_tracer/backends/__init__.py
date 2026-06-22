@@ -2,5 +2,13 @@
 
 from fiber_tracer.backends.base import SegmentationBackend
 from fiber_tracer.backends.ml_segmentation import MLSegmentationBackend
+from fiber_tracer.backends.tda_gudhi import betti_numbers, persistence_summary
+from fiber_tracer.backends.tda_ripser import ripser_persistence
 
-__all__ = ["SegmentationBackend", "MLSegmentationBackend"]
+__all__ = [
+    "SegmentationBackend",
+    "MLSegmentationBackend",
+    "betti_numbers",
+    "persistence_summary",
+    "ripser_persistence",
+]
