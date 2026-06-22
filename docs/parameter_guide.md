@@ -41,6 +41,27 @@ Physical standard deviation of a 3D Gaussian smoothing kernel applied before ana
 
 Boolean. Defaults to `True`. If `True`, the input volume is min–max normalized to `[0, 1]` before segmentation; if `False`, the raw volume is cast to `np.float32` and divided by its maximum so the pipeline still receives a float array in a known range. The pipeline respects this flag.
 
+## Chunked / out-of-core processing
+
+For volumes that do not fit in RAM, `fiber_tracer.chunked` provides helpers built on `zarr` and `dask` (installed via the `parallel` extra). The module includes:
+
+- `load_zarr` / `save_zarr` / `tiff_to_zarr` – read and write chunked `zarr` arrays from TIFF stacks.
+- `process_chunks` – apply a function to overlapping chunks and write only the central region back, avoiding boundary artifacts.
+- `normalize_intensity_chunked` – two-pass min–max normalization that keeps only one chunk in memory at a time.
+- `gaussian_denoise_chunked` – Gaussian smoothing with overlap padding for seamless chunk-wise denoising.
+
+These helpers are intended for programmatic use; a future CLI flag `--chunk-size` will expose chunked processing directly from the command line. For now, convert a TIFF stack to zarr and call the chunked normalization/denoising functions before passing the result to the pipeline:
+
+```python
+from fiber_tracer.chunked import tiff_to_zarr, normalize_intensity_chunked
+import zarr
+
+input_zarr = tiff_to_zarr("large_stack.tif", "input.zarr", chunks=(64, 64, 64))
+output_zarr = zarr.open_array("normalized.zarr", mode="w", shape=input_zarr.shape,
+                               chunks=(64, 64, 64), dtype="float32")
+normalize_intensity_chunked(input_zarr, output_zarr, chunk_shape=(64, 64, 64))
+```
+
 ## Segmentation parameters (`segmentation`)
 
 ### `method`
