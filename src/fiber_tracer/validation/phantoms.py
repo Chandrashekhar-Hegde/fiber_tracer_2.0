@@ -14,6 +14,7 @@ class FiberPhantom:
     diameters_um: np.ndarray
     lengths_um: np.ndarray
     voxel_spacing_um: tuple[float, float, float]
+    fiber_diameter_um: float
 
 
 def generate_straight_fiber(
@@ -78,6 +79,7 @@ def generate_fiber_phantom(
         diameters_um=np.array(diameters),
         lengths_um=np.array(lengths),
         voxel_spacing_um=voxel_spacing_um,
+        fiber_diameter_um=fiber_diameter_um,
     )
 
 
@@ -117,4 +119,5 @@ def generate_phantom_with_known_orientation(
         diameters_um=np.array([fiber_diameter_um]),
         lengths_um=np.array([length]),
         voxel_spacing_um=voxel_spacing_um,
+        fiber_diameter_um=fiber_diameter_um,
     )
