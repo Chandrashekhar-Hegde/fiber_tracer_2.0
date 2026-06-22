@@ -38,6 +38,8 @@ dependencies = [
     "pandas>=2.0.0",
     "matplotlib>=3.7.0",
     "tifffile>=2023.0.0",
+    "imagecodecs>=2023.0.0",
+    "h5py>=3.0",
     "pyyaml>=6.0",
     "tqdm>=4.65.0",
 ]
