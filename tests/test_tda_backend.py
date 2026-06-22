@@ -55,3 +55,38 @@ def test_betti_numbers_hollow_cube_shell():
     result = betti_numbers(volume)
     assert result["b0"] == 1
     assert result["b2"] == 1
+
+
+@pytest.mark.skipif(importlib.util.find_spec("gudhi") is None, reason="gudhi not installed")
+def test_persistence_diagram_returns_essential_components():
+    from fiber_tracer.backends.tda_gudhi import persistence_diagram
+
+    volume = np.ones((5, 5, 5), dtype=bool)
+    diagram = persistence_diagram(volume)
+    # Each entry is (dimension, birth, death). Essential features have death == inf.
+    essential_0 = [d for d in diagram if d["dimension"] == 0 and np.isinf(d["death"])]
+    assert len(essential_0) == 1
+
+
+@pytest.mark.skipif(importlib.util.find_spec("gudhi") is None, reason="gudhi not installed")
+def test_persistence_diagram_two_components():
+    from fiber_tracer.backends.tda_gudhi import persistence_diagram
+
+    volume = np.zeros((9, 9, 9), dtype=bool)
+    volume[1:4, 1:4, 1:4] = True
+    volume[5:8, 5:8, 5:8] = True
+    diagram = persistence_diagram(volume)
+    essential_0 = [d for d in diagram if d["dimension"] == 0 and np.isinf(d["death"])]
+    assert len(essential_0) == 2
+
+
+@pytest.mark.skipif(importlib.util.find_spec("gudhi") is None, reason="gudhi not installed")
+def test_persistence_summary_finite_features():
+    from fiber_tracer.backends.tda_gudhi import persistence_summary
+
+    volume = np.ones((5, 5, 5), dtype=bool)
+    summary = persistence_summary(volume)
+    assert summary["n_features"] > 0
+    assert summary["n_finite"] >= 0
+    assert summary["max_persistence"] >= 0.0
+    assert summary["mean_persistence"] >= 0.0
