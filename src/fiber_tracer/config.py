@@ -128,7 +128,11 @@ class Config:
             raise TypeError(f"expected dict, got {type(data).__name__}")
         data = dict(data)
         if "voxel_spacing_um" in data:
-            data["voxel_spacing_um"] = _dict_to_dataclass(data["voxel_spacing_um"], VoxelSpacing)
+            vs = data["voxel_spacing_um"]
+            if isinstance(vs, (list, tuple)) and len(vs) == 3:
+                data["voxel_spacing_um"] = VoxelSpacing(*vs)
+            else:
+                data["voxel_spacing_um"] = _dict_to_dataclass(vs, VoxelSpacing)
         if "processing" in data:
             data["processing"] = _dict_to_dataclass(data["processing"], ProcessingConfig)
         if "segmentation" in data:

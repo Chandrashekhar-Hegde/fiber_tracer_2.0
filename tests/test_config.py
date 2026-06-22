@@ -85,3 +85,30 @@ def test_config_round_trip_yaml(tmp_path):
 
     assert loaded.fiber_diameter_um == pytest.approx(12.0)
     assert loaded.regime == "resolved"
+
+
+def test_config_from_dict_accepts_voxel_spacing_as_list():
+    """voxel_spacing_um may be supplied as [z, y, x] for YAML/JSON brevity."""
+    cfg = Config.from_dict(
+        {
+            "data_path": "dummy.tif",
+            "output_dir": "out",
+            "voxel_spacing_um": [0.5, 0.6, 1.0],
+        }
+    )
+    assert isinstance(cfg.voxel_spacing_um, VoxelSpacing)
+    assert cfg.voxel_spacing_um.z == pytest.approx(0.5)
+    assert cfg.voxel_spacing_um.y == pytest.approx(0.6)
+    assert cfg.voxel_spacing_um.x == pytest.approx(1.0)
+
+
+def test_config_from_dict_accepts_voxel_spacing_as_tuple():
+    cfg = Config.from_dict(
+        {
+            "data_path": "dummy.tif",
+            "output_dir": "out",
+            "voxel_spacing_um": (2.0, 2.0, 2.0),
+        }
+    )
+    assert isinstance(cfg.voxel_spacing_um, VoxelSpacing)
+    assert cfg.voxel_spacing_um.z == pytest.approx(2.0)
