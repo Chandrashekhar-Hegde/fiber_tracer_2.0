@@ -43,19 +43,17 @@ def test_ripser_persistence_raises_when_ripser_unavailable():
 
 
 def test_betti_numbers_rejects_non_3d_volume():
-    with (
-        patch.object(builtins, "__import__", side_effect=_import_side_effect),
-        pytest.raises(BackendNotAvailableError),
-    ):
-        betti_numbers(np.ones((3, 3), dtype=bool))
+    with patch("fiber_tracer.backends.tda_gudhi._import_gudhi") as mock_import:
+        mock_import.return_value = object()
+        with pytest.raises(ValueError, match="Expected 3D binary volume"):
+            betti_numbers(np.ones((3, 3), dtype=bool))
 
 
 def test_ripser_persistence_rejects_non_point_cloud():
-    with (
-        patch.object(builtins, "__import__", side_effect=_import_side_effect),
-        pytest.raises(BackendNotAvailableError),
-    ):
-        ripser_persistence(np.ones((3, 2)))
+    with patch("fiber_tracer.backends.tda_ripser._import_ripser") as mock_import:
+        mock_import.return_value = object()
+        with pytest.raises(ValueError, match="Expected Nx3 point cloud"):
+            ripser_persistence(np.ones((10, 2)))
 
 
 @pytest.mark.skipif(importlib.util.find_spec("gudhi") is None, reason="gudhi not installed")
