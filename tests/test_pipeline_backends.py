@@ -1,10 +1,11 @@
 # tests/test_pipeline_backends.py
 from unittest.mock import patch
 
+import numpy as np
 import pytest
 
 from fiber_tracer.config import Config, VoxelSpacing
-from fiber_tracer.io import save_tiff_stack
+from fiber_tracer.io import load_tiff_stack, save_tiff_stack
 from fiber_tracer.pipeline import FiberAnalysisPipeline
 from fiber_tracer.validation.phantoms import generate_fiber_phantom
 
@@ -44,10 +45,13 @@ def test_unet_method_routes_to_ml_backend(tmp_path):
     assert summary["regime"] == "resolved"
 
 
-def test_invalid_segmentation_method_raises():
+def test_invalid_segmentation_method_raises(tmp_path):
     config = Config()
+    config.data_path = str(tmp_path / "data")
+    config.output_dir = str(tmp_path / "out")
     config.segmentation.method = "invalid"
-    with pytest.raises(ValueError):
+    (tmp_path / "data").mkdir()
+    with pytest.raises(ValueError, match="segmentation.method"):
         config.validate()
 
 
@@ -78,15 +82,31 @@ def test_tda_descriptors_added_to_summary(tmp_path):
     expected_betti = {"b0": 3, "b1": 0, "b2": 0}
     expected_persistence = {"n_features": 3, "n_finite": 0, "max_persistence": 0.0}
 
-    pipeline = FiberAnalysisPipeline(config)
-    with patch("fiber_tracer.pipeline.betti_numbers", return_value=expected_betti) as mock_betti:
-        with patch(
-            "fiber_tracer.pipeline.persistence_summary",
-            return_value=expected_persistence,
-        ) as mock_persistence:
-            summary = pipeline.run()
+    known_mask = np.zeros((64, 64, 64), dtype=bool)
+    known_mask[10:20, 10:20, 10:20] = True
+    known_mask[30:40, 30:40, 30:40] = True
 
+    pipeline = FiberAnalysisPipeline(config)
+    with patch("fiber_tracer.pipeline.segment_otsu_3d", return_value=known_mask) as mock_otsu:
+        with patch(
+            "fiber_tracer.pipeline.betti_numbers", return_value=expected_betti
+        ) as mock_betti:
+            with patch(
+                "fiber_tracer.pipeline.persistence_summary",
+                return_value=expected_persistence,
+            ) as mock_persistence:
+                summary = pipeline.run()
+
+    mock_otsu.assert_called_once()
     mock_betti.assert_called_once()
     mock_persistence.assert_called_once()
     assert summary["tda"]["betti_numbers"] == expected_betti
     assert summary["tda"]["persistence_summary"] == expected_persistence
+
+    # TDA descriptors must be computed on the cleaned mask (labels > 0),
+    # not on the raw Otsu mask.
+    labels = load_tiff_stack(out_dir / "labels.tif")
+    cleaned_mask = labels > 0
+    passed_mask = mock_betti.call_args[0][0]
+    assert passed_mask.dtype == bool
+    np.testing.assert_array_equal(passed_mask, cleaned_mask)

@@ -166,13 +166,6 @@ class FiberAnalysisPipeline:
         else:
             mask = segment_otsu_3d(volume)
 
-        tda_descriptors: Optional[dict[str, Any]] = None
-        if self.config.analysis.compute_tda_descriptors:
-            tda_descriptors = {
-                "betti_numbers": betti_numbers(mask),
-                "persistence_summary": persistence_summary(mask),
-            }
-
         # Remove small spurious foreground voxels and smooth boundaries while
         # keeping well-separated fibers distinct.
         mask = ndimage.binary_opening(mask, structure=ndimage.generate_binary_structure(3, 1))
@@ -182,6 +175,15 @@ class FiberAnalysisPipeline:
             labels = segment_connected_components_3d(mask)
         else:  # otsu
             labels = segment_connected_components_3d(mask)
+
+        tda_descriptors: Optional[dict[str, Any]] = None
+        if self.config.analysis.compute_tda_descriptors:
+            cleaned_mask = labels > 0
+            tda_descriptors = {
+                "betti_numbers": betti_numbers(cleaned_mask),
+                "persistence_summary": persistence_summary(cleaned_mask),
+            }
+
         skeleton = skeletonize_label_volume(labels)
 
         # Per-fiber properties
