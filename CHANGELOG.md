@@ -5,6 +5,22 @@ All notable changes to the Fiber Tracer project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-06-21
+
+### Added
+- Napari viewer integration (`fiber-tracer view`) for raw, labels, skeleton, and fiber orientation vector layers.
+- Plotly-based interactive HTML reports (`fiber-tracer report-viz`).
+- Automatic GF-PA66 Zenodo downloader with license acceptance, file listing, progress bar, and resume support.
+- Batch-processing CLI (`fiber-tracer batch`) with aggregate CSV reporting.
+- `docs/architecture.md` and `docs/developer_guide.md`.
+
+### Changed
+- README updated with visualization, batch, and GF-PA66 download examples.
+- `docs/parameter_guide.md` and `docs/validation_protocol.md` updated with new CLI commands and downloader instructions.
+
+### Fixed
+- n/a
+
 ## [3.1.0] - 2026-06-21
 
 ### Added

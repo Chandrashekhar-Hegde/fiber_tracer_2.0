@@ -1,4 +1,4 @@
-# Fiber Tracer (RAFA) v3.0.0
+# Fiber Tracer (RAFA) v3.2.0
 
 **Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites, with optional structure-tensor and skeleton backends.**
 
@@ -30,11 +30,17 @@ The package requires Python ≥3.9.
 # Core package only
 pip install -e .
 
-# Recommended install for tests and examples
+# Core development
 pip install -e ".[structure,skeleton,dev]"
+
+# + napari / plotly visualizations
+pip install -e ".[viz]"
+
+# All optional backends
+pip install -e ".[all]"
 ```
 
-The `structure` and `skeleton` extras install optional backends used by the test suite and documentation examples. Other extras are defined in `pyproject.toml` but are not required for the current tests.
+The `structure` and `skeleton` extras install optional backends used by the test suite and documentation examples. The `viz` extra installs napari and plotly for interactive viewing and HTML reporting. Other extras are defined in `pyproject.toml` but are not required for the current tests.
 
 ## Quick start
 
@@ -63,6 +69,58 @@ fiber-tracer \
   --regime resolved
 ```
 
+### Visualize results in napari
+
+```bash
+fiber-tracer view --data path/to/stack.tif --output results/
+```
+
+### Generate interactive HTML report
+
+```bash
+fiber-tracer report-viz --summary results/summary.json --output report.html
+```
+
+### Batch processing
+
+Create `batch.yaml`:
+
+```yaml
+common:
+  voxel_spacing_um: [1.0, 1.0, 1.0]
+  fiber_diameter_um: 6.0
+  regime: auto
+volumes:
+  - data_path: sample_a.tif
+    output_dir: results/sample_a
+  - data_path: sample_b.tif
+    output_dir: results/sample_b
+    fiber_diameter_um: 4.0
+```
+
+Run:
+
+```bash
+fiber-tracer batch --config batch.yaml --aggregate-csv batch_summary.csv
+```
+
+### Download GF-PA66 validation dataset
+
+```bash
+python scripts/download_gfpa66.py --list
+python scripts/download_gfpa66.py --file pa66_volumes.h5 --output-dir data/ --accept-license
+python scripts/validate_gfpa66.py --data data/pa66_volumes.h5 --output results/gfpa66/ --dataset <name>
+```
+
+### CLI commands
+
+- `fiber-tracer run` / `fiber-tracer analyze` — analyze a single volume.
+- `fiber-tracer view` — open raw data and results in napari.
+- `fiber-tracer report-viz` — generate an interactive Plotly HTML report from `summary.json`.
+- `fiber-tracer batch` — process multiple volumes from a batch config.
+
+Run `fiber-tracer --help` for full usage details.
+
 ## Example output files
 
 After a run, the output directory contains some or all of the following:
@@ -81,10 +139,25 @@ Not every file is produced in every regime; for example, `a2_map.npy` is written
 
 ## Documentation
 
+- [`docs/architecture.md`](docs/architecture.md) — Package architecture and module responsibilities.
+- [`docs/developer_guide.md`](docs/developer_guide.md) — Development workflow, testing, and contribution guidelines.
 - [`docs/methodology.md`](docs/methodology.md) — Algorithms, regime selection, and limitations.
 - [`docs/validation_protocol.md`](docs/validation_protocol.md) — Phantom benchmarks, public datasets, metrics, and reproducibility.
 - [`docs/parameter_guide.md`](docs/parameter_guide.md) — Configuration options and practical guidance.
 - [`docs/RAFA_IMPLEMENTATION_PLAN.md`](docs/RAFA_IMPLEMENTATION_PLAN.md) — Original redesign plan.
+
+## Visualization
+
+Interactive visualization is available via the `viz` extra:
+
+- **napari** (`fiber-tracer view`) — explore raw data, fiber labels, skeletons, and orientation vector layers.
+- **plotly** (`fiber-tracer report-viz`) — generate self-contained interactive HTML reports.
+
+Install with:
+
+```bash
+pip install -e ".[viz]"
+```
 
 ## Running the benchmark
 
