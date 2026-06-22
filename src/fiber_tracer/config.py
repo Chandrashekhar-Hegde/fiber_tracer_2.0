@@ -8,6 +8,7 @@ from typing import Optional, Union, get_args, get_origin
 import yaml  # type: ignore[import-untyped]
 
 VALID_REGIMES = ("auto", "resolved", "marginal", "subvoxel")
+VALID_SEGMENTATION_METHODS = {"otsu", "watershed", "unet"}
 
 
 def _dict_to_dataclass(data, cls):
@@ -104,6 +105,11 @@ class Config:
             if s <= 0:
                 raise ValueError("voxel spacing must be positive")
         validate_regime(self.regime)
+        if self.segmentation.method not in VALID_SEGMENTATION_METHODS:
+            raise ValueError(
+                f"segmentation.method must be one of {VALID_SEGMENTATION_METHODS}, "
+                f"got {self.segmentation.method}"
+            )
 
     def to_dict(self) -> dict:
         return asdict(self)

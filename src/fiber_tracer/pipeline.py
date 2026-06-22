@@ -8,6 +8,8 @@ import numpy as np
 from scipy import ndimage
 
 from fiber_tracer.analysis.morphometry import equivalent_diameter_from_volume, per_fiber_volumes
+from fiber_tracer.backends import betti_numbers, persistence_summary
+from fiber_tracer.backends.ml_segmentation import MLSegmentationBackend
 from fiber_tracer.centerline.skeleton import skeletonize_label_volume
 from fiber_tracer.config import Config
 from fiber_tracer.io import get_shape_info, load_tiff_stack, save_tiff_stack
@@ -153,13 +155,32 @@ class FiberAnalysisPipeline:
 
     def _run_resolved(self, volume: np.ndarray, out: Path) -> dict:
         """Resolved-regime pipeline: segmentation, labeling, skeletonization."""
-        mask = segment_otsu_3d(volume)
+        if self.config.segmentation.method == "unet":
+            backend = MLSegmentationBackend(model_path=None)
+            segmentation = backend.segment(volume)
+            # Ensure binary mask
+            if segmentation.dtype != bool:
+                mask = segmentation > 0
+            else:
+                mask = segmentation
+        else:
+            mask = segment_otsu_3d(volume)
+
+        tda_descriptors: Optional[dict[str, Any]] = None
+        if self.config.analysis.compute_tda_descriptors:
+            tda_descriptors = {
+                "betti_numbers": betti_numbers(mask),
+                "persistence_summary": persistence_summary(mask),
+            }
+
         # Remove small spurious foreground voxels and smooth boundaries while
         # keeping well-separated fibers distinct.
         mask = ndimage.binary_opening(mask, structure=ndimage.generate_binary_structure(3, 1))
         if self.config.segmentation.method == "watershed":
             labels = segment_watershed_3d(mask)
-        else:
+        elif self.config.segmentation.method == "unet":
+            labels = segment_connected_components_3d(mask)
+        else:  # otsu
             labels = segment_connected_components_3d(mask)
         skeleton = skeletonize_label_volume(labels)
 
@@ -194,6 +215,8 @@ class FiberAnalysisPipeline:
             "voxel_spacing_um": spacing,
             "fibers": fibers,
         }
+        if tda_descriptors is not None:
+            summary["tda"] = tda_descriptors
         notes = []
         if not self.config.analysis.compute_morphometry:
             notes.append("Morphometry disabled; equivalent diameter not computed.")
