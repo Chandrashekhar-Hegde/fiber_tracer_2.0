@@ -43,7 +43,7 @@ Boolean. Defaults to `True`. If `True`, the input volume is min–max normalized
 
 ## Chunked / out-of-core processing
 
-For volumes that do not fit in RAM, `fiber_tracer.chunked` provides helpers built on `zarr` and `dask` (installed via the `parallel` extra). The module includes:
+For volumes that do not fit in RAM, `fiber_tracer.chunked` provides helpers built on `zarr`. The `parallel` extra installs `dask` for higher-level distributed workflows, but it is not required by these helpers. The module includes:
 
 - `load_zarr` / `save_zarr` / `tiff_to_zarr` – read and write chunked `zarr` arrays from TIFF stacks.
 - `process_chunks` – apply a function to overlapping chunks and write only the central region back, avoiding boundary artifacts.

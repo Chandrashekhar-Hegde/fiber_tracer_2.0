@@ -1,4 +1,10 @@
-"""Chunked / out-of-core processing helpers using zarr and dask."""
+"""Chunked / out-of-core processing helpers built on zarr.
+
+These functions allow large volumes to be processed in overlapping blocks
+without loading the entire array into memory. The ``parallel`` extra
+includes ``dask`` for higher-level distributed workflows, but the helpers
+here are zarr-backed.
+"""
 
 from pathlib import Path
 from typing import Callable, Optional, Union

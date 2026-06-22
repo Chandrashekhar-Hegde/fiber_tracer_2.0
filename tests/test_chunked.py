@@ -31,6 +31,13 @@ def test_process_chunks_identity():
     np.testing.assert_array_equal(data, output)
 
 
+def test_process_chunks_with_overlap():
+    data = np.zeros((24, 24, 24), dtype=np.float32)
+    output = np.zeros_like(data)
+    process_chunks(data, output, lambda x: x, chunk_shape=(8, 8, 8), overlap=2)
+    np.testing.assert_array_equal(data, output)
+
+
 def test_normalize_intensity_chunked():
     data = np.linspace(0, 255, 64).reshape((4, 4, 4)).astype(np.uint8)
     output = np.zeros((4, 4, 4), dtype=np.float32)
