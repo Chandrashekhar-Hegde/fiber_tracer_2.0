@@ -8,10 +8,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_phantom_benchmark_meets_acceptance_thresholds(tmp_path):
+def test_phantom_benchmark_meets_acceptance_thresholds():
     """Run scripts/benchmark_phantoms.py and assert resolved-regime thresholds."""
-    output_dir = tmp_path / "benchmark"
-    output_dir.mkdir()
+    output_dir = REPO_ROOT / "benchmark_results"
+    output_dir.mkdir(parents=True, exist_ok=True)
     result = subprocess.run(
         [
             sys.executable,
@@ -22,7 +22,10 @@ def test_phantom_benchmark_meets_acceptance_thresholds(tmp_path):
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
-        check=True,
+    )
+    assert result.returncode == 0, (
+        f"Benchmark script failed with exit code {result.returncode}:\n"
+        f"STDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
     )
     # The script prints a markdown table; we check the JSON it writes.
     results_path = output_dir / "benchmark_results.json"
