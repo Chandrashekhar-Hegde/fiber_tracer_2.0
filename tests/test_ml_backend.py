@@ -11,7 +11,6 @@ import pytest
 from fiber_tracer.backends.ml_segmentation import MLSegmentationBackend
 from fiber_tracer.exceptions import BackendNotAvailableError
 
-
 _ORIGINAL_IMPORT = builtins.__import__
 
 

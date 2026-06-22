@@ -1,6 +1,7 @@
 """Optional ML segmentation backend."""
 
-from typing import Any, Optional
+from typing import Callable, Optional
+
 import numpy as np
 
 from fiber_tracer.backends.base import SegmentationBackend
@@ -23,7 +24,7 @@ class MLSegmentationBackend(SegmentationBackend):
             ) from exc
         self.torch = torch
         self.model_path = model_path
-        self.model: Optional[Any] = None
+        self.model: Optional[Callable[[np.ndarray], np.ndarray]] = None
 
     def segment(self, volume: np.ndarray) -> np.ndarray:
         """Raise NotImplementedError until a model is loaded."""
@@ -32,4 +33,4 @@ class MLSegmentationBackend(SegmentationBackend):
                 "No model is loaded. Subclass MLSegmentationBackend, load a checkpoint, "
                 "or implement a model before calling segment()."
             )
-        return self.model(volume)
+        return np.asarray(self.model(volume))
