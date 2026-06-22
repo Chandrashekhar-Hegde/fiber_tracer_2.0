@@ -18,6 +18,7 @@
 - **nnU-Net** — Apache-2.0 — Copyright DKFZ — https://github.com/MIC-DKFZ/nnUNet
 - **GUDHI** — MIT (Python modules ≥3.9.0) — https://gudhi.inria.fr/
 - **Ripser.py** — MIT — https://ripser.scikit-tda.org/
+- **h5py** — BSD-3-Clause — https://www.h5py.org/
 
 ## Datasets used for validation
 
