@@ -12,14 +12,14 @@ N_FIBERS = st.integers(min_value=1, max_value=5)
 
 
 @given(shape=SHAPES, n_fibers=N_FIBERS)
-@settings(max_examples=10, deadline=None)
+@settings(max_examples=10, deadline=2000)
 def test_phantom_volume_shape(shape, n_fibers):
     phantom = generate_fiber_phantom(shape=shape, n_fibers=n_fibers, seed=42)
     assert phantom.volume.shape == shape
 
 
 @given(shape=SHAPES, n_fibers=N_FIBERS)
-@settings(max_examples=10, deadline=None)
+@settings(max_examples=10, deadline=2000)
 def test_phantom_volume_range(shape, n_fibers):
     phantom = generate_fiber_phantom(shape=shape, n_fibers=n_fibers, seed=42)
     assert np.all(phantom.volume >= 0.0)
@@ -27,14 +27,14 @@ def test_phantom_volume_range(shape, n_fibers):
 
 
 @given(shape=SHAPES, n_fibers=N_FIBERS)
-@settings(max_examples=10, deadline=None)
+@settings(max_examples=10, deadline=2000)
 def test_phantom_labels_shape(shape, n_fibers):
     phantom = generate_fiber_phantom(shape=shape, n_fibers=n_fibers, seed=42)
     assert phantom.labels.shape == shape
 
 
 @given(shape=SHAPES, n_fibers=N_FIBERS)
-@settings(max_examples=10, deadline=None)
+@settings(max_examples=10, deadline=2000)
 def test_phantom_placed_fiber_count(shape, n_fibers):
     phantom = generate_fiber_phantom(shape=shape, n_fibers=n_fibers, seed=42)
     placed = phantom.orientations.shape[0]
@@ -42,7 +42,7 @@ def test_phantom_placed_fiber_count(shape, n_fibers):
 
 
 @given(shape=SHAPES, n_fibers=N_FIBERS)
-@settings(max_examples=10, deadline=None)
+@settings(max_examples=10, deadline=2000)
 def test_phantom_orientations_are_unit_vectors(shape, n_fibers):
     phantom = generate_fiber_phantom(shape=shape, n_fibers=n_fibers, seed=42)
     for direction in phantom.orientations:
@@ -50,7 +50,7 @@ def test_phantom_orientations_are_unit_vectors(shape, n_fibers):
 
 
 @given(shape=SHAPES, n_fibers=N_FIBERS)
-@settings(max_examples=10, deadline=None)
+@settings(max_examples=10, deadline=2000)
 def test_phantom_labels_are_nonnegative_integers(shape, n_fibers):
     phantom = generate_fiber_phantom(shape=shape, n_fibers=n_fibers, seed=42)
     assert phantom.labels.dtype.kind == "i"
@@ -58,7 +58,7 @@ def test_phantom_labels_are_nonnegative_integers(shape, n_fibers):
 
 
 @given(shape=SHAPES, n_fibers=N_FIBERS)
-@settings(max_examples=10, deadline=None)
+@settings(max_examples=10, deadline=2000)
 def test_phantom_max_label_equals_placed_fiber_count(shape, n_fibers):
     phantom = generate_fiber_phantom(shape=shape, n_fibers=n_fibers, seed=42)
     placed = phantom.orientations.shape[0]

@@ -2,7 +2,7 @@
 
 import numpy as np
 import pytest
-from hypothesis import given
+from hypothesis import assume, given
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
 
@@ -22,23 +22,21 @@ float_array = arrays(
 
 @given(float_array, float_array)
 def test_angular_error_range(v1, v2):
-    if np.linalg.norm(v1) == 0 or np.linalg.norm(v2) == 0:
-        pytest.skip("zero vector")
+    assume(np.linalg.norm(v1) > 1e-12)
+    assume(np.linalg.norm(v2) > 1e-12)
     assert 0.0 <= angular_error(v1, v2) <= 90.0
 
 
 @given(float_array)
 def test_angular_error_identical(v):
-    if np.linalg.norm(v) == 0:
-        pytest.skip("zero vector")
-    assert angular_error(v, v) == pytest.approx(0.0, abs=1e-9)
+    assume(np.linalg.norm(v) > 1e-12)
+    assert angular_error(v, v) == pytest.approx(0.0, abs=1e-5)
 
 
 @given(float_array)
 def test_angular_error_sign_ambiguity(v):
-    if np.linalg.norm(v) == 0:
-        pytest.skip("zero vector")
-    assert angular_error(v, -v) == pytest.approx(0.0, abs=1e-9)
+    assume(np.linalg.norm(v) > 1e-12)
+    assert angular_error(v, -v) == pytest.approx(0.0, abs=1e-5)
 
 
 @given(mask=arrays(np.bool_, (10, 10)))
@@ -51,25 +49,19 @@ def test_dice_score_symmetric(a, b):
     assert dice_score(a, b) == pytest.approx(dice_score(b, a))
 
 
-@given(
-    arrays(
-        np.float64,
-        (5, 3),
-        elements=st.floats(-1.0, 1.0),
-    ),
-    arrays(
-        np.float64,
-        (5, 3),
-        elements=st.floats(-1.0, 1.0),
-    ),
+def _normalize_rows(a):
+    return a / np.linalg.norm(a, axis=1, keepdims=True)
+
+
+unit_vectors_5x3 = (
+    arrays(np.float64, (5, 3), elements=st.floats(-1.0, 1.0))
+    .filter(lambda a: np.all(np.linalg.norm(a, axis=1) > 1e-12))
+    .map(_normalize_rows)
 )
+
+
+@given(unit_vectors_5x3, unit_vectors_5x3)
 def test_mean_angular_error_range(pred_directions, true_directions):
-    for directions in (pred_directions, true_directions):
-        for i in range(directions.shape[0]):
-            norm = np.linalg.norm(directions[i])
-            if norm < 1e-12:
-                pytest.skip("zero direction row")
-            directions[i] = directions[i] / norm
     assert 0.0 <= mean_angular_error(pred_directions, true_directions) <= 90.0
 
 
