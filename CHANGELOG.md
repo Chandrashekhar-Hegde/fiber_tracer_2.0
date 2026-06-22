@@ -5,6 +5,21 @@ All notable changes to the Fiber Tracer project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-06-21
+
+### Added
+- Hypothesis property-based tests for metrics and phantom generation.
+- Phantom benchmark regression test (`tests/test_benchmark_regression.py`) and CI integration.
+- zarr-based chunked processing helpers (`src/fiber_tracer/chunked.py`) for out-of-core normalization and Gaussian denoising.
+- Memory profiler script (`scripts/profile_pipeline_memory.py`).
+
+### Changed
+- CI workflow runs the benchmark regression test once per matrix job and uploads `benchmark_results.json`.
+- `.gitignore` now excludes `benchmark_results/` and `profile_tmp/`.
+
+### Fixed
+- Clarified that chunked helpers are zarr-backed; `dask` remains available via the `parallel` extra.
+
 ## [3.0.0] - 2026-06-21
 
 ### Added
