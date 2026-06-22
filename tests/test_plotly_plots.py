@@ -58,7 +58,7 @@ def test_plot_orientation_distribution_creates_html(tmp_path, resolved_summary):
     output = tmp_path / "orientation.html"
     plot_orientation_distribution(resolved_summary, str(output))
     assert output.exists()
-    html = output.read_text()
+    html = output.read_text(encoding="utf-8")
     assert "plotly" in html.lower()
 
 
@@ -80,7 +80,7 @@ def test_plot_a2_ellipsoid_creates_html(tmp_path):
     )
     plot_a2_ellipsoid(a2, str(output))
     assert output.exists()
-    html = output.read_text()
+    html = output.read_text(encoding="utf-8")
     assert "Surface" in html or "surface" in html.lower()
 
 
@@ -88,7 +88,7 @@ def test_generate_interactive_report_resolved(tmp_path, resolved_summary):
     output = tmp_path / "report.html"
     generate_interactive_report(resolved_summary, str(output))
     assert output.exists()
-    html = output.read_text()
+    html = output.read_text(encoding="utf-8")
     assert html.count('class="plotly-graph-div"') >= 2
 
 
@@ -96,7 +96,7 @@ def test_generate_interactive_report_subvoxel(tmp_path, subvoxel_summary):
     output = tmp_path / "report.html"
     generate_interactive_report(subvoxel_summary, str(output))
     assert output.exists()
-    html = output.read_text()
+    html = output.read_text(encoding="utf-8")
     assert "plotly" in html.lower()
     assert "a2" in html.lower()
 
@@ -105,7 +105,7 @@ def test_generate_interactive_report_empty(tmp_path):
     output = tmp_path / "report.html"
     generate_interactive_report({}, str(output))
     assert output.exists()
-    html = output.read_text()
+    html = output.read_text(encoding="utf-8")
     assert "No visualizations available" in html
 
 
@@ -118,6 +118,6 @@ def test_generate_interactive_report_roundtrip_json(tmp_path, resolved_summary):
     generate_interactive_report(loaded, str(output))
 
     assert output.exists()
-    html = output.read_text()
+    html = output.read_text(encoding="utf-8")
     assert 'id="orientation-distribution"' in html
     assert 'id="diameter-distribution"' in html
