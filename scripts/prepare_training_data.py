@@ -66,7 +66,14 @@ def _extract_patches(
     n_patches: int = PATCHES_PER_VOLUME,
     patch_size: tuple[int, int, int] = PATCH_SIZE,
     seed: int = 0,
+    min_foreground_ratio: float = 0.01,
 ) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    """Extract foreground-biased 3D patches.
+
+    Patches are rejected and re-sampled if their foreground ratio is below
+    *min_foreground_ratio*.  This prevents the corpus from being dominated by
+    background-only patches.
+    """
     rng = random.Random(seed)
     volume, mask = _maybe_pad(volume, mask, patch_size)
     d, h, w = volume.shape
@@ -74,8 +81,11 @@ def _extract_patches(
     vol_patches: list[np.ndarray] = []
     msk_patches: list[np.ndarray] = []
     foreground_coords = np.argwhere(mask > 0)
-    for i in range(n_patches):
-        if foreground_coords.size and rng.random() > 0.3:
+    max_attempts = n_patches * 50
+    attempts = 0
+    while len(vol_patches) < n_patches and attempts < max_attempts:
+        attempts += 1
+        if foreground_coords.size and rng.random() > 0.2:
             z, y, x = foreground_coords[rng.randint(0, len(foreground_coords) - 1)]
             z = min(max(z - pd // 2, 0), d - pd)
             y = min(max(y - ph // 2, 0), h - ph)
@@ -84,8 +94,19 @@ def _extract_patches(
             z = rng.randint(0, d - pd)
             y = rng.randint(0, h - ph)
             x = rng.randint(0, w - pw)
+        patch_mask = mask[z : z + pd, y : y + ph, x : x + pw]
+        if foreground_coords.size and patch_mask.mean() < min_foreground_ratio:
+            continue
         vol_patches.append(volume[z : z + pd, y : y + ph, x : x + pw])
-        msk_patches.append(mask[z : z + pd, y : y + ph, x : x + pw])
+        msk_patches.append(patch_mask)
+    if len(vol_patches) < n_patches:
+        # Fallback: fill remaining slots with whatever we have.
+        while len(vol_patches) < n_patches:
+            z = rng.randint(0, d - pd)
+            y = rng.randint(0, h - ph)
+            x = rng.randint(0, w - pw)
+            vol_patches.append(volume[z : z + pd, y : y + ph, x : x + pw])
+            msk_patches.append(mask[z : z + pd, y : y + ph, x : x + pw])
     return vol_patches, msk_patches
 
 
