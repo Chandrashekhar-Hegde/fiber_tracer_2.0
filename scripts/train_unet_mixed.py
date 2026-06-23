@@ -125,8 +125,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
-    use_amp = args.amp and device.type in ("cuda", "mps")
-    scaler = torch.amp.GradScaler("cuda") if (use_amp and device.type == "cuda") else None
+    # AMP on MPS does not support ConvTranspose3D in fp16/bf16, so only
+    # enable AMP on CUDA where the full 3D U-Net op set is supported.
+    use_amp = args.amp and device.type == "cuda"
+    scaler = torch.amp.GradScaler("cuda") if use_amp else None
 
     best_dice = -1.0
     args.output.parent.mkdir(parents=True, exist_ok=True)
