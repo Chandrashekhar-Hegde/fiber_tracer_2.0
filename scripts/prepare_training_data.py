@@ -66,13 +66,14 @@ def _extract_patches(
     n_patches: int = PATCHES_PER_VOLUME,
     patch_size: tuple[int, int, int] = PATCH_SIZE,
     seed: int = 0,
-    min_foreground_ratio: float = 0.01,
+    min_foreground_ratio: float = 0.0005,
 ) -> tuple[list[np.ndarray], list[np.ndarray]]:
     """Extract foreground-biased 3D patches.
 
     Patches are rejected and re-sampled if their foreground ratio is below
-    *min_foreground_ratio*.  This prevents the corpus from being dominated by
-    background-only patches.
+    *min_foreground_ratio*.  Thin fibers occupy a tiny volume fraction, so the
+    default threshold is low (0.05%) to keep fiber-containing patches while
+    still discarding purely background crops.
     """
     rng = random.Random(seed)
     volume, mask = _maybe_pad(volume, mask, patch_size)
@@ -81,11 +82,22 @@ def _extract_patches(
     vol_patches: list[np.ndarray] = []
     msk_patches: list[np.ndarray] = []
     foreground_coords = np.argwhere(mask > 0)
-    max_attempts = n_patches * 50
+    if not foreground_coords.size:
+        # No foreground at all; return random background patches.
+        for _ in range(n_patches):
+            z = rng.randint(0, d - pd)
+            y = rng.randint(0, h - ph)
+            x = rng.randint(0, w - pw)
+            vol_patches.append(volume[z : z + pd, y : y + ph, x : x + pw])
+            msk_patches.append(mask[z : z + pd, y : y + ph, x : x + pw])
+        return vol_patches, msk_patches
+
+    # Phase 1: try to get n_patches with the desired foreground ratio.
     attempts = 0
+    max_attempts = n_patches * 200
     while len(vol_patches) < n_patches and attempts < max_attempts:
         attempts += 1
-        if foreground_coords.size and rng.random() > 0.2:
+        if rng.random() > 0.1:
             z, y, x = foreground_coords[rng.randint(0, len(foreground_coords) - 1)]
             z = min(max(z - pd // 2, 0), d - pd)
             y = min(max(y - ph // 2, 0), h - ph)
@@ -95,18 +107,33 @@ def _extract_patches(
             y = rng.randint(0, h - ph)
             x = rng.randint(0, w - pw)
         patch_mask = mask[z : z + pd, y : y + ph, x : x + pw]
-        if foreground_coords.size and patch_mask.mean() < min_foreground_ratio:
+        if patch_mask.mean() < min_foreground_ratio:
             continue
         vol_patches.append(volume[z : z + pd, y : y + ph, x : x + pw])
         msk_patches.append(patch_mask)
-    if len(vol_patches) < n_patches:
-        # Fallback: fill remaining slots with whatever we have.
-        while len(vol_patches) < n_patches:
-            z = rng.randint(0, d - pd)
-            y = rng.randint(0, h - ph)
-            x = rng.randint(0, w - pw)
-            vol_patches.append(volume[z : z + pd, y : y + ph, x : x + pw])
-            msk_patches.append(mask[z : z + pd, y : y + ph, x : x + pw])
+
+    # Phase 2: relax constraint and keep trying foreground-biased patches.
+    relaxed_ratio = min_foreground_ratio / 5.0
+    attempts = 0
+    while len(vol_patches) < n_patches and attempts < max_attempts:
+        attempts += 1
+        z, y, x = foreground_coords[rng.randint(0, len(foreground_coords) - 1)]
+        z = min(max(z - pd // 2, 0), d - pd)
+        y = min(max(y - ph // 2, 0), h - ph)
+        x = min(max(x - pw // 2, 0), w - pw)
+        patch_mask = mask[z : z + pd, y : y + ph, x : x + pw]
+        if patch_mask.mean() < relaxed_ratio:
+            continue
+        vol_patches.append(volume[z : z + pd, y : y + ph, x : x + pw])
+        msk_patches.append(patch_mask)
+
+    # Phase 3: last resort, random patches.
+    while len(vol_patches) < n_patches:
+        z = rng.randint(0, d - pd)
+        y = rng.randint(0, h - ph)
+        x = rng.randint(0, w - pw)
+        vol_patches.append(volume[z : z + pd, y : y + ph, x : x + pw])
+        msk_patches.append(mask[z : z + pd, y : y + ph, x : x + pw])
     return vol_patches, msk_patches
 
 
