@@ -29,17 +29,13 @@ def _dice_score(pred: torch.Tensor, target: torch.Tensor, eps: float = 1e-6) -> 
 
 
 class BCEDiceLoss(nn.Module):
-    def __init__(self, pos_weight: float = 1.0, bce_weight: float = 0.5) -> None:
+    def __init__(self, bce_weight: float = 0.5) -> None:
         super().__init__()
-        self.pos_weight = pos_weight
+        self.bce = nn.BCELoss()
         self.bce_weight = bce_weight
 
     def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        eps = 1e-6
-        bce = -(
-            self.pos_weight * target * torch.log(pred + eps)
-            + (1.0 - target) * torch.log(1.0 - pred + eps)
-        ).mean()
+        bce = self.bce(pred, target)
         dice = 1.0 - _dice_score(pred, target).mean()
         return self.bce_weight * bce + (1.0 - self.bce_weight) * dice  # type: ignore[no-any-return]
 
@@ -125,14 +121,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         augment=False,
         seed=args.seed,
     )
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=0)
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
-    # Estimate foreground ratio from the training set to weight BCE.
+    # Weighted sampler: patches with more foreground are sampled more often,
+    # but background patches still appear. This combats the extreme class
+    # imbalance in thin-fiber XCT without distorting the loss surface.
+    from torch.utils.data import WeightedRandomSampler
+
     fg_ratios = [targets.mean().item() for _, targets in train_ds]
-    mean_fg = float(np.mean(fg_ratios)) if fg_ratios else 0.5
-    pos_weight = float((1.0 - mean_fg) / (mean_fg + 1e-8))
-    print(f"Training foreground ratio: {mean_fg:.4f}, BCE pos_weight: {pos_weight:.2f}")
+    weights = [max(0.05, fg) ** 0.5 for fg in fg_ratios]
+    sampler = WeightedRandomSampler(weights, num_samples=len(train_ds), replacement=True)
+    train_loader = DataLoader(train_ds, batch_size=args.batch_size, sampler=sampler, num_workers=0)
+    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
     features = tuple(args.features)
     model = UNet3D(
@@ -142,7 +141,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         dropout=args.dropout,
         norm=args.norm,
     ).to(device)
-    criterion = BCEDiceLoss(pos_weight=pos_weight).to(device)
+    criterion = BCEDiceLoss().to(device)
     optimizer = optim.AdamW(model.parameters(), lr=args.lr)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
 
