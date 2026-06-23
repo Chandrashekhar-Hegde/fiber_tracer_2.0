@@ -104,6 +104,41 @@ DATASETS: dict[str, dict[str, object]] = {
             ),
         ],
     },
+    "ivw_short_gfrp": {
+        "source": "Leibniz-Institut fuer Verbundwerkstoffe / Boos et al.",
+        "files": [
+            (
+                "https://zenodo.org/api/records/15852957/files/sGFRP_stitched_images_3x4.zip/content",
+                "sGFRP_stitched_images_3x4.zip",
+            ),
+            (
+                "https://zenodo.org/api/records/15852957/files/sGFRP_metadata.json/content",
+                "sGFRP_metadata.json",
+            ),
+        ],
+    },
+    "ivw_carbon_twill_weave": {
+        "source": "Leibniz-Institut fuer Verbundwerkstoffe / Boos et al.",
+        "files": [
+            (
+                "https://zenodo.org/api/records/14946081/files/CF_weave_stitched_images_2x2.zip/content",
+                "CF_weave_stitched_images_2x2.zip",
+            ),
+            (
+                "https://zenodo.org/api/records/14946081/files/8L-G-weave_meta.json/content",
+                "8L-G-weave_meta.json",
+            ),
+        ],
+    },
+    "ivw_recycled_cfrp": {
+        "source": "Leibniz-Institut fuer Verbundwerkstoffe / Boos et al.",
+        "files": [
+            (
+                "https://zenodo.org/api/records/14945398/files/rCF_stitched_images_2x2.zip/content",
+                "rCF_stitched_images_2x2.zip",
+            ),
+        ],
+    },
 }
 
 

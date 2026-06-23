@@ -94,12 +94,26 @@ def _extract_from_phantom(
     patch_size: tuple[int, int, int],
 ) -> tuple[np.ndarray, np.ndarray]:
     rng = random.Random(idx)
+    modes = [
+        "random",
+        "aligned",
+        "in_plane",
+        "orthogonal",
+        "woven",
+        "twill",
+    ]
+    mode = modes[idx % len(modes)]
     phantom = generate_fiber_phantom(
         shape=(128, 128, 128),
-        n_fibers=rng.randint(3, 12),
-        fiber_diameter_um=rng.uniform(2.0, 8.0),
+        n_fibers=rng.randint(3, 16),
+        fiber_diameter_um=rng.uniform(1.5, 10.0),
+        fiber_length_um=rng.uniform(20.0, 180.0),
         voxel_spacing_um=(1.0, 1.0, 1.0),
-        noise_std=rng.uniform(0.01, 0.07),
+        noise_std=rng.uniform(0.01, 0.08),
+        orientation_mode=mode,
+        broken_fraction=rng.uniform(0.0, 0.25),
+        n_broken_pieces=rng.randint(2, 4),
+        porosity=rng.uniform(0.0, 0.005),
         seed=rng.randint(0, 2**31 - 1),
     )
     volume = _normalize(phantom.volume.astype(np.float32))
