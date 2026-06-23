@@ -122,15 +122,40 @@ def main(argv: Sequence[str] | None = None) -> int:
         seed=args.seed,
     )
 
-    # Weighted sampler: patches with more foreground are sampled more often,
-    # but background patches still appear. This combats the extreme class
-    # imbalance in thin-fiber XCT without distorting the loss surface.
-    from torch.utils.data import WeightedRandomSampler
+    # Deterministic oversampling: repeat foreground-containing patches so that
+    # every epoch sees a balanced mix, without the high variance of sampling
+    # with replacement.
+    from torch.utils.data import Sampler
 
-    fg_ratios = [targets.mean().item() for _, targets in train_ds]
-    weights = [max(0.05, fg) ** 0.5 for fg in fg_ratios]
-    sampler = WeightedRandomSampler(weights, num_samples=len(train_ds), replacement=True)
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, sampler=sampler, num_workers=0)
+    class OversampledFiberSampler(Sampler):
+        def __init__(self, dataset, seed: int = 0):
+            rng = random.Random(seed)
+            fg_ratios = [targets.mean().item() for _, targets in dataset]
+            indices = list(range(len(dataset)))
+            # Repeat patches based on foreground density.
+            repeated = []
+            for idx, fg in zip(indices, fg_ratios):
+                if fg >= 0.05:
+                    repeated.extend([idx] * 4)
+                elif fg >= 0.01:
+                    repeated.extend([idx] * 2)
+                elif fg >= 0.001:
+                    repeated.append(idx)
+                else:
+                    repeated.append(idx)
+            rng.shuffle(repeated)
+            self.indices = repeated
+
+        def __iter__(self):
+            return iter(self.indices)
+
+        def __len__(self):
+            return len(self.indices)
+
+    train_sampler = OversampledFiberSampler(train_ds, seed=args.seed)
+    train_loader = DataLoader(
+        train_ds, batch_size=args.batch_size, sampler=train_sampler, num_workers=0
+    )
     val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
 
     features = tuple(args.features)
