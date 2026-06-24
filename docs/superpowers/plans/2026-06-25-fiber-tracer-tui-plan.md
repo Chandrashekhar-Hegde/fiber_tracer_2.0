@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a keyboard-driven, themeable Terminal UI for Fiber Tracer using Bun + Ink + termcn that wraps the existing Python analysis engine and supports future model registries, training, and experiments.
+**Goal:** Build a keyboard-driven, themeable Terminal UI for Fiber Tracer using Bun + Ink + @inkjs/ui that wraps the existing Python analysis engine and supports future model registries, training, and experiments.
 
 **Architecture:** The TUI is a React/Ink application in a `tui/` directory. It communicates with the existing Python backend through a small bridge that spawns `fiber-tracer` CLI commands and parses JSON progress/results. State (config, history, themes) is persisted to `~/.config/fiber-tracer/`. The UI is organized around a persistent sidebar that doubles as a wizard navigator.
 
-**Tech Stack:** Bun 1.3+, React 18, Ink 5, termcn/OpenTUI, TypeScript, Python 3.10+ Fiber Tracer backend.
+**Tech Stack:** Bun 1.3+, React 18, Ink 5, @inkjs/ui 2.x, TypeScript, Python 3.10+ Fiber Tracer backend.
 
 ---
 
@@ -95,7 +95,7 @@ This creates `package.json`, `tsconfig.json`, `bun.lockb`, `index.ts`, `.gitigno
 Run:
 ```bash
 cd tui
-bun add react ink @termcn/ui opentui
+bun add react ink @inkjs/ui
 bun add -d @types/react @types/ink typescript
 ```
 
@@ -118,7 +118,7 @@ Modify `tui/package.json`:
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@termcn/ui": "^0.0.1",
+    "@inkjs/ui": "^2.0.0",
     "ink": "^5.0.0",
     "opentui": "^0.0.1",
     "react": "^18.3.0"
@@ -189,7 +189,7 @@ bun run build
 
 ```bash
 git add tui/
-git commit -m "chore(tui): scaffold Bun + Ink + termcn project"
+git commit -m "chore(tui): scaffold Bun + Ink + @inkjs/ui project"
 ```
 
 ---
@@ -1720,7 +1720,7 @@ git commit -m "feat(tui): add tests, CI job, and documentation"
 
 | Spec Section | Plan Task |
 |--------------|-----------|
-| Bun + Ink + termcn stack | Task 1 |
+| Bun + Ink + @inkjs/ui stack | Task 1 |
 | Theme system (Dracula + others) | Task 2 |
 | Config/history persistence | Task 3 |
 | Persistent sidebar navigation | Task 4 |
@@ -1735,7 +1735,7 @@ Every task includes exact file paths, code, commands, and expected outputs. Deli
 
 ## Risk Mitigations
 
-- **termcn components may not all exist yet.** Fallback: use raw Ink `Box`/`Text` and implement components manually if a termcn component is missing.
+- **@inkjs/ui component availability.** Fallback: use raw Ink `Box`/`Text` and implement components manually if a @inkjs/ui component is missing.
 - **Python bridge subprocess may be slow.** Mitigation: start with subprocess; plan to migrate to `fiber-tracer tui-server` JSON-RPC in a follow-up.
 - **Local Python is 3.9.** Mitigation: upgrade local Python to 3.10+ before implementation (separate todo). CI already tests 3.10–3.12.
 - **Terminal resize.** Mitigation: use Ink's built-in `useStdout` dimensions and keep layouts fluid.
