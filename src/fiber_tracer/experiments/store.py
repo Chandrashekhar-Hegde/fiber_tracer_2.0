@@ -43,6 +43,7 @@ class Experiment:
     config_snapshot: dict[str, Any] = field(default_factory=dict)
     status: str = "pending"
     metrics: dict[str, Any] = field(default_factory=dict)
+    history: dict[str, Any] = field(default_factory=dict)
     started_at: str = field(default_factory=_now)
     finished_at: str | None = None
     artifact_dir: str = ""

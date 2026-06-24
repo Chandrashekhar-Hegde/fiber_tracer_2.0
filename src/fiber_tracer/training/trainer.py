@@ -31,12 +31,21 @@ class BCEDiceLoss(nn.Module):
 
     def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         bce = self.bce(pred, target)
-        pred_flat = pred.view(pred.size(0), -1)
-        target_flat = target.view(target.size(0), -1)
-        intersection = (pred_flat * target_flat).sum(dim=1)
-        union = pred_flat.sum(dim=1) + target_flat.sum(dim=1)
-        dice = 1.0 - (2.0 * intersection + 1e-6) / (union + 1e-6)
-        return self.bce_weight * bce + (1.0 - self.bce_weight) * dice.mean()
+        dice = 1.0 - _dice_score(pred, target).mean()
+        return self.bce_weight * bce + (1.0 - self.bce_weight) * dice
+
+
+def _dice_score(
+    pred: torch.Tensor,
+    target: torch.Tensor,
+    eps: float = 1e-6,
+) -> torch.Tensor:
+    """Return per-sample Dice coefficients for a batch of predictions."""
+    pred_flat = pred.view(pred.size(0), -1)
+    target_flat = target.view(target.size(0), -1)
+    intersection = (pred_flat * target_flat).sum(dim=1)
+    union = pred_flat.sum(dim=1) + target_flat.sum(dim=1)
+    return (2.0 * intersection + eps) / (union + eps)
 
 
 class UNetTrainer:
@@ -55,6 +64,12 @@ class UNetTrainer:
         seed: int = 42,
         progress_callback: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
+        """Initialize the trainer.
+
+        The ``seed`` parameter is kept for reference and passed to the dataset
+        for deterministic train/val splits. It intentionally does **not** set
+        global RNG state; future versions may use a local generator.
+        """
         self.dataset_dir = Path(dataset_dir)
         self.output_dir = Path(output_dir)
         self.epochs = epochs
@@ -64,9 +79,6 @@ class UNetTrainer:
         self.seed = seed
         self.features = features
         self.progress_callback = progress_callback
-
-        torch.manual_seed(seed)
-        np.random.seed(seed)
 
         if device == "auto":
             device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -140,21 +152,21 @@ class UNetTrainer:
         criterion = BCEDiceLoss().to(self.device)
         total_loss = 0.0
         total_dice = 0.0
-        n = 0
+        total_samples = 0
         for batch in loader:
             inputs, targets = self._numpy_to_tensor(batch)
+            batch_size = inputs.size(0)
             outputs = model(inputs)
-            total_loss += criterion(outputs, targets).item()
-            pred_flat = outputs.view(outputs.size(0), -1)
-            target_flat = targets.view(targets.size(0), -1)
-            intersection = (pred_flat * target_flat).sum(dim=1)
-            union = pred_flat.sum(dim=1) + target_flat.sum(dim=1)
-            dice = (2.0 * intersection + 1e-6) / (union + 1e-6)
-            total_dice += dice.mean().item()
-            n += 1
+            total_loss += criterion(outputs, targets).item() * batch_size
+            total_dice += _dice_score(outputs, targets).mean().item() * batch_size
+            total_samples += batch_size
+
+        if total_samples == 0:
+            raise ValueError("validation loader is empty")
+
         return {
-            "loss": total_loss / max(n, 1),
-            "dice": total_dice / max(n, 1),
+            "loss": total_loss / total_samples,
+            "dice": total_dice / total_samples,
         }
 
     def train(self, experiment_id: str) -> dict[str, Any]:
@@ -227,7 +239,8 @@ class UNetTrainer:
 
                 store.update(
                     experiment_id,
-                    metrics={k: v for k, v in history.items()},
+                    history=history,
+                    metrics={},
                 )
 
             final_metrics = {
@@ -240,6 +253,7 @@ class UNetTrainer:
                 experiment_id,
                 status="completed",
                 finished_at=datetime.now(timezone.utc).isoformat(),
+                history=history,
                 metrics=final_metrics,
                 artifact_dir=str(self.output_dir),
             )
