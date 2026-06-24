@@ -362,6 +362,7 @@ Set `segmentation.method: "unet"` to use the lightweight 3D U-Net implemented in
 ```bash
 pip install -e ".[ml]"
 # Use the pre-trained production model (download from GitHub Releases)
+# https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2
 fiber-tracer --data stack.tif --output results/ \
   --segmentation-method unet --model-path models/fiber_unet_v2_full.pt
 
