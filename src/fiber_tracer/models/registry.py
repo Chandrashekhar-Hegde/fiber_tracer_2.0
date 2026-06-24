@@ -1,23 +1,29 @@
 """Local model registry backed by a JSON manifest."""
+
 from __future__ import annotations
 
 import json
+import logging
+from copy import deepcopy
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from fiber_tracer.utils.paths import get_config_dir
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ModelEntry:
-    id: str
+    model_id: str
     name: str
     architecture: str
     source: str
     path: str
     version: str = "unknown"
-    created_at: str = ""
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     tags: list[str] = field(default_factory=list)
     description: str = ""
     status: str = "ready"
@@ -40,12 +46,17 @@ class ModelRegistry:
             if "models" not in data:
                 return self._default_manifest()
             return data
-        except (json.JSONDecodeError, OSError):
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.warning(
+                "Failed to load model manifest from %s (%s). Falling back to default manifest.",
+                self.manifest_path,
+                exc.__class__.__name__,
+            )
             return self._default_manifest()
 
-    def _save(self) -> None:
+    def _save(self, manifest: dict[str, Any]) -> None:
         tmp = self.manifest_path.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(self._manifest, indent=2))
+        tmp.write_text(json.dumps(manifest, indent=2))
         tmp.replace(self.manifest_path)
 
     def _default_manifest(self) -> dict[str, Any]:
@@ -55,7 +66,7 @@ class ModelRegistry:
             "models": [
                 asdict(
                     ModelEntry(
-                        id="unet-v3.2",
+                        model_id="unet-v3.2",
                         name="Fiber U-Net v3.2",
                         architecture="unet3d",
                         source="bundled",
@@ -69,11 +80,21 @@ class ModelRegistry:
         }
 
     def list_models(self) -> list[ModelEntry]:
-        return [ModelEntry(**m) for m in self._manifest["models"]]
+        entries: list[ModelEntry] = []
+        for raw in self._manifest["models"]:
+            try:
+                entries.append(ModelEntry(**raw))
+            except TypeError as exc:
+                if isinstance(raw, dict):
+                    model_id = raw.get("model_id", "<unknown>")
+                else:
+                    model_id = "<unknown>"
+                raise ValueError(f"malformed model entry for {model_id!r}") from exc
+        return entries
 
     def get_model(self, model_id: str) -> ModelEntry | None:
         for m in self.list_models():
-            if m.id == model_id:
+            if m.model_id == model_id:
                 return m
         return None
 
@@ -83,7 +104,7 @@ class ModelRegistry:
 
     def add_model(
         self,
-        id: str,
+        model_id: str,
         name: str,
         path: str,
         architecture: str = "unet3d",
@@ -91,12 +112,12 @@ class ModelRegistry:
         description: str = "",
         tags: list[str] | None = None,
     ) -> ModelEntry:
-        if self.get_model(id) is not None:
-            raise ValueError(f"model {id!r} already exists")
+        if self.get_model(model_id) is not None:
+            raise ValueError(f"model {model_id!r} already exists")
         if not Path(path).exists():
             raise FileNotFoundError(f"model path does not exist: {path}")
         entry = ModelEntry(
-            id=id,
+            model_id=model_id,
             name=name,
             architecture=architecture,
             source="local",
@@ -105,23 +126,29 @@ class ModelRegistry:
             description=description,
             tags=tags or [],
         )
-        self._manifest["models"].append(asdict(entry))
-        self._save()
+        updated = deepcopy(self._manifest)
+        updated["models"].append(asdict(entry))
+        self._save(updated)
+        self._manifest = updated
         return entry
 
     def remove_model(self, model_id: str) -> None:
         if self._manifest.get("default_model_id") == model_id:
             raise ValueError("cannot remove the default model; change default first")
-        before = len(self._manifest["models"])
-        self._manifest["models"] = [m for m in self._manifest["models"] if m["id"] != model_id]
-        if len(self._manifest["models"]) == before:
+        updated = deepcopy(self._manifest)
+        before = len(updated["models"])
+        updated["models"] = [m for m in updated["models"] if m.get("model_id") != model_id]
+        if len(updated["models"]) == before:
             raise KeyError(f"model {model_id!r} not found")
-        self._save()
+        self._save(updated)
+        self._manifest = updated
 
     def set_default(self, model_id: str) -> None:
         if self.get_model(model_id) is None:
             raise KeyError(f"model {model_id!r} not found")
-        self._manifest["default_model_id"] = model_id
-        for m in self._manifest["models"]:
-            m["is_default"] = m["id"] == model_id
-        self._save()
+        updated = deepcopy(self._manifest)
+        updated["default_model_id"] = model_id
+        for m in updated["models"]:
+            m["is_default"] = m.get("model_id") == model_id
+        self._save(updated)
+        self._manifest = updated
