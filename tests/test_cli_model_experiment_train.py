@@ -100,3 +100,57 @@ def test_train_help_returns_zero(tmp_path):
     assert result.returncode == 0, result.stderr
     assert "--dataset-dir" in result.stdout
     assert "--model-id" in result.stdout
+
+
+def test_model_without_subcommand_exits_nonzero(tmp_path):
+    result = run_cli(tmp_path, "model")
+    assert result.returncode != 0
+
+
+def test_experiment_without_subcommand_exits_nonzero(tmp_path):
+    result = run_cli(tmp_path, "experiment")
+    assert result.returncode != 0
+
+
+def test_model_add_duplicate_id_exits_one(tmp_path):
+    model_path = tmp_path / "dummy.pt"
+    model_path.write_text("not a real checkpoint")
+
+    first = run_cli(
+        tmp_path,
+        "model",
+        "add",
+        "--model-id",
+        "local-dup",
+        "--name",
+        "Local Model",
+        "--path",
+        str(model_path),
+    )
+    assert first.returncode == 0, first.stderr
+
+    second = run_cli(
+        tmp_path,
+        "model",
+        "add",
+        "--model-id",
+        "local-dup",
+        "--name",
+        "Local Model",
+        "--path",
+        str(model_path),
+    )
+    assert second.returncode == 1
+    assert "already exists" in second.stderr
+
+
+def test_model_remove_unknown_exits_one(tmp_path):
+    result = run_cli(tmp_path, "model", "remove", "unknown-id")
+    assert result.returncode == 1
+    assert "not found" in result.stderr
+
+
+def test_model_set_default_unknown_exits_one(tmp_path):
+    result = run_cli(tmp_path, "model", "set-default", "unknown-id")
+    assert result.returncode == 1
+    assert "not found" in result.stderr

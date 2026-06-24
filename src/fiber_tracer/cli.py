@@ -56,7 +56,7 @@ def _build_batch_parser(subparsers: Any) -> None:
 
 def _build_model_parser(subparsers: Any) -> None:
     parser = subparsers.add_parser("model", help="Manage segmentation models")
-    model_sub = parser.add_subparsers(dest="model_command")
+    model_sub = parser.add_subparsers(dest="model_command", required=True)
 
     list_p = model_sub.add_parser("list", help="List registered models")
     list_p.add_argument("--json", action="store_true", help="Output as JSON")
@@ -99,14 +99,18 @@ def _run_model_add(args: argparse.Namespace) -> int:
     from fiber_tracer.models.registry import ModelRegistry
 
     registry = ModelRegistry()
-    registry.add_model(
-        model_id=args.model_id,
-        name=args.name,
-        path=args.path,
-        architecture=args.architecture,
-        version=args.version,
-        description=args.description,
-    )
+    try:
+        registry.add_model(
+            model_id=args.model_id,
+            name=args.name,
+            path=args.path,
+            architecture=args.architecture,
+            version=args.version,
+            description=args.description,
+        )
+    except (FileNotFoundError, ValueError, KeyError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
     print(f"Added model {args.model_id}")
     return 0
 
@@ -115,7 +119,11 @@ def _run_model_remove(args: argparse.Namespace) -> int:
     from fiber_tracer.models.registry import ModelRegistry
 
     registry = ModelRegistry()
-    registry.remove_model(args.model_id)
+    try:
+        registry.remove_model(args.model_id)
+    except (FileNotFoundError, ValueError, KeyError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
     print(f"Removed model {args.model_id}")
     return 0
 
@@ -124,14 +132,18 @@ def _run_model_set_default(args: argparse.Namespace) -> int:
     from fiber_tracer.models.registry import ModelRegistry
 
     registry = ModelRegistry()
-    registry.set_default(args.model_id)
+    try:
+        registry.set_default(args.model_id)
+    except (FileNotFoundError, ValueError, KeyError) as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
     print(f"Default model set to {args.model_id}")
     return 0
 
 
 def _build_experiment_parser(subparsers: Any) -> None:
     parser = subparsers.add_parser("experiment", help="Manage experiments")
-    exp_sub = parser.add_subparsers(dest="experiment_command")
+    exp_sub = parser.add_subparsers(dest="experiment_command", required=True)
 
     list_p = exp_sub.add_parser("list", help="List experiments")
     list_p.add_argument("--json", action="store_true", help="Output as JSON")
