@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import json
 import logging
 import sys
@@ -275,6 +276,11 @@ def _run_train(args: argparse.Namespace) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="RAFA fiber analysis")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"fiber-tracer {importlib.metadata.version('fiber-tracer')}",
+    )
     parser.add_argument("--log-level", default="INFO")
 
     # Keep top-level pipeline arguments for backward compatibility.
