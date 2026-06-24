@@ -6,9 +6,13 @@ import { SelectData } from "./components/select-data";
 import { Configure } from "./components/configure";
 import { Review } from "./components/review";
 import { RunWatch } from "./components/run-watch";
+import { Dashboard } from "./components/dashboard";
+import { History } from "./components/history";
+import { Logs } from "./components/logs";
 import { Settings } from "./components/settings";
 import { useConfig } from "./hooks/useConfig";
 import { useBridge } from "./hooks/useBridge";
+import { useHistory } from "./hooks/useHistory";
 import { loadTheme } from "./theme";
 import type { Section } from "./components/sidebar";
 import type { AnalysisConfig } from "./types";
@@ -34,12 +38,16 @@ export function App() {
   const [wizardStep, setWizardStep] = useState(0);
   const [analysisConfig, setAnalysisConfig] = useState<AnalysisConfig>(DEFAULT_CONFIG);
   const bridge = useBridge();
+  const history = useHistory();
   const theme = loadTheme(config.theme);
 
   const onInput = useCallback(
     (input: string, key: { rightArrow: boolean; leftArrow: boolean }) => {
       if (input === "q") exit();
       if (input === "1") setSection("new-analysis");
+      if (input === "2") setSection("dashboard");
+      if (input === "3") setSection("history");
+      if (input === "7") setSection("logs");
       if (input === "8") setSection("settings");
       if (section === "new-analysis") {
         if (key.rightArrow || input === "n") setWizardStep((s) => Math.min(3, s + 1));
@@ -58,7 +66,7 @@ export function App() {
   const footer =
     section === "new-analysis"
       ? ["← p", "→ n", "Enter select", "r run", "q quit"]
-      : ["1 Analysis", "8 Settings", "q quit"];
+      : ["1 Analysis", "2 Dashboard", "3 History", "7 Logs", "8 Settings", "q quit"];
 
   return (
     <Layout section={section} wizardStep={wizardStep} footerShortcuts={footer} theme={theme}>
@@ -80,6 +88,9 @@ export function App() {
           )}
         </WizardShell>
       )}
+      {section === "dashboard" && <Dashboard summary={undefined} theme={theme} />}
+      {section === "history" && <History history={history.history} theme={theme} />}
+      {section === "logs" && <Logs logs={bridge.logs} theme={theme} />}
       {section === "settings" && <Settings config={config} onChange={setConfig} theme={theme} />}
     </Layout>
   );
