@@ -1,5 +1,7 @@
 """Classical segmentation: thresholding and watershed separation."""
 
+from __future__ import annotations
+
 import numpy as np
 from scipy import ndimage
 from skimage import filters, morphology

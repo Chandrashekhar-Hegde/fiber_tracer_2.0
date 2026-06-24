@@ -1,5 +1,7 @@
 """Custom exceptions for fiber_tracer."""
 
+from __future__ import annotations
+
 
 class FiberTracerError(Exception):
     """Base exception."""

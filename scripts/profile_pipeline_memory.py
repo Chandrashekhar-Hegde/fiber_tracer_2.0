@@ -1,5 +1,7 @@
 """Profile peak memory usage of the resolved-regime pipeline on synthetic phantoms."""
 
+from __future__ import annotations
+
 import argparse
 import resource
 import sys

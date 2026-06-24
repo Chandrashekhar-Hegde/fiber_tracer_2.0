@@ -1,11 +1,15 @@
 """Pipeline orchestrator for RAFA."""
 
+from __future__ import annotations
+
 import logging
+import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from scipy import ndimage
+from tqdm import tqdm
 
 from fiber_tracer.analysis.morphometry import equivalent_diameter_from_volume, per_fiber_volumes
 from fiber_tracer.backends import betti_numbers, persistence_summary
@@ -44,10 +48,11 @@ logger = logging.getLogger(__name__)
 class FiberAnalysisPipeline:
     def __init__(self, config: Config):
         self.config = config
-        self.volume: Optional[np.ndarray] = None
-        self.labels: Optional[np.ndarray] = None
+        self.volume: np.ndarray | None = None
+        self.labels: np.ndarray | None = None
 
     def run(self) -> dict:
+        start = time.perf_counter()
         self.config.validate()
         out = Path(self.config.output_dir)
         out.mkdir(parents=True, exist_ok=True)
@@ -77,18 +82,23 @@ class FiberAnalysisPipeline:
         logger.info(f"Selected regime: {regime}")
 
         if regime == "resolved":
-            return self._run_resolved(volume, out)
+            summary = self._run_resolved(volume, out)
         elif regime == "marginal":
-            return self._run_marginal(volume, out)
+            summary = self._run_marginal(volume, out)
         elif regime == "subvoxel":
-            return self._run_subvoxel(volume, out)
+            summary = self._run_subvoxel(volume, out)
         else:
             raise ValueError(f"unsupported regime: {regime}")
+
+        elapsed = time.perf_counter() - start
+        summary["elapsed_seconds"] = elapsed
+        logger.info(f"Pipeline completed in {elapsed:.2f}s")
+        return summary
 
     def _compute_local_directions(
         self,
         volume: np.ndarray,
-        rho_um: Optional[float] = None,
+        rho_um: float | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Compute the structure-tensor orientation field and apply an Otsu foreground mask.
 
@@ -156,7 +166,10 @@ class FiberAnalysisPipeline:
     def _run_resolved(self, volume: np.ndarray, out: Path) -> dict:
         """Resolved-regime pipeline: segmentation, labeling, skeletonization."""
         if self.config.segmentation.method == "unet":
-            backend = MLSegmentationBackend(model_path=self.config.segmentation.model_path)
+            backend = MLSegmentationBackend(
+                model_path=self.config.segmentation.model_path,
+                batch_size=self.config.segmentation.batch_size,
+            )
             segmentation = backend.segment(volume)
             # Ensure binary mask
             if segmentation.dtype != bool:
@@ -176,7 +189,7 @@ class FiberAnalysisPipeline:
         else:  # otsu
             labels = segment_connected_components_3d(mask)
 
-        tda_descriptors: Optional[dict[str, Any]] = None
+        tda_descriptors: dict[str, Any] | None = None
         if self.config.analysis.compute_tda_descriptors:
             cleaned_mask = labels > 0
             tda_descriptors = {
@@ -194,7 +207,7 @@ class FiberAnalysisPipeline:
         )
         volumes = per_fiber_volumes(labels)
         fibers: list[dict[str, Any]] = []
-        for label_id, n_voxels in volumes.items():
+        for label_id, n_voxels in tqdm(volumes.items(), desc="fiber properties"):
             fiber: dict[str, Any] = {
                 "label": int(label_id),
                 "n_voxels": int(n_voxels),
@@ -298,7 +311,9 @@ class FiberAnalysisPipeline:
         np.save(out / "a2_centers.npy", a2_centers)
 
         a2_windows = []
-        for window_id, (i, j, k) in enumerate(np.ndindex(a2_map.shape[:3])):
+        for window_id, (i, j, k) in enumerate(
+            tqdm(list(np.ndindex(a2_map.shape[:3])), desc="orientation windows")
+        ):
             cz, cy, cx = a2_centers[i, j, k]
             tensor = a2_map[i, j, k]
             a2_windows.append(

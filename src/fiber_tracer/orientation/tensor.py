@@ -1,5 +1,7 @@
 """Advani-Tucker second-order orientation tensor."""
 
+from __future__ import annotations
+
 import numpy as np
 
 

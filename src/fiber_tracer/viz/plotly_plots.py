@@ -1,7 +1,9 @@
 """Plotly-based interactive visualizations for RAFA summary reports."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -146,7 +148,7 @@ def _combined_report_html(title: str, divs: list[str]) -> str:
     )
 
 
-def _a2_from_summary(summary: dict[str, Any]) -> Optional[np.ndarray]:
+def _a2_from_summary(summary: dict[str, Any]) -> np.ndarray | None:
     """Resolve a usable 3x3 A2 tensor from a summary, or None."""
     a2_raw = summary.get("a2")
     if a2_raw is None:

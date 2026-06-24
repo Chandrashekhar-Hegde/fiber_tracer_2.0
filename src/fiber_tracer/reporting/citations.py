@@ -1,5 +1,7 @@
 """Shared citation and caveat metadata for reports."""
 
+from __future__ import annotations
+
 CITATIONS = [
     (
         "Advani, S. G., & Tucker III, C. L. (1987). The use of tensors to describe and "

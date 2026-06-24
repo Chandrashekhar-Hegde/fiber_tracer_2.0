@@ -1,9 +1,12 @@
 """Configuration management with validation and units."""
 
+from __future__ import annotations
+
 import json
 import os
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
-from typing import Optional, Union, get_args, get_origin
+from pathlib import Path
+from typing import Optional, Union, get_args, get_origin, get_type_hints
 
 import yaml  # type: ignore[import-untyped]
 
@@ -20,13 +23,15 @@ def _dict_to_dataclass(data, cls):
     if not isinstance(data, dict):
         raise TypeError(f"expected dict or {cls.__name__}, got {type(data).__name__}")
 
+    hints = get_type_hints(cls)
     coerced = {}
     for f in fields(cls):
         if f.name not in data:
             continue
-        field_type = f.type
+        field_type = hints.get(f.name, f.type)
         origin = get_origin(field_type)
-        if origin is Union:
+        # Handle typing.Union / types.UnionType for Optional[X] and X | None.
+        if origin is not None:
             for arg in get_args(field_type):
                 if arg is not type(None) and is_dataclass(arg):
                     field_type = arg
@@ -65,6 +70,7 @@ class ProcessingConfig:
 class SegmentationConfig:
     method: str = "otsu"  # otsu, watershed, unet
     model_path: Optional[str] = None  # path to PyTorch checkpoint for method="unet"
+    batch_size: int = 1  # inference batch size for U-Net backend
     min_fiber_diameter_um: float = 10.0
     max_fiber_diameter_um: float = 50.0
     watershed_seed_sigma_um: Optional[float] = None
@@ -115,7 +121,7 @@ class Config:
     def to_dict(self) -> dict:
         return asdict(self)
 
-    def save(self, path: str) -> None:
+    def save(self, path: Union[str, Path]) -> None:
         path = str(path)
         with open(path, "w") as f:
             if path.endswith((".yaml", ".yml")):
@@ -124,7 +130,7 @@ class Config:
                 json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Config":
+    def from_dict(cls, data: dict) -> Config:
         if not isinstance(data, dict):
             raise TypeError(f"expected dict, got {type(data).__name__}")
         data = dict(data)
@@ -145,7 +151,7 @@ class Config:
         return cls(**data)
 
     @classmethod
-    def from_file(cls, path: str) -> "Config":
+    def from_file(cls, path: Union[str, Path]) -> Config:
         path = str(path)
         with open(path) as f:
             if path.endswith((".yaml", ".yml")):

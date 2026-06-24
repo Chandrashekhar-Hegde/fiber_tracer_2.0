@@ -4,7 +4,7 @@ This guide covers installing `fiber-tracer` from source. For everyday use we rec
 
 ## System requirements
 
-- **Python:** `>=3.9` (Python 3.9, 3.10, 3.11, and 3.12 are supported).
+- **Python:** `>=3.10` (Python 3.10, 3.11, and 3.12 are supported).
 - **Operating systems:** Linux, macOS, and Windows.
 - **RAM:** At least 4 GB is recommended; 8 GB or more is preferred for 3D volumes.
 - **Disk:** A few hundred megabytes for the source checkout and virtual environment. Working volumes and intermediate outputs can require several gigabytes.
@@ -136,7 +136,7 @@ A successful run reports no failures. If tests are skipped, it usually means an 
 
 ### macOS (including Apple Silicon)
 
-No special steps are required. Use either native Apple Silicon Python or a Rosetta-based Python interpreter; both work with the source install. If you use Homebrew Python, ensure it is Python 3.9 or newer.
+No special steps are required. Use either native Apple Silicon Python or a Rosetta-based Python interpreter; both work with the source install. If you use Homebrew Python, ensure it is Python 3.10 or newer.
 
 ```bash
 python3 -m venv .venv
@@ -172,7 +172,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ### Linux
 
-All extras are available on Linux, including the `unet` extra. Make sure the system has Python 3.9+ and the standard build tools for compiling any wheels:
+All extras are available on Linux, including the `unet` extra. Make sure the system has Python 3.10+ and the standard build tools for compiling any wheels:
 
 ```bash
 sudo apt update

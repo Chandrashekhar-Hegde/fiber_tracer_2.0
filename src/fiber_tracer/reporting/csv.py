@@ -1,7 +1,9 @@
 """CSV report exporter for per-fiber / per-window results."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import pandas as pd
 
@@ -21,7 +23,7 @@ def _records_from_summary(summary: dict) -> list[dict[str, Any]]:
     return records
 
 
-def write_csv_report(path: Union[str, Path], summary: dict) -> None:
+def write_csv_report(path: str | Path, summary: dict) -> None:
     """Write per-fiber / per-window records to CSV."""
     path = Path(path)
     records = _records_from_summary(summary)

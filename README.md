@@ -1,7 +1,7 @@
 # Fiber Tracer (RAFA) v3.2.0
 
 [![Version](https://img.shields.io/badge/version-3.2.0-blue)](https://github.com/llMr-Sweetll/fiber_tracer_2.0)
-[![Python](https://img.shields.io/badge/python-%3E%3D3.9-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/github/license/llMr-Sweetll/fiber_tracer_2.0)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/llMr-Sweetll/fiber_tracer_2.0/ci.yml?branch=main&label=CI)](https://github.com/llMr-Sweetll/fiber_tracer_2.0/actions/workflows/ci.yml)
 
@@ -58,7 +58,7 @@ Across all regimes the tool writes machine-readable JSON, CSV, and HTML reports 
 
 ## Installation
 
-Fiber Tracer requires Python ≥3.9 and is installed as `fiber-tracer`. The source repository is at `https://github.com/llMr-Sweetll/fiber_tracer_2.0`.
+Fiber Tracer requires Python ≥3.10 and is installed as `fiber-tracer`. The source repository is at `https://github.com/llMr-Sweetll/fiber_tracer_2.0`.
 
 ```bash
 # Clone the repository
@@ -391,6 +391,7 @@ Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persis
 | [`docs/architecture.md`](docs/architecture.md) | Package architecture, module map, data flow, and extension points. |
 | [`docs/validation_protocol.md`](docs/validation_protocol.md) | Phantom benchmarks, GF-PA66 dataset instructions, metrics, and reproducibility notes. |
 | [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) | Detailed model card for the production 3D U-Net: training data, validation, limitations, and retraining. |
+| [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) | Tuning guidance for runtime, memory, and U-Net batch size. |
 | [`docs/developer_guide.md`](docs/developer_guide.md) | Development setup, testing, linting, type checking, and contribution workflow. |
 | [`docs/RAFA_IMPLEMENTATION_PLAN.md`](docs/RAFA_IMPLEMENTATION_PLAN.md) | Original redesign plan for the RAFA pipeline. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Version history and release notes. |

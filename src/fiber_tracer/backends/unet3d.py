@@ -4,11 +4,14 @@ The network is intentionally small so it can be trained on CPU with the
 synthetic phantom generator shipped in ``fiber_tracer.validation.phantoms``.
 """
 
+from __future__ import annotations
+
 from collections.abc import Sequence
 
 import numpy as np
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 
 
 class _ConvBlock(nn.Module):
@@ -131,7 +134,7 @@ class UNet3D(nn.Module):
         overlap: int = 16,
         batch_size: int = 1,
     ) -> np.ndarray:
-        """Run sliding-window inference on a 3D volume.
+        """Run batched sliding-window inference on a 3D volume.
 
         Overlapping predictions are averaged. The input is expected to be a
         3D numpy array; it is normalized internally to ``[0, 1]``.
@@ -158,28 +161,38 @@ class UNet3D(nn.Module):
         counts = np.zeros(padded_shape, dtype=np.float32)
 
         stride = tuple(max(1, ps - overlap) for ps in patch_size)
-        for d in range(0, padded_shape[0] - patch_size[0] + 1, stride[0]):
-            for h in range(0, padded_shape[1] - patch_size[1] + 1, stride[1]):
-                for w in range(0, padded_shape[2] - patch_size[2] + 1, stride[2]):
-                    patch = padded[
-                        d : d + patch_size[0],
-                        h : h + patch_size[1],
-                        w : w + patch_size[2],
-                    ]
-                    patch_tensor = (
-                        torch.from_numpy(patch).unsqueeze(0).unsqueeze(0).float().to(device)
-                    )
-                    pred = self(patch_tensor).squeeze().cpu().numpy()
-                    output[
-                        d : d + patch_size[0],
-                        h : h + patch_size[1],
-                        w : w + patch_size[2],
-                    ] += pred
-                    counts[
-                        d : d + patch_size[0],
-                        h : h + patch_size[1],
-                        w : w + patch_size[2],
-                    ] += 1
+        coords = [
+            (d, h, w)
+            for d in range(0, padded_shape[0] - patch_size[0] + 1, stride[0])
+            for h in range(0, padded_shape[1] - patch_size[1] + 1, stride[1])
+            for w in range(0, padded_shape[2] - patch_size[2] + 1, stride[2])
+        ]
+
+        for i in tqdm(range(0, len(coords), batch_size), desc="inference"):
+            batch_coords = coords[i : i + batch_size]
+            batch_patches = []
+            for d, h, w in batch_coords:
+                patch = padded[
+                    d : d + patch_size[0],
+                    h : h + patch_size[1],
+                    w : w + patch_size[2],
+                ]
+                batch_patches.append(patch)
+            batch_tensor = torch.from_numpy(np.stack(batch_patches, axis=0))
+            batch_tensor = batch_tensor.unsqueeze(1).float().to(device)
+            preds = self(batch_tensor).squeeze(1).cpu().numpy()
+
+            for (d, h, w), pred in zip(batch_coords, preds):
+                output[
+                    d : d + patch_size[0],
+                    h : h + patch_size[1],
+                    w : w + patch_size[2],
+                ] += pred
+                counts[
+                    d : d + patch_size[0],
+                    h : h + patch_size[1],
+                    w : w + patch_size[2],
+                ] += 1
 
         # Avoid division by zero; counts is always positive for valid inputs.
         output /= counts

@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - GitHub issue templates, pull request template, and community documentation (`CONTRIBUTING.md`, `CONTRIBUTORS.md`, `CODE_OF_CONDUCT.md`, `ROADMAP.md`).
 - `ROADMAP.md` with short-, medium-, and long-term project direction.
+- `docs/PERFORMANCE.md` with tuning guidance for classical and U-Net pipelines.
+- `.gitattributes` for line-ending normalization.
+- Progress bars (`tqdm`) in the analysis pipeline and U-Net inference.
+- Batched U-Net inference with a `--batch-size` CLI flag.
+
+### Changed
+- **Minimum supported Python version raised from 3.9 to 3.10.**
+- Updated `mypy` pin to `>=1.0,<3.0`.
+- Updated GitHub Actions to latest major versions.
 
 ### Fixed
 - CI type-check failures caused by `mypy` 2.x and dependency source syntax.

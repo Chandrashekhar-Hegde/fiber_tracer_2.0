@@ -1,5 +1,7 @@
 """Fiber morphometry computed from ordered centerlines."""
 
+from __future__ import annotations
+
 import numpy as np
 
 

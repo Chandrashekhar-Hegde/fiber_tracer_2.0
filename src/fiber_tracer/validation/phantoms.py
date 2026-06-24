@@ -1,7 +1,8 @@
 """Synthetic fiber phantoms with ground truth."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional
 
 import numpy as np
 
@@ -122,7 +123,7 @@ def generate_fiber_phantom(
     broken_fraction: float = 0.0,
     n_broken_pieces: int = 2,
     porosity: float = 0.0,
-    seed: Optional[int] = None,
+    seed: int | None = None,
 ) -> FiberPhantom:
     """Generate a phantom with configurable fiber architecture.
 
@@ -220,8 +221,8 @@ def generate_fiber_phantom(
 
 def generate_phantom_with_known_orientation(
     shape: tuple[int, int, int] = (64, 64, 64),
-    direction: Optional[np.ndarray] = None,
-    center: Optional[tuple[float, float, float]] = None,
+    direction: np.ndarray | None = None,
+    center: tuple[float, float, float] | None = None,
     fiber_diameter_um: float = 4.0,
     voxel_spacing_um: tuple[float, float, float] = (1.0, 1.0, 1.0),
     intensity: float = 1.0,

@@ -1,5 +1,7 @@
 """Graph analysis of skeletons using optional skan backend."""
 
+from __future__ import annotations
+
 import numpy as np
 
 from fiber_tracer.exceptions import BackendNotAvailableError

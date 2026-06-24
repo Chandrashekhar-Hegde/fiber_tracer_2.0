@@ -8,10 +8,11 @@ This script does not redistribute the data. It downloads the file directly from
 Zenodo after the user accepts the dataset license.
 """
 
+from __future__ import annotations
+
 import argparse
 import sys
 from pathlib import Path
-from typing import Optional
 
 import requests
 from tqdm import tqdm
@@ -43,7 +44,7 @@ def list_files(metadata: dict) -> list[dict]:
 def download_file(
     url: str,
     dest: Path,
-    expected_size: Optional[int] = None,
+    expected_size: int | None = None,
     chunk_size: int = 1024 * 1024,
 ) -> None:
     """Download a file with a progress bar.

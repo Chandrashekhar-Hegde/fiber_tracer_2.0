@@ -1,6 +1,6 @@
 """Optional TDA descriptors using gudhi."""
 
-from typing import Union
+from __future__ import annotations
 
 import numpy as np
 from scipy import ndimage
@@ -22,7 +22,7 @@ def _validate_binary_volume(binary_volume: np.ndarray) -> None:
         raise ValueError(f"Expected 3D binary volume, got {binary_volume.ndim}D")
 
 
-def persistence_diagram(binary_volume: np.ndarray) -> list[dict[str, Union[int, float]]]:
+def persistence_diagram(binary_volume: np.ndarray) -> list[dict[str, int | float]]:
     """Compute the persistence diagram of a binary 3D volume.
 
     Uses the Euclidean distance transform of the foreground as the filtration.
@@ -54,7 +54,7 @@ def persistence_diagram(binary_volume: np.ndarray) -> list[dict[str, Union[int, 
         top_dimensional_cells=distance.flatten(),
     )
     persistence = cc.persistence()
-    diagram: list[dict[str, Union[int, float]]] = []
+    diagram: list[dict[str, int | float]] = []
     for dim, (birth, death) in persistence:
         diagram.append(
             {

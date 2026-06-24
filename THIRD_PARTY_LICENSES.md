@@ -19,7 +19,7 @@
 - **torchvision** — BSD-3-Clause — https://pytorch.org/vision/
 - **scikit-learn** — BSD-3-Clause — https://scikit-learn.org/
 - **nnunetv2** — Apache-2.0 — Linux-only extra due to transitive build constraints — https://github.com/MIC-DKFZ/nnUNet
-- **gudhi** — MIT (Python modules ≥3.9.0) — https://gudhi.inria.fr/
+- **gudhi** — MIT (Python modules ≥3.10.0) — https://gudhi.inria.fr/
 - **plotly** — MIT — https://plotly.com/python/
 - **napari** — BSD-3-Clause — https://napari.org/
 - **zarr** — MIT — https://zarr.dev/

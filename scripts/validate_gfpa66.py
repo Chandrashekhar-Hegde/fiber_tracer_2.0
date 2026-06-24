@@ -5,12 +5,13 @@ DOI: 10.5281/zenodo.4587827
 Citation: Bertoldo et al., Front. Mater. 2021, DOI:10.3389/fmats.2021.761229
 """
 
+from __future__ import annotations
+
 import argparse
 import sys
 import tempfile
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional
 
 from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.io import save_tiff_stack
@@ -22,7 +23,7 @@ DEFAULT_DATASET_NAMES: Sequence[str] = (
 )
 
 
-def find_dataset_path(hint: Optional[str] = None) -> Path:
+def find_dataset_path(hint: str | None = None) -> Path:
     """Locate the GF-PA66 HDF5 dataset.
 
     If ``hint`` is provided, return it as a Path. Otherwise search the current
@@ -43,7 +44,7 @@ def find_dataset_path(hint: Optional[str] = None) -> Path:
     )
 
 
-def load_hdf5_volume(path: str, dataset: Optional[str] = None):
+def load_hdf5_volume(path: str, dataset: str | None = None):
     try:
         import h5py
     except ImportError as exc:

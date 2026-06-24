@@ -22,7 +22,7 @@ class MLSegmentationBackend(SegmentationBackend):
     ``model_path``.
     """
 
-    def __init__(self, model_path: str | None = None):
+    def __init__(self, model_path: str | None = None, batch_size: int = 1):
         try:
             import torch
         except ImportError as exc:
@@ -31,6 +31,7 @@ class MLSegmentationBackend(SegmentationBackend):
             ) from exc
         self.torch = torch
         self.model_path = model_path
+        self.batch_size = batch_size
         self.model: UNet3D | None = None
         self._checkpoint: dict | None = None
 
@@ -87,5 +88,7 @@ class MLSegmentationBackend(SegmentationBackend):
             patch_size = self._checkpoint.get("patch_size", (32, 32, 32))
         else:
             patch_size = (32, 32, 32)
-        prob: np.ndarray = self.model.predict_volume(volume, patch_size=patch_size, overlap=16)
+        prob: np.ndarray = self.model.predict_volume(
+            volume, patch_size=patch_size, overlap=16, batch_size=self.batch_size
+        )
         return (prob > 0.5).astype(np.uint8)

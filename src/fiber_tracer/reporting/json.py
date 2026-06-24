@@ -1,11 +1,12 @@
 """JSON report exporter."""
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Union
 
 
-def write_json_report(path: Union[str, Path], summary: dict) -> None:
+def write_json_report(path: str | Path, summary: dict) -> None:
     """Write the analysis summary to a JSON file."""
     path = Path(path)
     with open(path, "w") as f:

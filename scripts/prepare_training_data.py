@@ -1,12 +1,13 @@
 """Convert raw XCT stacks into training patches and a dataset registry."""
 
+from __future__ import annotations
+
 import argparse
 import json
 import random
 import sys
 import zipfile
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 import tifffile
@@ -176,15 +177,15 @@ def _is_h5(path: Path) -> bool:
     return path.suffix.lower() in (".h5", ".hdf5")
 
 
-def _h5_data_path(sub_key: Optional[str]) -> str:
+def _h5_data_path(sub_key: str | None) -> str:
     return f"{sub_key}/data" if sub_key else "data"
 
 
-def _h5_label_path(sub_key: Optional[str]) -> str:
+def _h5_label_path(sub_key: str | None) -> str:
     return f"{sub_key}/ground_truth" if sub_key else "ground_truth"
 
 
-def _volume_shape(path: Path, sub_key: Optional[str] = None) -> tuple[int, int, int]:
+def _volume_shape(path: Path, sub_key: str | None = None) -> tuple[int, int, int]:
     """Return (D, H, W) without loading the full volume."""
     if _is_h5(path):
         import h5py
@@ -204,7 +205,7 @@ def _volume_shape(path: Path, sub_key: Optional[str] = None) -> tuple[int, int, 
 
 def _sample_intensities(
     path: Path,
-    sub_key: Optional[str] = None,
+    sub_key: str | None = None,
     max_voxels: int = 10_000_000,
 ) -> np.ndarray:
     """Sample voxel intensities for Otsu threshold estimation."""
@@ -229,7 +230,7 @@ def _sample_intensities(
 
 def _load_roi(
     path: Path,
-    sub_key: Optional[str],
+    sub_key: str | None,
     z_range: tuple[int, int],
     y_range: tuple[int, int],
     x_range: tuple[int, int],
@@ -256,7 +257,7 @@ def _load_roi(
 
 def _load_label_roi(
     path: Path,
-    sub_key: Optional[str],
+    sub_key: str | None,
     z_range: tuple[int, int],
     y_range: tuple[int, int],
     x_range: tuple[int, int],
@@ -272,7 +273,7 @@ def _load_label_roi(
         return (np.asarray(ds[z0:z1, y0:y1, x0:x1]) > 0).astype(np.float32)
 
 
-def _has_ground_truth(path: Path, sub_key: Optional[str] = None) -> bool:
+def _has_ground_truth(path: Path, sub_key: str | None = None) -> bool:
     """Check whether an HDF5 file contains a ground-truth label dataset."""
     if not _is_h5(path):
         return False
@@ -284,11 +285,11 @@ def _has_ground_truth(path: Path, sub_key: Optional[str] = None) -> bool:
 
 def _extract_patches_streaming(
     path: Path,
-    sub_key: Optional[str],
+    sub_key: str | None,
     n_patches: int,
     patch_size: tuple[int, int, int],
     seed: int,
-    threshold: Optional[float] = None,
+    threshold: float | None = None,
 ) -> tuple[list[np.ndarray], list[np.ndarray], str]:
     """Extract patches from a potentially large volume without loading it whole.
 
@@ -345,14 +346,14 @@ def _extract_patches_streaming(
     return vol_patches, msk_patches, label_source
 
 
-def _find_volumes(source_dir: Path) -> list[tuple[Path, Optional[str]]]:
+def _find_volumes(source_dir: Path) -> list[tuple[Path, str | None]]:
     """Return list of loadable volume references under *source_dir*.
 
     TIFF *directories* containing many slices are treated as a single 3D
     volume. Standalone multi-page TIFF files are also accepted. HDF5 files
     may yield multiple references if they contain several volumes.
     """
-    candidates: list[tuple[Path, Optional[str]]] = []
+    candidates: list[tuple[Path, str | None]] = []
 
     # Discover TIFF directories first.
     tiff_dirs: set[Path] = set()
@@ -394,10 +395,10 @@ def _find_volumes(source_dir: Path) -> list[tuple[Path, Optional[str]]]:
 def _process_real_volume(
     volume_path: Path,
     output_dir: Path,
-    sub_key: Optional[str] = None,
+    sub_key: str | None = None,
     n_patches: int = PATCHES_PER_VOLUME,
     patch_size: tuple[int, int, int] = PATCH_SIZE,
-) -> Optional[dict]:
+) -> dict | None:
     try:
         shape = _volume_shape(volume_path, sub_key)
     except Exception as exc:
@@ -409,7 +410,7 @@ def _process_real_volume(
         return None
 
     seed = hash(f"{volume_path.name}_{sub_key}") % 2**31
-    threshold: Optional[float] = None
+    threshold: float | None = None
     if not _has_ground_truth(volume_path, sub_key):
         # Estimate Otsu threshold from a sample so we can stream patches.
         sample = _sample_intensities(volume_path, sub_key)
@@ -460,7 +461,7 @@ def _extract_zip_archives(source_dir: Path) -> None:
             print(f"  Warning: skipping incomplete/corrupt archive {archive}: {exc}")
 
 
-def main(argv: Optional[list[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Prepare training patches")
     parser.add_argument("--raw", type=Path, default=Path("data/raw"))
     parser.add_argument("--output", type=Path, default=Path("data/processed"))

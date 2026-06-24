@@ -1,9 +1,11 @@
 """Command-line interface for fiber_tracer."""
 
+from __future__ import annotations
+
 import argparse
 import logging
 import sys
-from typing import Any, Optional
+from typing import Any
 
 from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.pipeline import FiberAnalysisPipeline
@@ -21,6 +23,9 @@ def _add_pipeline_args(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument("--segmentation-method", choices=["otsu", "watershed", "unet"])
     parser.add_argument("--model-path", help="Path to a PyTorch checkpoint for method='unet'")
+    parser.add_argument(
+        "--batch-size", type=int, default=1, help="Inference batch size for U-Net backend"
+    )
 
 
 def _add_view_args(parser: argparse.ArgumentParser) -> None:
@@ -103,6 +108,8 @@ def _run_pipeline(args: argparse.Namespace) -> int:
         config.segmentation.method = args.segmentation_method
     if args.model_path:
         config.segmentation.model_path = args.model_path
+    if args.batch_size:
+        config.segmentation.batch_size = args.batch_size
 
     config.validate()
     pipeline = FiberAnalysisPipeline(config)
@@ -137,7 +144,7 @@ def _run_batch(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: Optional[list] = None) -> int:
+def main(argv: list | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 

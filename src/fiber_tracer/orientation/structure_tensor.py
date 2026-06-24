@@ -1,5 +1,7 @@
 """Orientation estimation using the structure-tensor package."""
 
+from __future__ import annotations
+
 import numpy as np
 from scipy import ndimage
 

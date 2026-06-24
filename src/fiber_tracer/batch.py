@@ -1,9 +1,11 @@
 """Batch processing for multiple fiber volumes."""
 
+from __future__ import annotations
+
 import json
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 import yaml  # type: ignore[import-untyped]
@@ -40,7 +42,7 @@ def _merge_common(common: dict[str, Any], entry: dict[str, Any]) -> dict[str, An
     return merged
 
 
-def _to_voxel_spacing(value: Any) -> Optional[VoxelSpacing]:
+def _to_voxel_spacing(value: Any) -> VoxelSpacing | None:
     if value is None or isinstance(value, VoxelSpacing):
         return value
     if isinstance(value, (list, tuple)) and len(value) == 3:
@@ -80,7 +82,7 @@ def build_config(entry: dict[str, Any]) -> Config:
 
 def process_batch(
     config_path: str,
-    aggregate_csv: Optional[str] = None,
+    aggregate_csv: str | None = None,
 ) -> list[dict[str, Any]]:
     """Process all volumes in a batch config and return per-volume summaries."""
     batch = load_batch_config(config_path)

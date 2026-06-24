@@ -1,8 +1,10 @@
 """I/O for TIFF stacks and volume metadata."""
 
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 import tifffile
@@ -17,7 +19,7 @@ __all__ = [
 ]
 
 
-def load_tiff_stack(path: Union[str, Path]) -> np.ndarray:
+def load_tiff_stack(path: str | Path) -> np.ndarray:
     """Load a TIFF stack from a file or directory of TIFFs."""
     path = Path(path)
     if path.is_dir():
@@ -79,7 +81,7 @@ def _safe_to_writable_dtype(volume: np.ndarray) -> np.ndarray:
     raise TypeError(f"Unsupported dtype for TIFF writing: {volume.dtype}")
 
 
-def save_tiff_stack(path: Union[str, Path], volume: np.ndarray) -> None:
+def save_tiff_stack(path: str | Path, volume: np.ndarray) -> None:
     """Write a 3D volume to a single TIFF file.
 
     The volume is converted to a TIFF-compatible dtype and written with

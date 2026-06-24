@@ -9,12 +9,14 @@ Example
     python scripts/train_unet_phantoms.py --epochs 30 --output models/fiber_unet.pt
 """
 
+from __future__ import annotations
+
 import argparse
 import random
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 import numpy as np
 import torch
@@ -36,7 +38,7 @@ class PhantomPatchDataset(Dataset):
         patches_per_phantom: int,
         patch_size: tuple[int, int, int] = (32, 32, 32),
         phantom_shape: tuple[int, int, int] = (64, 64, 64),
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> None:
         self.patch_size = patch_size
         self.phantom_shape = phantom_shape
@@ -170,7 +172,7 @@ def _evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> dic
     }
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Train a 3D U-Net on synthetic fiber phantoms")
     parser.add_argument("--n-phantoms", type=int, default=200, help="Number of training phantoms")
     parser.add_argument("--patches-per-phantom", type=int, default=16, help="Patches per phantom")

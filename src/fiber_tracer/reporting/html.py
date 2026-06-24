@@ -1,12 +1,13 @@
 """HTML report exporter."""
 
+from __future__ import annotations
+
 from pathlib import Path
-from typing import Union
 
 from fiber_tracer.reporting.citations import CITATIONS, REGIME_CAVEATS
 
 
-def write_html_report(path: Union[str, Path], summary: dict) -> None:
+def write_html_report(path: str | Path, summary: dict) -> None:
     """Write a human-readable HTML report with caveats and citations."""
     path = Path(path)
     regime = summary.get("regime", "unknown")

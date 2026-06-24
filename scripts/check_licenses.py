@@ -4,6 +4,8 @@ Allows packages whose PyPI metadata contains GPL classifiers but whose runtime
 is known to be under a permissive license (e.g. docutils).
 """
 
+from __future__ import annotations
+
 import json
 import subprocess
 import sys

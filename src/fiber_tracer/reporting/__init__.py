@@ -1,5 +1,7 @@
 """Reporting exporters and shared report metadata."""
 
+from __future__ import annotations
+
 from fiber_tracer.reporting.citations import CITATIONS, REGIME_CAVEATS
 from fiber_tracer.reporting.csv import write_csv_report
 from fiber_tracer.reporting.html import write_html_report

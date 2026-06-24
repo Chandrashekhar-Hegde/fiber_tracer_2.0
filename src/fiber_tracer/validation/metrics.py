@@ -1,5 +1,7 @@
 """Validation metrics against ground truth."""
 
+from __future__ import annotations
+
 import numpy as np
 
 

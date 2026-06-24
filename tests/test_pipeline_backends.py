@@ -40,7 +40,7 @@ def test_unet_method_routes_to_ml_backend(tmp_path):
         mock_backend_cls.return_value.segment.return_value = phantom.labels > 0
         summary = pipeline.run()
 
-    mock_backend_cls.assert_called_once_with(model_path=None)
+    mock_backend_cls.assert_called_once_with(model_path=None, batch_size=1)
     mock_backend_cls.return_value.segment.assert_called_once()
     assert summary["n_labels"] > 0
     assert summary["regime"] == "resolved"
