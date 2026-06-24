@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and discussions
+    url: https://github.com/llMr-Sweetll/fiber_tracer_2.0/discussions
+    about: Please use Discussions for usage questions, ideas, and show-and-tell.
+  - name: Documentation
+    url: https://github.com/llMr-Sweetll/fiber_tracer_2.0/tree/main/docs
+    about: Check the docs directory before opening an issue.

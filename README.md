@@ -394,6 +394,8 @@ Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persis
 | [`docs/developer_guide.md`](docs/developer_guide.md) | Development setup, testing, linting, type checking, and contribution workflow. |
 | [`docs/RAFA_IMPLEMENTATION_PLAN.md`](docs/RAFA_IMPLEMENTATION_PLAN.md) | Original redesign plan for the RAFA pipeline. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Version history and release notes. |
+| [`ROADMAP.md`](ROADMAP.md) | Short-, medium-, and long-term project roadmap. |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to set up a dev environment, run tests, and submit PRs. |
 | [`CITATIONS.md`](CITATIONS.md) | Academic and software citations. |
 | [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) | Dependency and dataset licenses. |
 

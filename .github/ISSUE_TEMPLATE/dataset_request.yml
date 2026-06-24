@@ -1,0 +1,48 @@
+name: Dataset request
+description: Propose adding an open XCT dataset for training or benchmarking.
+title: "[DATASET] "
+labels: ["data"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Dataset name
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Dataset URL or DOI
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: License
+      description: e.g., CC BY-SA 4.0, CC0, custom open license
+    validations:
+      required: true
+  - type: dropdown
+    id: fiber_type
+    attributes:
+      label: Fiber / matrix type
+      options:
+        - Glass fiber
+        - Carbon fiber
+        - Natural fiber
+        - Short fiber
+        - Continuous fiber
+        - Woven / textile
+        - Other / mixed
+  - type: textarea
+    id: why
+    attributes:
+      label: Why add this dataset?
+      description: What gap does it fill (resolution, fiber type, damage state, etc.)?
+    validations:
+      required: true
+  - type: textarea
+    id: ground_truth
+    attributes:
+      label: Ground truth available?
+      description: Are labels, masks, orientation tensors, or other annotations provided?

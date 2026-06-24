@@ -8,6 +8,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- GitHub issue templates, pull request template, and community documentation (`CONTRIBUTING.md`, `CONTRIBUTORS.md`, `CODE_OF_CONDUCT.md`, `ROADMAP.md`).
+- `ROADMAP.md` with short-, medium-, and long-term project direction.
+
+### Fixed
+- CI type-check failures caused by `mypy` 2.x and dependency source syntax.
+
+## [3.3.0] — TBD
+
+### Planned
+- Expanded training corpus and `fiber_unet_v3.pt` model.
+- Domain-randomization augmentation for synthetic patches.
+- Public benchmark leaderboard in documentation.
+- GitHub Actions release workflow and Docker image.
+
+## [3.2.0] — 2026-06-21
+
+### Added
 - Production 3D U-Net model (`fiber_unet_v2_full.pt`) trained on 2,152 mixed patches from synthetic phantoms and open XCT datasets (Henry Royce Institute, DTU, IVW).
 - Mixed synthetic + real training pipeline: `scripts/download_datasets.py`, `scripts/prepare_training_data.py`, `scripts/train_unet_mixed.py`, and `scripts/validate_unet_gfpa66.py`.
 - Deterministic oversampling sampler in `scripts/train_unet_mixed.py` to handle extreme class imbalance in thin-fiber XCT patches.
@@ -25,18 +42,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/TROUBLESHOOTING.md` covering common errors and fixes.
 - `config_example.yaml` and `batch_example.yaml` as copy-pasteable configuration templates.
 - BibTeX entries in `CITATIONS.md`.
-
-### Changed
-- `README.md` now links to the new user guide, CLI reference, install guide, and troubleshooting docs.
-- `docs/parameter_guide.md` now documents the accepted `[z, y, x]` list form of `voxel_spacing_um`.
-- `docs/validation_protocol.md` now explains the GF-PA66 validation helper and optional `--dataset` flag.
-
-### Fixed
-- `Config.from_dict` now accepts `voxel_spacing_um` as a 3-element list or tuple (e.g. `[1.0, 1.0, 1.0]`), matching the batch config and README examples.
-
-## [3.2.0] - 2026-06-21
-
-### Added
 - Napari viewer integration (`fiber-tracer view`) for raw, labels, skeleton, and fiber orientation vector layers.
 - Plotly-based interactive HTML reports (`fiber-tracer report-viz`).
 - Automatic GF-PA66 Zenodo downloader with license acceptance, file listing, progress bar, and resume support.
@@ -44,11 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/architecture.md` and `docs/developer_guide.md`.
 
 ### Changed
-- README updated with visualization, batch, and GF-PA66 download examples.
-- `docs/parameter_guide.md` and `docs/validation_protocol.md` updated with new CLI commands and downloader instructions.
+- README updated with visualization, batch, GF-PA66 download, U-Net backend, and ROADMAP links.
+- `docs/parameter_guide.md` now documents the accepted `[z, y, x]` list form of `voxel_spacing_um` and U-Net config keys.
+- `docs/validation_protocol.md` now explains the GF-PA66 validation helper, optional `--dataset` flag, and U-Net validation metrics.
 
 ### Fixed
-- n/a
+- `Config.from_dict` now accepts `voxel_spacing_um` as a 3-element list or tuple (e.g. `[1.0, 1.0, 1.0]`), matching the batch config and README examples.
 
 ## [3.1.0] - 2026-06-21
 
