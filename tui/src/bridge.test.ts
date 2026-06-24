@@ -1,4 +1,4 @@
-import { describe, expect, it, mock, beforeEach, afterEach } from "bun:test";
+import { describe, expect, it, mock, afterEach } from "bun:test";
 import { EventEmitter } from "events";
 import * as childProcess from "child_process";
 import { runAnalysis } from "./bridge";
@@ -6,10 +6,11 @@ import { runAnalysis } from "./bridge";
 const originalSpawn = childProcess.spawn;
 
 function createMockProcess(options: {
-  code: number;
+  code?: number;
   stdout?: string;
   stderr?: string;
   chunks?: string[];
+  error?: Error;
 }) {
   const stdout = new EventEmitter();
   const stderr = new EventEmitter();
@@ -18,15 +19,19 @@ function createMockProcess(options: {
   proc.stderr = stderr;
 
   setTimeout(() => {
+    if (options.error) {
+      proc.emit("error", options.error);
+      return;
+    }
     if (options.chunks && options.chunks.length > 0) {
       options.chunks.forEach((chunk, index) => {
         setTimeout(() => stdout.emit("data", Buffer.from(chunk)), index * 5);
       });
-      setTimeout(() => proc.emit("close", options.code), options.chunks.length * 5 + 5);
+      setTimeout(() => proc.emit("close", options.code ?? 0), options.chunks.length * 5 + 5);
     } else {
       if (options.stdout) stdout.emit("data", Buffer.from(options.stdout));
       if (options.stderr) stderr.emit("data", Buffer.from(options.stderr));
-      proc.emit("close", options.code);
+      proc.emit("close", options.code ?? 0);
     }
   }, 0);
 
@@ -43,6 +48,9 @@ afterEach(() => {
 
 describe("bridge", () => {
   it("reports error when fiber-tracer CLI is missing", async () => {
+    const proc = createMockProcess({ error: new Error("spawn fiber-tracer ENOENT") });
+    setMockSpawn(proc);
+
     const result = await runAnalysis({
       dataPath: "/nonexistent",
       outputDir: "/tmp/out",
@@ -57,6 +65,7 @@ describe("bridge", () => {
       computeTda: false,
     });
     expect(result.success).toBe(false);
+    expect(result.error).toContain("ENOENT");
   });
 });
 
@@ -88,6 +97,7 @@ describe("listModels", () => {
     expect(models[0].isDefault).toBe(true);
     expect(models[0].createdAt).toBe("2024-01-01T00:00:00Z");
     expect(models[0].name).toBe("Fiber U-Net v3.2");
+    expect("modelId" in models[0]).toBe(false);
   });
 });
 
@@ -159,6 +169,27 @@ describe("startTraining", () => {
     expect(onProgress.mock.calls[0][0].percent).toBe(0);
     expect(onProgress.mock.calls[2][0].percent).toBe(100);
     expect(onLog).toHaveBeenCalledTimes(3);
+  });
+
+  it("parses multiple JSON progress events in a single chunk", async () => {
+    const progress = [
+      JSON.stringify({ stage: "train", percent: 10, elapsedSeconds: 10, message: "a" }),
+      JSON.stringify({ stage: "train", percent: 20, elapsedSeconds: 20, message: "b" }),
+      JSON.stringify({ stage: "train", percent: 30, elapsedSeconds: 30, message: "c" }),
+    ];
+    const proc = createMockProcess({ code: 0, chunks: [progress.map((line) => `${line}`).join("\n") + "\n"] });
+    setMockSpawn(proc);
+
+    const { startTraining } = await import("./bridge");
+    const onProgress = mock((_: import("./types").ProgressEvent) => {});
+
+    const result = await startTraining(trainingOptions, { onProgress });
+
+    expect(result.success).toBe(true);
+    expect(onProgress).toHaveBeenCalledTimes(3);
+    expect(onProgress.mock.calls[0][0].percent).toBe(10);
+    expect(onProgress.mock.calls[1][0].percent).toBe(20);
+    expect(onProgress.mock.calls[2][0].percent).toBe(30);
   });
 
   it("resolves with error when training fails", async () => {
