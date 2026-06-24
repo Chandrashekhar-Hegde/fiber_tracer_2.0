@@ -22,13 +22,13 @@ class _ConvBlock(nn.Module):
         norm: str = "batch",
     ) -> None:
         super().__init__()
-        Norm = nn.BatchNorm3d if norm == "batch" else nn.InstanceNorm3d
+        norm_layer = nn.BatchNorm3d if norm == "batch" else nn.InstanceNorm3d
         layers: list[nn.Module] = [
             nn.Conv3d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
-            Norm(out_channels),
+            norm_layer(out_channels),
             nn.ReLU(inplace=True),
             nn.Conv3d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
-            Norm(out_channels),
+            norm_layer(out_channels),
             nn.ReLU(inplace=True),
         ]
         if dropout > 0.0:
@@ -82,7 +82,9 @@ class UNet3D(nn.Module):
             in_feat = reversed_features[i] * 2 if i == 0 else reversed_features[i - 1]
             out_feat = reversed_features[i]
             self.up_convs.append(nn.ConvTranspose3d(in_feat, out_feat, kernel_size=2, stride=2))
-            self.decoder_blocks.append(_ConvBlock(out_feat * 2, out_feat, dropout=dropout, norm=norm))
+            self.decoder_blocks.append(
+                _ConvBlock(out_feat * 2, out_feat, dropout=dropout, norm=norm)
+            )
 
         self.final_conv = nn.Conv3d(features[0], out_channels, kernel_size=1)
 

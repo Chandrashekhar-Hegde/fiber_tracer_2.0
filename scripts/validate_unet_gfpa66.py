@@ -17,7 +17,6 @@ import h5py
 import numpy as np
 import torch
 import torch.nn as nn
-from scipy.ndimage import zoom
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
@@ -119,7 +118,12 @@ def _sliding_window_inference(
         for batch, coords in tqdm(loader, desc="inference"):
             batch = batch.to(device)
             probs = model(batch).cpu().numpy()
-            for i, (z, y, x) in enumerate(coords):
+            # DataLoader returns coordinates as a tuple of batched tensors.
+            zs, ys, xs = coords
+            for i in range(probs.shape[0]):
+                z = int(zs[i])
+                y = int(ys[i])
+                x = int(xs[i])
                 pd, ph, pw = patch_size
                 output[z : z + pd, y : y + ph, x : x + pw] += probs[i, 0]
                 counts[z : z + pd, y : y + ph, x : x + pw] += 1.0
@@ -132,8 +136,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Validate U-Net on GF-PA66")
     parser.add_argument("--checkpoint", type=Path, default=Path("models/fiber_unet_v2_full.pt"))
     parser.add_argument("--data", type=Path, default=Path("data/raw/gfpa66/pa66_volumes.h5"))
-    parser.add_argument("--image-key", default="pa66")
-    parser.add_argument("--label-key", default="ground_truth")
+    parser.add_argument("--image-key", default="pa66/data")
+    parser.add_argument("--label-key", default="pa66/ground_truth")
     parser.add_argument("--patch-size", type=int, default=64)
     parser.add_argument("--stride", type=int, default=32)
     parser.add_argument("--batch-size", type=int, default=1)
@@ -180,7 +184,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     target = (labels > 0).astype(np.uint8)
 
     # Optional: evaluate on central slices for speed.
-    z_slice = slice(None)
     if args.subsample:
         d = volume.shape[0]
         mid = d // 2
@@ -189,7 +192,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         z_end = min(d, mid + half)
         volume = volume[z_start:z_end]
         target = target[z_start:z_end]
-        z_slice = slice(z_start, z_end)
         print(f"Evaluating on slices {z_start}-{z_end}")
 
     print("Running sliding-window inference...")
