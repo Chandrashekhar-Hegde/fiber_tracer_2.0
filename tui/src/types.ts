@@ -46,3 +46,44 @@ export interface BridgeResult {
 }
 
 export type BridgeStatus = "idle" | "running" | "success" | "error" | "cancelled";
+
+export interface Model {
+  modelId: string;
+  name: string;
+  architecture: string;
+  source: string;
+  path: string;
+  version: string;
+  createdAt: string;
+  tags: string[];
+  description: string;
+  status: string;
+  isDefault: boolean;
+}
+
+export interface Experiment {
+  id: string;
+  name: string;
+  type: string;
+  modelId: string;
+  dataset: string;
+  configSnapshot: Record<string, unknown>;
+  status: string;
+  metrics: Record<string, unknown>;
+  history: Record<string, unknown>;
+  startedAt: string;
+  finishedAt?: string;
+  artifactDir: string;
+  errorMessage?: string;
+}
+
+export interface TrainingOptions {
+  datasetDir: string;
+  modelId: string;
+  outputDir: string;
+  name: string;
+  epochs: number;
+  batchSize: number;
+  lr: number;
+  device: string;
+}
