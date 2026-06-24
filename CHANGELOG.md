@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Production 3D U-Net model (`fiber_unet_v2_full.pt`) trained on 2,152 mixed patches from synthetic phantoms and open XCT datasets (Henry Royce Institute, DTU, IVW).
+- Mixed synthetic + real training pipeline: `scripts/download_datasets.py`, `scripts/prepare_training_data.py`, `scripts/train_unet_mixed.py`, and `scripts/validate_unet_gfpa66.py`.
+- Deterministic oversampling sampler in `scripts/train_unet_mixed.py` to handle extreme class imbalance in thin-fiber XCT patches.
+- Foreground-aware patch extraction with configurable minimum foreground ratio in `scripts/prepare_training_data.py`.
+- Enhanced phantom generator supporting aligned, in-plane, orthogonal, woven, twill, broken-fiber, and porosity modes.
+- Validation against GF-PA66 ground truth: Dice ≈ 0.90 / IoU ≈ 0.81 on held-out central slices.
 - Lightweight 3D U-Net segmentation backend (`segmentation.method: "unet"`) with `scripts/train_unet_phantoms.py` for synthetic-phantom training.
 - `fiber_tracer.backends.unet3d.UNet3D` and sliding-window `predict_volume` inference.
 - Topological data analysis backend (`analysis.compute_tda_descriptors: true`) using `gudhi` distance-transform persistence diagrams, Betti numbers, and persistence summaries.

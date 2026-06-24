@@ -52,7 +52,7 @@ Across all regimes the tool writes machine-readable JSON, CSV, and HTML reports 
 
 - It does **not** claim peer-reviewed validation, universal accuracy, or certification for any specific material.
 - It does **not** solve differential equations; Runge–Kutta integration and Poincaré–Hopf index tracking are not part of the pipeline.
-- It does **not** ship trained machine-learning models or benchmark datasets.
+- It ships an optional pre-trained 3D U-Net for fiber segmentation, but the model should be validated on your own data before drawing conclusions.
 - It does **not** guarantee segmentation quality on noisy, low-contrast, or heavily touching fibers without parameter tuning.
 - It does **not** perform out-of-core analysis from the CLI; large volumes require programmatic use of the `fiber_tracer.chunked` helpers (see [`docs/architecture.md`](docs/architecture.md)).
 
@@ -361,10 +361,17 @@ Set `segmentation.method: "unet"` to use the lightweight 3D U-Net implemented in
 
 ```bash
 pip install -e ".[ml]"
-python scripts/train_unet_phantoms.py --epochs 30 --output models/fiber_unet.pt
+# Use the pre-trained production model (download from GitHub Releases)
 fiber-tracer --data stack.tif --output results/ \
-  --segmentation-method unet --model-path models/fiber_unet.pt
+  --segmentation-method unet --model-path models/fiber_unet_v2_full.pt
+
+# Or train your own on mixed synthetic + open XCT data
+python scripts/download_datasets.py
+python scripts/prepare_training_data.py --n-synthetic 1000 --n-patches-per-volume 64
+python scripts/train_unet_mixed.py --epochs 100 --output models/fiber_unet_v2.pt
 ```
+
+The production model (`fiber_unet_v2_full.pt`) was trained on 2,152 mixed patches covering glass/carbon, UD/woven/short/broken fibers, and failure cases from Henry Royce Institute, DTU, and IVW open XCT datasets. Held-out validation on the GF-PA66 ground truth achieves **Dice ≈ 0.90 / IoU ≈ 0.81**.
 
 Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persistence summaries with `gudhi` (requires the `tda` extra).
 
