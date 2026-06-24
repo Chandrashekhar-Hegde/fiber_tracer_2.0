@@ -11,7 +11,7 @@ license = {text = "MIT"}
 authors = [
     {name = "Chandrashekhar Hegde", email = "hegde.g.chandrashekhar@gmail.com"}
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 keywords = [
     "fiber analysis",
     "composite materials",
@@ -25,7 +25,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -57,7 +56,7 @@ dev = [
     "pytest-cov",
     "black",
     "ruff",
-    "mypy<2.0",
+    "mypy>=1.0,<3.0",
     "h5py>=3.0",
     "hypothesis>=6.0",
     "requests>=2.25",
@@ -81,7 +80,7 @@ fiber_tracer = ["*.yaml", "*.yml", "*.json"]
 
 [tool.black]
 line-length = 100
-target-version = ['py39']
+target-version = ['py310']
 
 [tool.ruff]
 line-length = 100
@@ -90,8 +89,7 @@ line-length = 100
 select = ["E", "F", "I", "N", "W", "UP"]
 
 [tool.mypy]
-# Runtime still supports Python 3.9, but type-checking targets 3.10 because
-# some upstream dependencies (e.g. tifffile) use 3.10+ syntax internally.
+# Type-checking targets Python 3.10, the minimum supported runtime version.
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
