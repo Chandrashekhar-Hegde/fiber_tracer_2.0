@@ -234,7 +234,7 @@ full_volume.dat
 *.ckpt
 *.pt
 checkpoint/
-models/
+/models/
 
 # Training data
 /data/raw/
