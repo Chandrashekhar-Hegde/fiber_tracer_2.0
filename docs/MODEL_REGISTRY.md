@@ -1,6 +1,6 @@
 # Model Registry, Experiments, and Training
 
-Fiber Tracer v3.3.0 introduces local, file-based management for segmentation models and training experiments. Everything is stored under the user configuration directory, which keeps project directories clean and makes models reusable across analyses.
+The model registry, experiment tracking, and training CLI are implemented and available on the `main` branch; they will be included in the upcoming v3.3.0 release. Everything is file-based and stored under the user configuration directory, which keeps project directories clean and makes models reusable across analyses.
 
 - **Model registry** — a catalog of local `.pt` checkpoints with metadata such as architecture, version, and description.
 - **Experiments** — lightweight records that link a training run to a model ID, hyper-parameters, and final metrics.
@@ -20,7 +20,7 @@ On macOS this resolves to `~/.config/fiber-tracer` by default. If the directory 
 
 ## Model registry
 
-Registered models can be selected by ID from the CLI (`--model-path <model_id>` syntax is also accepted when the ID exists in the registry) and are surfaced in the TUI Model Registry screen.
+Registered models can be selected by ID from the CLI; a registry ID can be supplied anywhere `--model-path` expects a checkpoint path, and the CLI resolves it to the registered file. Models are also surfaced in the TUI Model Registry screen.
 
 ### `fiber-tracer model list`
 
@@ -133,6 +133,8 @@ fiber-tracer train \
   --lr 1e-4 \
   --device auto
 ```
+
+**Note:** Training requires the `ml` extra: `pip install -e ".[ml]"`.
 
 ### Flags
 

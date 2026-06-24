@@ -126,6 +126,10 @@ Installs all backends and development tools. On Linux this includes the `unet` e
 pip install -e ".[all]"
 ```
 
+### Training
+
+**Note:** The `fiber-tracer train` command requires the `ml` extra: `pip install -e ".[ml]"`.
+
 ## Verification commands
 
 After installation, verify that the package and CLI are working.

@@ -233,6 +233,8 @@ fiber-tracer train \
   --device auto
 ```
 
+**Note:** Training requires the `ml` extra: `pip install -e ".[ml]"`.
+
 See [`docs/MODEL_REGISTRY.md`](docs/MODEL_REGISTRY.md) for the full guide, and [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) for model limitations and retraining advice.
 
 ## Terminal UI (TUI)

@@ -26,7 +26,8 @@ This document describes where the project is headed and how you can help. For de
 - [ ] Add a separate CI job for ML-backend tests that installs the `ml` extra.
 - [ ] Add a Dockerfile for reproducible CPU/MPS inference.
 - [x] Build an interactive Terminal UI (TUI) with Bun, Ink, and termcn for guided analysis, dashboards, model registry, and experiments.
-- [x] Add model registry, experiment tracking, and `fiber-tracer train` CLI for local U-Net training.
+- [~] Add model registry, experiment tracking, and `fiber-tracer train` CLI for local U-Net training.  
+  _Implemented on `main`; pending the v3.3.0 release._
 
 ### Community
 

@@ -62,7 +62,7 @@ Run the Regime-Aware Fiber Analysis (RAFA) pipeline on one 3D volume.
 | `--fiber-diameter` | No | positive float | `10.0` | Expected fiber diameter in micrometres. |
 | `--regime` | No | `auto`, `resolved`, `marginal`, `subvoxel` | `auto` | Analysis regime. `auto` selects from the voxel/fiber ratio. |
 | `--segmentation-method` | No | `otsu`, `watershed`, `unet` | `otsu` | Segmentation backend. Use `unet` for the 3D U-Net model. |
-| `--model-path` | No* | file path or registered model ID | `models/fiber_unet_v2_full.pt` | Path to a PyTorch checkpoint for `unet`, or a model ID from the registry. |
+| `--model-path` | No** | file path or registered model ID | `models/fiber_unet_v2_full.pt` | Path to a PyTorch checkpoint for `unet`, or a model ID from the registry. |
 | `--batch-size` | No | positive integer | `1` | U-Net inference batch size. Increase for higher throughput if memory allows. |
 
 \* `--data` and `--output` are not individually marked required by the parser, but the run fails if either is not provided by CLI or config.  
@@ -417,6 +417,8 @@ fiber-tracer train \
   --lr 1e-4 \
   --device auto
 ```
+
+**Note:** Training requires the `ml` extra: `pip install -e ".[ml]"`.
 
 ### JSON progress
 
