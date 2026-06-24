@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import sys
+from dataclasses import asdict
 from typing import Any
 
 from fiber_tracer.config import Config, VoxelSpacing
@@ -50,6 +52,191 @@ def _build_batch_parser(subparsers: Any) -> None:
     parser.set_defaults(func=_run_batch)
 
 
+def _build_model_parser(subparsers: Any) -> None:
+    parser = subparsers.add_parser("model", help="Manage segmentation models")
+    model_sub = parser.add_subparsers(dest="model_command")
+
+    list_p = model_sub.add_parser("list", help="List registered models")
+    list_p.add_argument("--json", action="store_true", help="Output as JSON")
+    list_p.set_defaults(func=_run_model_list)
+
+    add_p = model_sub.add_parser("add", help="Add a local model")
+    add_p.add_argument("--model-id", required=True)
+    add_p.add_argument("--name", required=True)
+    add_p.add_argument("--path", required=True)
+    add_p.add_argument("--architecture", default="unet3d")
+    add_p.add_argument("--version", default="unknown")
+    add_p.add_argument("--description", default="")
+    add_p.set_defaults(func=_run_model_add)
+
+    remove_p = model_sub.add_parser("remove", help="Remove a model")
+    remove_p.add_argument("model_id")
+    remove_p.set_defaults(func=_run_model_remove)
+
+    default_p = model_sub.add_parser("set-default", help="Set the default model")
+    default_p.add_argument("model_id")
+    default_p.set_defaults(func=_run_model_set_default)
+
+
+def _run_model_list(args: argparse.Namespace) -> int:
+    from fiber_tracer.models.registry import ModelRegistry
+
+    registry = ModelRegistry()
+    models = registry.list_models()
+    if args.json:
+        print(json.dumps([asdict(m) for m in models]))
+        return 0
+    default = registry.get_default()
+    for m in models:
+        marker = " (default)" if default and m.model_id == default.model_id else ""
+        print(f"{m.model_id}: {m.name} [{m.source}]{marker}")
+    return 0
+
+
+def _run_model_add(args: argparse.Namespace) -> int:
+    from fiber_tracer.models.registry import ModelRegistry
+
+    registry = ModelRegistry()
+    registry.add_model(
+        model_id=args.model_id,
+        name=args.name,
+        path=args.path,
+        architecture=args.architecture,
+        version=args.version,
+        description=args.description,
+    )
+    print(f"Added model {args.model_id}")
+    return 0
+
+
+def _run_model_remove(args: argparse.Namespace) -> int:
+    from fiber_tracer.models.registry import ModelRegistry
+
+    registry = ModelRegistry()
+    registry.remove_model(args.model_id)
+    print(f"Removed model {args.model_id}")
+    return 0
+
+
+def _run_model_set_default(args: argparse.Namespace) -> int:
+    from fiber_tracer.models.registry import ModelRegistry
+
+    registry = ModelRegistry()
+    registry.set_default(args.model_id)
+    print(f"Default model set to {args.model_id}")
+    return 0
+
+
+def _build_experiment_parser(subparsers: Any) -> None:
+    parser = subparsers.add_parser("experiment", help="Manage experiments")
+    exp_sub = parser.add_subparsers(dest="experiment_command")
+
+    list_p = exp_sub.add_parser("list", help="List experiments")
+    list_p.add_argument("--json", action="store_true", help="Output as JSON")
+    list_p.set_defaults(func=_run_experiment_list)
+
+    show_p = exp_sub.add_parser("show", help="Show experiment details")
+    show_p.add_argument("experiment_id")
+    show_p.set_defaults(func=_run_experiment_show)
+
+    compare_p = exp_sub.add_parser("compare", help="Compare experiments by metric")
+    compare_p.add_argument("experiment_ids", nargs="+")
+    compare_p.add_argument("--metric", default="val_dice")
+    compare_p.set_defaults(func=_run_experiment_compare)
+
+
+def _run_experiment_list(args: argparse.Namespace) -> int:
+    from fiber_tracer.experiments.store import ExperimentStore
+
+    store = ExperimentStore()
+    experiments = store.list_experiments()
+    if args.json:
+        print(json.dumps([asdict(e) for e in experiments]))
+        return 0
+    for exp in experiments:
+        print(f"{exp.id} {exp.name} {exp.status}")
+    return 0
+
+
+def _run_experiment_show(args: argparse.Namespace) -> int:
+    from fiber_tracer.experiments.store import ExperimentStore
+
+    store = ExperimentStore()
+    exp = store.get_experiment(args.experiment_id)
+    if exp is None:
+        print(f"Experiment {args.experiment_id} not found", file=sys.stderr)
+        return 1
+    print(json.dumps(asdict(exp), indent=2))
+    return 0
+
+
+def _run_experiment_compare(args: argparse.Namespace) -> int:
+    from fiber_tracer.experiments.store import ExperimentStore
+
+    store = ExperimentStore()
+    result = store.compare(args.experiment_ids, metric=args.metric)
+    print(json.dumps(result, indent=2))
+    return 0
+
+
+def _build_train_parser(subparsers: Any) -> None:
+    parser = subparsers.add_parser("train", help="Train a segmentation model")
+    parser.add_argument("--dataset-dir", required=True)
+    parser.add_argument("--model-id", default="unet-v3.2")
+    parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--epochs", type=int, default=10)
+    parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--val-fraction", type=float, default=0.1)
+    parser.add_argument("--device", default="auto")
+    parser.add_argument("--features", nargs="+", type=int, default=None)
+    parser.add_argument("--name", default=None, help="Experiment name")
+    parser.set_defaults(func=_run_train)
+
+
+def _run_train(args: argparse.Namespace) -> int:
+    from fiber_tracer.experiments.store import ExperimentStore
+    from fiber_tracer.models.registry import ModelRegistry
+    from fiber_tracer.training.trainer import UNetTrainer
+
+    registry = ModelRegistry()
+    model = registry.get_model(args.model_id)
+    if model is None:
+        print(f"Model {args.model_id} not found", file=sys.stderr)
+        return 1
+
+    store = ExperimentStore()
+    exp = store.create(
+        name=args.name or f"train-{args.model_id}",
+        type="train",
+        model_id=args.model_id,
+        dataset=args.dataset_dir,
+        config_snapshot={
+            "epochs": args.epochs,
+            "batch_size": args.batch_size,
+            "lr": args.lr,
+            "device": args.device,
+            "val_fraction": args.val_fraction,
+            "features": args.features,
+        },
+        artifact_dir=args.output_dir,
+    )
+
+    features = tuple(args.features) if args.features else (8, 16, 32)
+    trainer = UNetTrainer(
+        dataset_dir=args.dataset_dir,
+        output_dir=args.output_dir,
+        epochs=args.epochs,
+        batch_size=args.batch_size,
+        lr=args.lr,
+        val_fraction=args.val_fraction,
+        device=args.device,
+        features=features,
+    )
+    trainer.train(experiment_id=exp.id)
+    return 0
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="RAFA fiber analysis")
     parser.add_argument("--log-level", default="INFO")
@@ -67,6 +254,9 @@ def _build_parser() -> argparse.ArgumentParser:
 
     _build_report_viz_parser(subparsers)
     _build_batch_parser(subparsers)
+    _build_model_parser(subparsers)
+    _build_experiment_parser(subparsers)
+    _build_train_parser(subparsers)
 
     return parser
 
@@ -126,8 +316,6 @@ def _run_view(args: argparse.Namespace) -> int:
 
 def _run_report_viz(args: argparse.Namespace) -> int:
     """Generate an interactive Plotly report from a summary.json."""
-    import json
-
     from fiber_tracer.viz.plotly_plots import generate_interactive_report
 
     with open(args.summary) as f:
@@ -161,6 +349,12 @@ def main(argv: list | None = None) -> int:
         return _run_report_viz(args)
     if args.command == "batch":
         return _run_batch(args)
+    if args.command == "model":
+        return args.func(args)
+    if args.command == "experiment":
+        return args.func(args)
+    if args.command == "train":
+        return args.func(args)
 
     parser.print_help()
     return 1
