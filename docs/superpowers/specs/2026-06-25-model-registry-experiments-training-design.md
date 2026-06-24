@@ -200,6 +200,40 @@ The TUI `bridge.ts` already parses JSON lines from stdout and can consume these 
 - `CHANGELOG.md` — add under `[Unreleased]`
 - `ROADMAP.md` — mark TUI placeholders and training CLI as in-progress/done
 
+## Portable installation & verification
+
+To make the whole project reproducible on a fresh machine, the phase also delivers:
+
+1. **One-line install scripts**
+   - `scripts/install.sh` for macOS and Linux.
+   - `scripts/install.ps1` for Windows (PowerShell).
+   - Each script:
+     - Verifies Python ≥3.10 is available (prints guidance if not).
+     - Installs Bun if it is missing.
+     - Creates a Python virtual environment in `.venv`.
+     - Installs `fiber-tracer[dev]` in editable mode.
+     - Installs TUI dependencies with `bun install`.
+
+2. **Verification scripts**
+   - `scripts/verify.sh` / `scripts/verify.ps1` run:
+     - `fiber-tracer --version`
+     - `pytest` (Python test suite)
+     - `bun run typecheck`
+     - `bun test`
+   - A non-zero exit code is returned if any step fails.
+
+3. **CI coverage**
+   - Add a GitHub Actions workflow that checks out the repo on a clean runner and runs the install + verify scripts on:
+     - Ubuntu
+     - macOS
+     - Windows (PowerShell)
+   - This ensures the install path stays green on every push/PR.
+
+4. **Documentation**
+   - Update `docs/INSTALL.md` with the one-line installer.
+   - Add a `## Quick start` section to `README.md`.
+   - Add troubleshooting entries in `docs/TROUBLESHOOTING.md` for common install failures.
+
 ## Future-proofing
 
 - `architecture` field leaves room for `nnunet`, `swin`, and classical backends.
