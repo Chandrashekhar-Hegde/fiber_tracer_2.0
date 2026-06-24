@@ -1,5 +1,5 @@
 import { spawn } from "child_process";
-import { writeFileSync } from "fs";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import type { AnalysisConfig, BridgeResult, ProgressEvent } from "./types";
@@ -13,16 +13,24 @@ export async function runAnalysis(
   config: AnalysisConfig,
   options: BridgeOptions = {}
 ): Promise<BridgeResult> {
-  const tmpYaml = join(tmpdir(), `fiber-tracer-${Date.now()}.yaml`);
+  const tmpDir = mkdtempSync(join(tmpdir(), "ft-"));
+  const tmpYaml = join(tmpDir, "config.yaml");
   writeFileSync(tmpYaml, buildYaml(config));
+
+  const cleanup = () => {
+    try {
+      rmSync(tmpDir, { recursive: true, force: true });
+    } catch {}
+  };
 
   return new Promise((resolve) => {
     let proc: ReturnType<typeof spawn>;
     try {
       proc = spawn("fiber-tracer", ["run", "--config", tmpYaml], {
-        env: { ...process.env, PYTHONUNBUFFERED: "1" },
+        env: { ...process.env, PYTHONUNBUFFERED: "1", FIBER_TRACER_JSON_PROGRESS: "1" },
       });
     } catch (err) {
+      cleanup();
       resolve({
         success: false,
         outputDir: config.outputDir,
@@ -49,6 +57,7 @@ export async function runAnalysis(
     });
 
     proc.on("error", (err) => {
+      cleanup();
       resolve({
         success: false,
         outputDir: config.outputDir,
@@ -57,6 +66,7 @@ export async function runAnalysis(
     });
 
     proc.on("close", (code) => {
+      cleanup();
       if (code === 0) {
         resolve({ success: true, outputDir: config.outputDir });
       } else {
@@ -68,14 +78,14 @@ export async function runAnalysis(
 
 function buildYaml(config: AnalysisConfig): string {
   return `
-data: ${config.dataPath}
-output: ${config.outputDir}
-voxel_spacing: [${config.voxelSpacing.join(", ")}]
-fiber_diameter: ${config.fiberDiameter}
+data_path: ${JSON.stringify(config.dataPath)}
+output_dir: ${JSON.stringify(config.outputDir)}
+voxel_spacing_um: [${config.voxelSpacing.join(", ")}]
+fiber_diameter_um: ${config.fiberDiameter}
 regime: ${config.regime}
 segmentation:
   method: ${config.method}
-  model_path: ${config.model}
+  model_path: ${JSON.stringify(config.model)}
   batch_size: ${config.batchSize}
 analysis:
   compute_morphometry: ${config.computeMorphometry}
