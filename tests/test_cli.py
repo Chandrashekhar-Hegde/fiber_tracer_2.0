@@ -1,6 +1,8 @@
 import json
 from unittest.mock import MagicMock
 
+import pytest
+
 from fiber_tracer.cli import main
 from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.io import save_tiff_stack
@@ -32,6 +34,14 @@ def _make_resolved_output(tmp_path, shape=(32, 32, 32)):
     )
     FiberAnalysisPipeline(config).run()
     return stack_path, out_dir
+
+
+def test_cli_version_command(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--version"])
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "fiber-tracer" in captured.out
 
 
 def test_cli_view_command_runs_napari_viewer(tmp_path, monkeypatch):

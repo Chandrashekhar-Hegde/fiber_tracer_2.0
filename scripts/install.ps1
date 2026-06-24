@@ -32,7 +32,8 @@ if (-not $PythonCmd) {
     exit 1
 }
 
-Write-Host "Using Python: $PythonCmd (& $PythonCmd --version)"
+$pyVersion = & $PythonCmd --version
+Write-Host "Using Python: $PythonCmd ($pyVersion)"
 
 if (-not (Get-Command bun -ErrorAction SilentlyContinue)) {
     Write-Host "Bun not found. Installing Bun..."
