@@ -8,6 +8,9 @@ import { Review } from "./components/review";
 import { RunWatch } from "./components/run-watch";
 import { Dashboard } from "./components/dashboard";
 import { History } from "./components/history";
+import { Experiments } from "./components/experiments";
+import { ModelRegistry } from "./components/model-registry";
+import { Training } from "./components/training";
 import { Logs } from "./components/logs";
 import { Settings } from "./components/settings";
 import { useConfig } from "./hooks/useConfig";
@@ -47,6 +50,9 @@ export function App() {
       if (input === "1") setSection("new-analysis");
       if (input === "2") setSection("dashboard");
       if (input === "3") setSection("history");
+      if (input === "4") setSection("experiments");
+      if (input === "5") setSection("model-registry");
+      if (input === "6") setSection("training");
       if (input === "7") setSection("logs");
       if (input === "8") setSection("settings");
       if (section === "new-analysis") {
@@ -66,7 +72,7 @@ export function App() {
   const footer =
     section === "new-analysis"
       ? ["← p", "→ n", "Enter select", "r run", "q quit"]
-      : ["1 Analysis", "2 Dashboard", "3 History", "7 Logs", "8 Settings", "q quit"];
+      : ["1 Analysis", "2 Dashboard", "3 History", "4 Experiments", "5 Registry", "6 Training", "7 Logs", "8 Settings", "q quit"];
 
   return (
     <Layout section={section} wizardStep={wizardStep} footerShortcuts={footer} theme={theme}>
@@ -90,6 +96,9 @@ export function App() {
       )}
       {section === "dashboard" && <Dashboard summary={undefined} theme={theme} />}
       {section === "history" && <History history={history.history} theme={theme} />}
+      {section === "experiments" && <Experiments theme={theme} />}
+      {section === "model-registry" && <ModelRegistry theme={theme} />}
+      {section === "training" && <Training theme={theme} />}
       {section === "logs" && <Logs logs={bridge.logs} theme={theme} />}
       {section === "settings" && <Settings config={config} onChange={setConfig} theme={theme} />}
     </Layout>
