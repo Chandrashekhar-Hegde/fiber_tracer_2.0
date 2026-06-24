@@ -1,0 +1,22 @@
+name: TUI
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "tui/**"
+      - ".github/workflows/tui.yml"
+  pull_request:
+    paths:
+      - "tui/**"
+      - ".github/workflows/tui.yml"
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: cd tui && bun install
+      - run: cd tui && bun run typecheck
+      - run: cd tui && bun test

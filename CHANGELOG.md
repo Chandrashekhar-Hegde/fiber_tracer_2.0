@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Progress bars (`tqdm`) in the analysis pipeline and U-Net inference.
 - Batched U-Net inference with a `--batch-size` CLI flag.
 - Design spec for an interactive Terminal UI (TUI) in `docs/superpowers/specs/2026-06-25-fiber-tracer-tui-design.md`.
+- Interactive terminal UI (TUI) in `tui/` with themes, wizard, dashboard, history, logs, and future-proof placeholders.
+- GitHub Actions CI workflow for the TUI.
 
 ### Changed
 - **Minimum supported Python version raised from 3.9 to 3.10.**

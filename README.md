@@ -18,6 +18,7 @@ Fiber Tracer is a Python toolkit that analyzes fiber-reinforced polymer composit
 - [Installation](#installation)
 - [Quick start](#quick-start)
 - [CLI overview](#cli-overview)
+- [Terminal UI (TUI)](#terminal-ui-tui)
 - [Working with real data](#working-with-real-data)
 - [Visualization](#visualization)
 - [Batch processing](#batch-processing)
@@ -170,6 +171,20 @@ PY
 | `batch`            | —     | Process multiple volumes from a YAML/JSON config.     | `fiber-tracer batch --config batch.yaml --aggregate-csv batch_summary.csv`         |
 
 Run `fiber-tracer <subcommand> --help` for detailed options.
+
+## Terminal UI (TUI)
+
+A guided, keyboard-driven terminal UI is available in the `tui/` directory. It provides a wizard for new analyses, a results dashboard, run history, logs, and settings with customizable themes.
+
+Requirements: [Bun](https://bun.sh/) ≥ 1.2 and [Node.js](https://nodejs.org/) ≥ 18.
+
+```bash
+cd tui
+bun install
+bun run dev
+```
+
+Use the number keys to switch sections, `←`/`→` or `p`/`n` to move through the wizard, `Enter` to select, `r` to run from the Review step, and `q` to quit. See [`tui/README.md`](tui/README.md) for the full shortcut list and theme configuration.
 
 ## Working with real data
 

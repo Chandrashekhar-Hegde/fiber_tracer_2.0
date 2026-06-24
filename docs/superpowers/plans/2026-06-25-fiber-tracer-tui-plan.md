@@ -1615,15 +1615,16 @@ git commit -m "feat(tui): add Model Registry, Experiments, and Training screens 
 
 ## Phase 7: Polish & CI
 
-### Task 10: Tests, docs, and CI integration
+### [x] Task 10: Tests, docs, and CI integration
 
 **Files:**
 - Create: `tui/src/app.test.tsx`
-- Modify: `.github/workflows/ci.yml`
-- Modify: `docs/CLI_REFERENCE.md`
+- Create: `.github/workflows/tui.yml`
+- Modify: `tui/README.md`
 - Modify: `README.md`
+- Modify: `CHANGELOG.md`
 
-- [ ] **Step 1: Add component render test**
+- [x] **Step 1: Add component render test**
 
 Create `tui/src/app.test.tsx`:
 
@@ -1641,7 +1642,7 @@ describe("App", () => {
 });
 ```
 
-- [ ] **Step 2: Install ink-testing-library**
+- [x] **Step 2: Install ink-testing-library**
 
 Run:
 ```bash
@@ -1649,7 +1650,7 @@ cd tui
 bun add -d ink-testing-library
 ```
 
-- [ ] **Step 3: Run TUI tests**
+- [x] **Step 3: Run TUI tests**
 
 Run:
 ```bash
@@ -1659,59 +1660,48 @@ bun test
 
 Expected: All tests pass.
 
-- [ ] **Step 4: Add TUI CI job**
+- [x] **Step 4: Add TUI CI job**
 
-Modify `.github/workflows/ci.yml` to add a `tui` job:
+Create `.github/workflows/tui.yml`:
 
 ```yaml
-  tui:
+name: TUI
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "tui/**"
+      - ".github/workflows/tui.yml"
+  pull_request:
+    paths:
+      - "tui/**"
+      - ".github/workflows/tui.yml"
+jobs:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - name: Install TUI dependencies
-        run: cd tui && bun install
-      - name: Type check TUI
-        run: cd tui && bun run typecheck
-      - name: Test TUI
-        run: cd tui && bun test
+      - run: cd tui && bun install
+      - run: cd tui && bun run typecheck
+      - run: cd tui && bun test
 ```
 
-- [ ] **Step 5: Update CLI reference**
+- [x] **Step 5: Update TUI README**
 
-Add to `docs/CLI_REFERENCE.md`:
+Create `tui/README.md` with project overview, requirements, install/test commands, keyboard shortcuts, theme configuration note, and link to the main README.
 
-```markdown
-## `fiber-tracer tui`
+- [x] **Step 6: Update README**
 
-Launch the interactive terminal UI.
+Add a "Terminal UI (TUI)" section to `README.md`.
+
+- [x] **Step 7: Commit**
 
 ```bash
-fiber-tracer tui
-```
-```
-
-- [ ] **Step 6: Update README**
-
-Add a "Terminal UI" section to `README.md`:
-
-```markdown
-## Terminal UI (experimental)
-
-A keyboard-driven TUI is available for guided analysis:
-
-```bash
-fiber-tracer tui
-```
-```
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add tui/src/app.test.tsx tui/package.json .github/workflows/ci.yml docs/CLI_REFERENCE.md README.md
-git commit -m "feat(tui): add tests, CI job, and documentation"
+git add tui/src/app.test.tsx tui/package.json tui/README.md .github/workflows/tui.yml README.md CHANGELOG.md docs/superpowers/plans/2026-06-25-fiber-tracer-tui-plan.md
+git commit -m "feat(tui): finalize TUI with tests, CI, docs and README"
 ```
 
 ---
