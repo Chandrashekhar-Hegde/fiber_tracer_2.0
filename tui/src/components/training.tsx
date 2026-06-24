@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useState } from "react";
+import React, { forwardRef, useImperativeHandle, useState, useRef, useEffect } from "react";
 import { Box, Text } from "ink";
 import { startTraining } from "../bridge";
 import type { Theme } from "../theme";
@@ -29,6 +29,14 @@ export const Training = forwardRef<TrainingRef, TrainingProps>(
     const [progress, setProgress] = useState<ProgressEvent | null>(null);
     const [logs, setLogs] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const mountedRef = useRef(true);
+
+    useEffect(() => {
+      mountedRef.current = true;
+      return () => {
+        mountedRef.current = false;
+      };
+    }, []);
 
     const handleStart = () => {
       if (running) return;
@@ -38,18 +46,27 @@ export const Training = forwardRef<TrainingRef, TrainingProps>(
       setError(null);
 
       startTraining(TRAINING_OPTIONS, {
-        onProgress: (event) => setProgress(event),
-        onLog: (line) => setLogs((prev) => [...prev.slice(-49), line]),
+        onProgress: (event) => {
+          if (!mountedRef.current) return;
+          setProgress(event);
+        },
+        onLog: (line) => {
+          if (!mountedRef.current) return;
+          setLogs((prev) => [...prev.slice(-49), line]);
+        },
       })
         .then((result) => {
+          if (!mountedRef.current) return;
           if (!result.success) {
             setError(result.error ?? "Training failed");
           }
         })
         .catch((err) => {
+          if (!mountedRef.current) return;
           setError(err instanceof Error ? err.message : String(err));
         })
         .finally(() => {
+          if (!mountedRef.current) return;
           setRunning(false);
         });
     };
