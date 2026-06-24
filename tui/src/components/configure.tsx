@@ -5,11 +5,10 @@ import type { AnalysisConfig } from "../types";
 
 interface ConfigureProps {
   config: AnalysisConfig;
-  onChange: (config: AnalysisConfig) => void;
   theme: Theme;
 }
 
-export function Configure({ config, onChange, theme }: ConfigureProps) {
+export function Configure({ config, theme }: ConfigureProps) {
   return (
     <Box flexDirection="column">
       <Text bold color={theme.accent}>

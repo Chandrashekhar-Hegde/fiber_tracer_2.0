@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useInput, useApp } from "ink";
 import { Layout } from "./components/layout";
 import { WizardShell } from "./components/wizard-shell";
@@ -36,19 +36,24 @@ export function App() {
   const bridge = useBridge();
   const theme = loadTheme(config.theme);
 
-  useInput((input, key) => {
-    if (input === "q") exit();
-    if (input === "1") setSection("new-analysis");
-    if (input === "8") setSection("settings");
-    if (section === "new-analysis") {
-      if (key.rightArrow || input === "n") setWizardStep((s) => Math.min(3, s + 1));
-      if (key.leftArrow || input === "p") setWizardStep((s) => Math.max(0, s - 1));
-      if (input === "r" && wizardStep === 2) {
-        setWizardStep(3);
-        bridge.run(analysisConfig);
+  const onInput = useCallback(
+    (input: string, key: { rightArrow: boolean; leftArrow: boolean }) => {
+      if (input === "q") exit();
+      if (input === "1") setSection("new-analysis");
+      if (input === "8") setSection("settings");
+      if (section === "new-analysis") {
+        if (key.rightArrow || input === "n") setWizardStep((s) => Math.min(3, s + 1));
+        if (key.leftArrow || input === "p") setWizardStep((s) => Math.max(0, s - 1));
+        if (input === "r" && wizardStep === 2) {
+          setWizardStep(3);
+          bridge.run(analysisConfig);
+        }
       }
-    }
-  });
+    },
+    [exit, section, wizardStep, bridge, analysisConfig]
+  );
+
+  useInput(onInput);
 
   const footer =
     section === "new-analysis"
@@ -67,11 +72,11 @@ export function App() {
             />
           )}
           {wizardStep === 1 && (
-            <Configure config={analysisConfig} onChange={setAnalysisConfig} theme={theme} />
+            <Configure config={analysisConfig} theme={theme} />
           )}
           {wizardStep === 2 && <Review config={analysisConfig} theme={theme} />}
           {wizardStep === 3 && (
-            <RunWatch status={bridge.status} progress={bridge.progress} logs={bridge.logs} theme={theme} />
+            <RunWatch status={bridge.status} progress={bridge.progress} logs={bridge.logs} error={bridge.error} theme={theme} />
           )}
         </WizardShell>
       )}

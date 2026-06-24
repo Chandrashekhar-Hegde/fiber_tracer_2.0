@@ -7,10 +7,11 @@ interface RunWatchProps {
   status: BridgeStatus;
   progress: ProgressEvent | null;
   logs: string[];
+  error: string | null;
   theme: Theme;
 }
 
-export function RunWatch({ status, progress, logs, theme }: RunWatchProps) {
+export function RunWatch({ status, progress, logs, error, theme }: RunWatchProps) {
   return (
     <Box flexDirection="column" flexGrow={1}>
       <Text bold color={theme.accent}>
@@ -32,6 +33,11 @@ export function RunWatch({ status, progress, logs, theme }: RunWatchProps) {
           </Text>
         ))}
       </Box>
+      {error && (
+        <Box marginTop={1}>
+          <Text color={theme.error}>Error: {error}</Text>
+        </Box>
+      )}
     </Box>
   );
 }
