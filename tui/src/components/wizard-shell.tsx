@@ -16,7 +16,7 @@ export function WizardShell({ step, theme, children }: WizardShellProps) {
       <Box marginBottom={1}>
         {STEPS.map((label, idx) => (
           <Text key={label} color={idx === step ? theme.highlight : theme.muted}>
-            {idx === step ? ` ${idx + 1}. ${label} ` : ` ${idx + 1}. ${label} `}
+            {idx === step ? `▸ ${idx + 1}. ${label} ` : `  ${idx + 1}. ${label} `}
           </Text>
         ))}
       </Box>

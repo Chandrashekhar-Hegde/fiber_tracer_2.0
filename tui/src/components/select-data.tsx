@@ -28,7 +28,7 @@ export function SelectData({ value, onChange, theme }: SelectDataProps) {
       <Text bold color={theme.accent}>
         1. Select Data
       </Text>
-      <Text color={theme.muted}>Choose a recent volume or press b to browse</Text>
+      <Text color={theme.muted}>Choose a recent volume</Text>
       {RECENT_FILES.map((file, idx) => (
         <Text key={file} color={idx === selectedIdx ? theme.highlight : theme.foreground}>
           {idx === selectedIdx ? "▸ " : "  "}

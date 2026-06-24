@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useInput } from "ink";
+import { useInput, useApp } from "ink";
 import { Layout } from "./components/layout";
 import { WizardShell } from "./components/wizard-shell";
 import { SelectData } from "./components/select-data";
@@ -29,9 +29,10 @@ export function App() {
   const [wizardStep, setWizardStep] = useState(0);
   const [analysisConfig, setAnalysisConfig] = useState<AnalysisConfig>(DEFAULT_CONFIG);
   const theme = loadTheme(config.theme);
+  const { exit } = useApp();
 
   useInput((input, key) => {
-    if (input === "q") process.exit(0);
+    if (input === "q") exit();
     if (input === "1") setSection("new-analysis");
     if (input === "8") setSection("settings");
     if (section === "new-analysis") {
