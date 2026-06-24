@@ -266,3 +266,5 @@ logs/
 # Ensure Configs are ignored but examples aren't
 config.yaml
 !config_example.yaml
+.superpowers/
+kimi-export*
