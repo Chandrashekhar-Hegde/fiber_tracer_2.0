@@ -164,7 +164,48 @@ fiber-tracer --config watershed.yaml --data sample.tif --output results/ \
 
 ---
 
-## 5. `BackendNotAvailableError` for optional extras
+## 5. U-Net backend issues
+
+### Symptom: `FileNotFoundError` when using `--segmentation-method unet`
+
+```text
+FileNotFoundError: [Errno 2] No such file or directory: 'models/fiber_unet_v2_full.pt'
+```
+
+### Likely cause
+
+The U-Net backend requires a PyTorch checkpoint. The production model is not committed to git because of its size; it must be downloaded separately.
+
+### Fix
+
+Download the checkpoint from the [v3.2.0-unet-v2 release](https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2) and place it at the path specified by `--model-path` (default: `models/fiber_unet_v2_full.pt`).
+
+```bash
+# Example
+mkdir -p models
+curl -L -o models/fiber_unet_v2_full.pt \
+  https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/download/v3.2.0-unet-v2/fiber_unet_v2_full.pt
+```
+
+---
+
+### Symptom: U-Net output is mostly background or mostly foreground
+
+### Likely cause
+
+The default probability threshold (0.5) may not be appropriate for your data, or your data distribution differs from the training set.
+
+### Fix
+
+1. Inspect the probability-like output or the binary `labels.tif` in napari.
+2. Adjust the decision threshold if your application exposes one, or post-process the mask with morphological operations.
+3. Validate the model on a small annotated subset of your data before running the full pipeline.
+
+**Related docs:** Model card and failure modes in [`docs/MODEL_CARD.md`](MODEL_CARD.md), U-Net workflow in [`docs/USER_GUIDE.md`](USER_GUIDE.md).
+
+---
+
+## 6. `BackendNotAvailableError` for optional extras
 
 ### Symptom
 ```text
@@ -207,7 +248,7 @@ Then re-run the command.
 
 ---
 
-## 6. napari / GUI viewer issues on headless servers
+## 7. napari / GUI viewer issues on headless servers
 
 ### Symptom
 `fiber-tracer view ...` fails with display errors such as:
@@ -240,7 +281,7 @@ The `view` subcommand launches a local napari GUI, which requires a display. It 
 
 ---
 
-## 7. Plotly HTML report fails to load
+## 8. Plotly HTML report fails to load
 
 ### Symptom
 `report.html` opens as a blank page, or the browser shows a loading spinner indefinitely.
@@ -267,7 +308,7 @@ The `view` subcommand launches a local napari GUI, which requires a display. It 
 
 ---
 
-## 8. Out-of-memory on large volumes
+## 9. Out-of-memory on large volumes
 
 ### Symptom
 The process is killed by the OS, raises `MemoryError`, or begins heavy swapping and becomes extremely slow.
@@ -299,7 +340,7 @@ The volume is larger than available RAM. The default CLI pipeline keeps the full
 
 ---
 
-## 9. Batch config parse errors
+## 10. Batch config parse errors
 
 ### Symptom
 ```text
@@ -362,7 +403,7 @@ fiber-tracer batch --config batch.yaml --aggregate-csv batch_summary.csv
 
 ---
 
-## 10. Validation or benchmark failures
+## 11. Validation or benchmark failures
 
 ### Symptom
 `scripts/benchmark_phantoms.py` exits non-zero, reports a Dice score below 0.85, or a mean angular error above 5°. External GF-PA66 validation produces lower scores than expected.

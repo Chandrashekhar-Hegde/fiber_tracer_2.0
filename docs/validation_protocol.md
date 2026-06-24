@@ -124,8 +124,44 @@ python scripts/benchmark_phantoms.py
 
 The script prints a JSON report and asserts the acceptance thresholds. A passing run exits with code `0`.
 
+## U-Net model validation
+
+A separate validation stream is used for the optional 3D U-Net segmentation backend (`segmentation.method: "unet"`).
+
+### Training validation
+
+During training we report three validation metrics:
+
+- **Soft Dice** — Dice computed from sigmoid probabilities; useful for monitoring but dominated by background-only patches.
+- **Hard Dice** — Dice computed after thresholding probabilities at 0.5; more interpretable but still affected by the high background fraction.
+- **Foreground hard Dice** — Hard Dice averaged only over validation patches containing ≥0.1% foreground voxels. This is the primary metric because it measures segmentation quality where fibers actually exist.
+
+The production checkpoint (`fiber_unet_v2_full.pt`) achieved a foreground hard Dice of **0.948** on its training-validation split.
+
+### Held-out GF-PA66 validation
+
+GF-PA66 (`pa66_volumes.h5`) was held out from training and used as a blind-like test. Sliding-window inference (64³ patches, stride 32) was run on the central 128 axial slices and compared against the `ground_truth` labels (classes > 0 treated as fiber):
+
+| Metric | Value |
+|--------|-------|
+| Target fiber voxels | 30,117,323 |
+| Predicted fiber voxels | 24,565,325 |
+| Dice | 0.895 |
+| IoU | 0.811 |
+| Pixel accuracy | 0.967 |
+
+### U-Net caveats
+
+- The GF-PA66 result is a single-reference benchmark. It does not prove the model generalizes to all glass/carbon fiber systems, resolutions, or contrast conditions.
+- Real training volumes other than GF-PA66 use Otsu pseudo-labels, so the model learns to approximate Otsu behavior on those volumes.
+- Reported accuracy is high mainly because background voxels dominate; Dice and IoU are the meaningful segmentation metrics.
+- The model was trained and validated on an Apple M5 Pro with MPS + CPU fallback; numerical results should be identical on CUDA/CPU for the same checkpoint, but throughput differs.
+
+See [`docs/MODEL_CARD.md`](MODEL_CARD.md) for a full model card, including intended use, known failure modes, and retraining instructions.
+
 ## Caveats
 
 - The phantom benchmark tests idealized straight fibers. Real composites may contain curvature, varying diameter, and contact points that reduce accuracy.
 - Public dataset benchmarking requires downloading the dataset separately and respecting its license.
 - Acceptance thresholds are project targets, not universal accuracy claims.
+- Machine-learning results depend on the similarity between the training distribution and the target data. Always validate the U-Net on your own volumes before reporting conclusions.

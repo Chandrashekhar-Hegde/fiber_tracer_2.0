@@ -56,8 +56,11 @@ Run the Regime-Aware Fiber Analysis (RAFA) pipeline on one 3D volume.
 | `--voxel-spacing` | No | three positive floats (`Z Y X`) | `[1.0, 1.0, 1.0]` | Physical voxel spacing in micrometres. |
 | `--fiber-diameter` | No | positive float | `10.0` | Expected fiber diameter in micrometres. |
 | `--regime` | No | `auto`, `resolved`, `marginal`, `subvoxel` | `auto` | Analysis regime. `auto` selects from the voxel/fiber ratio. |
+| `--segmentation-method` | No | `otsu`, `watershed`, `unet` | `otsu` | Segmentation backend. Use `unet` for the 3D U-Net model. |
+| `--model-path` | No* | file path | `models/fiber_unet_v2_full.pt` | Path to a PyTorch checkpoint for `unet`. |
 
-\* `--data` and `--output` are not individually marked required by the parser, but the run fails if either is not provided by CLI or config.
+\* `--data` and `--output` are not individually marked required by the parser, but the run fails if either is not provided by CLI or config.  
+\*\* `--model-path` is required only when `--segmentation-method unet` is used.
 
 ### Examples
 
@@ -78,11 +81,20 @@ fiber-tracer \
   --fiber-diameter 8.0 \
   --regime auto
 
+# Use the pre-trained 3D U-Net backend
+fiber-tracer run \
+  --data sample_c.tif \
+  --output results/sample_c_unet/ \
+  --voxel-spacing 1.0 1.0 1.0 \
+  --fiber-diameter 6.0 \
+  --segmentation-method unet \
+  --model-path models/fiber_unet_v2_full.pt
+
 # Use a config file and override the input data and output directory
 fiber-tracer run \
   --config config.yaml \
-  --data sample_c.tif \
-  --output results/sample_c/
+  --data sample_d.tif \
+  --output results/sample_d/
 ```
 
 ---
@@ -161,6 +173,7 @@ Any CLI flag has a corresponding config-file key. The full set of keys follows t
 | `processing.normalize` | — | boolean |
 | `processing.anisotropic_spacing` | — | dict `{z, y, x}` or `null` |
 | `segmentation.method` | — | `"otsu"`, `"watershed"`, `"unet"` |
+| `segmentation.model_path` | `--model-path` | string (path to `.pt` checkpoint) |
 | `segmentation.min_fiber_diameter_um` | — | float |
 | `segmentation.max_fiber_diameter_um` | — | float |
 | `segmentation.watershed_seed_sigma_um` | — | float or `null` |

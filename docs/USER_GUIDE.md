@@ -14,6 +14,7 @@ This guide walks you through analyzing 3D X-ray computed tomography (XCT) volume
 - [Resolved-regime workflow](#resolved-regime-workflow)
 - [Marginal-regime workflow](#marginal-regime-workflow)
 - [Subvoxel-regime workflow](#subvoxel-regime-workflow)
+- [Machine-learning segmentation workflow](#machine-learning-segmentation-workflow-3d-u-net)
 - [Configuration walkthrough](#configuration-walkthrough)
 - [Anisotropic voxel spacing](#anisotropic-voxel-spacing)
 - [Batch processing](#batch-processing)
@@ -281,6 +282,82 @@ The normalized volume is kept in memory but is **not** saved by default.
 - Individual fiber measurements are not meaningful.
 - Only population orientation statistics such as `A2`, fractional anisotropy, and orientation distributions are reported.
 - Large integration scales blur spatial detail.
+
+---
+
+## Machine-learning segmentation workflow (3D U-Net)
+
+The optional U-Net backend (`segmentation.method: "unet"`) is useful when classical Otsu or watershed segmentation fails — for example, on low-contrast, noisy, or densely touching fibers. It is not a replacement for the classical pipeline; it is an alternative that you should validate on your own data.
+
+### When to use it
+
+| Situation | Recommended backend |
+|-----------|---------------------|
+| Fibers are well separated and high contrast | `otsu` or `watershed` |
+| Fibers touch frequently and watershed over-segments | `unet` |
+| Low contrast or noisy scans | `unet` (after validation) |
+| You need a single binary fiber mask rather than per-fiber labels | `unet` |
+
+### Prerequisites
+
+Install the `ml` (or `unet`) extra:
+
+```bash
+pip install -e ".[ml]"
+```
+
+Download the pre-trained checkpoint from the [v3.2.0-unet-v2 release](https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2) and place it at `models/fiber_unet_v2_full.pt`.
+
+### Command-line usage
+
+```bash
+fiber-tracer \
+  --data stack.tif \
+  --output results_unet/ \
+  --voxel-spacing 1.0 1.0 1.0 \
+  --fiber-diameter 6.0 \
+  --segmentation-method unet \
+  --model-path models/fiber_unet_v2_full.pt
+```
+
+Or via config file:
+
+```yaml
+segmentation:
+  method: "unet"
+  model_path: "models/fiber_unet_v2_full.pt"
+```
+
+### Expected outputs
+
+The U-Net backend produces the same output files as the resolved regime, but `labels.tif` is a binary fiber mask (all foreground voxels share label 1) rather than a per-fiber label image.
+
+| File | Description |
+|------|-------------|
+| `labels.tif` | Binary fiber mask (0 = background, 1 = fiber) |
+| `normalized_input.tif` | Intensity-normalized input volume |
+| `report.csv` | Global metrics; no per-fiber rows |
+| `report.html` | Human-readable HTML report |
+| `summary.json` | JSON summary with configuration |
+
+### Validation and expected accuracy
+
+On held-out GF-PA66 ground truth the production model achieves:
+
+| Metric | Value |
+|--------|-------|
+| Dice | 0.895 |
+| IoU | 0.811 |
+| Pixel accuracy | 0.967 |
+
+These numbers are **not a guarantee** for your data. The model was trained on a specific mix of open datasets and synthetic phantoms. You must validate it on your own volumes before drawing conclusions. See [`docs/MODEL_CARD.md`](MODEL_CARD.md) for an honest discussion of limitations, failure modes, and retraining instructions.
+
+### Limitations
+
+- The model sees only 64³-voxel patches; it has no global context.
+- It was trained mostly on straight or gently curved fibers; highly tortuous mats may segment poorly.
+- Bright artifacts, porosity edges, or reconstruction streaks can be misclassified as fiber.
+- The default probability threshold is 0.5; you may need to tune it for your data.
 
 ---
 

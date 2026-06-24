@@ -84,12 +84,36 @@ FA = sqrt(1.5 * Σ_i (λi - λ̄)^2 / Σ_i λi^2)
 
 `fiber-tracer` is an image-analysis tool, not a differential-equation solver. Fiber extraction in the resolved regime relies on thresholding, morphological operations, and skeletonization. The marginal and subvoxel regimes use gradient structure tensors and orientation tensors. Runge–Kutta integration and Poincaré–Hopf index tracking are therefore not part of the segmentation pipeline.
 
+## Machine-learning backend (U-Net)
+
+An optional 3D U-Net segmentation backend (`segmentation.method: "unet"`) is available for cases where classical thresholding or watershed performs poorly. The architecture is a standard encoder–decoder 3D U-Net with batch normalization and dropout. It operates on 64³-voxel patches and produces a per-voxel fiber probability.
+
+### Inference
+
+Sliding-window inference with overlapping patches and average blending is used to produce a full-volume probability map. The default decision threshold is 0.5. The output is a binary fiber mask, not a per-fiber label image; downstream analysis therefore reports global statistics rather than individual fiber morphometry.
+
+### Training
+
+The production model was trained on 2,152 64³ patches from synthetic phantoms and 18 open XCT volumes. Training used:
+
+- BCE + Dice loss with equal weighting.
+- Deterministic oversampling of fiber-rich patches to mitigate class imbalance.
+- Random flips, 90° rotations, and elastic deformations.
+- AdamW optimizer with cosine learning-rate decay.
+
+Synthetic phantoms covered glass/carbon fibers, multiple orientation modes (random, aligned, in-plane, orthogonal, woven, twill), broken fibers, and porosity. Real volumes were pseudo-labeled with Otsu thresholding except for GF-PA66, which has expert ground truth and was held out from training.
+
+### Why the U-Net is not the default
+
+The classical pipeline is deterministic, does not require a checkpoint, and is interpretable. The U-Net is provided as an alternative for difficult cases but must be validated on the target data because its accuracy depends on the similarity between the training and test distributions.
+
 ## Limitations and caveats
 
 - **Resolved regime** assumes fibers are separable by thresholding and/or watershed. Touching or overlapping fibers can be over- or under-segmented.
 - **Watershed** separation depends on the distance transform and can fail for densely packed or irregularly shaped fibers.
 - **Marginal regime** mixes single-fiber and population-level information; results degrade as the fiber diameter approaches the voxel size.
 - **Subvoxel regime** produces population statistics only. Individual fiber measurements are not meaningful.
+- **U-Net backend** produces a binary fiber mask. It does not separate touching fibers into distinct labels and may fail on out-of-distribution data.
 - **Anisotropic voxel spacing** reduces orientation and morphometry accuracy unless derivatives are scaled by physical spacing. Resampling to isotropic voxels is recommended when the spacing ratios are large.
 - **Phantom validation** is performed on ideal straight fibers with controlled noise. Performance on real composites will vary with contrast, noise, partial-volume effects, and fiber contacts.
 
