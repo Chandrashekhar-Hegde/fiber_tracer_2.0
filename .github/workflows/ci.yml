@@ -33,3 +33,21 @@ jobs:
         run: |
           pip install pip-licenses
           python scripts/check_licenses.py
+
+  ml-test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install with ML extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[ml,dev]"
+      - name: Run ML tests
+        run: pytest tests/test_ml_backend.py tests/test_pipeline_backends.py tests/test_training_dataset.py -v
