@@ -372,7 +372,9 @@ python scripts/prepare_training_data.py --n-synthetic 1000 --n-patches-per-volum
 python scripts/train_unet_mixed.py --epochs 100 --output models/fiber_unet_v2.pt
 ```
 
-The production model (`fiber_unet_v2_full.pt`) was trained on 2,152 mixed patches covering glass/carbon, UD/woven/short/broken fibers, and failure cases from Henry Royce Institute, DTU, and IVW open XCT datasets. Held-out validation on the GF-PA66 ground truth achieves **Dice ≈ 0.90 / IoU ≈ 0.81**.
+The production model (`fiber_unet_v2_full.pt`) was trained on 2,152 mixed patches covering glass/carbon, UD/woven/short/broken fibers, and failure cases from Henry Royce Institute, DTU, and IVW open XCT datasets. Held-out validation on the GF-PA66 ground truth achieves **Dice ≈ 0.90 / IoU ≈ 0.81** on central slices.
+
+> **Important:** These validation numbers are a single-reference benchmark, not a universal accuracy guarantee. The model was trained on a specific distribution of open datasets and synthetic phantoms; it may fail on out-of-distribution data (different contrast, resolution, fiber type, or artifact levels). Always validate on your own volumes before reporting results. See [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) for a rigorous discussion of limitations, failure modes, and retraining instructions.
 
 Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persistence summaries with `gudhi` (requires the `tda` extra).
 
@@ -388,6 +390,7 @@ Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persis
 | [`docs/methodology.md`](docs/methodology.md) | Algorithms, regime selection, structure-tensor formulation, Advani–Tucker tensor, and limitations. |
 | [`docs/architecture.md`](docs/architecture.md) | Package architecture, module map, data flow, and extension points. |
 | [`docs/validation_protocol.md`](docs/validation_protocol.md) | Phantom benchmarks, GF-PA66 dataset instructions, metrics, and reproducibility notes. |
+| [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) | Detailed model card for the production 3D U-Net: training data, validation, limitations, and retraining. |
 | [`docs/developer_guide.md`](docs/developer_guide.md) | Development setup, testing, linting, type checking, and contribution workflow. |
 | [`docs/RAFA_IMPLEMENTATION_PLAN.md`](docs/RAFA_IMPLEMENTATION_PLAN.md) | Original redesign plan for the RAFA pipeline. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Version history and release notes. |
