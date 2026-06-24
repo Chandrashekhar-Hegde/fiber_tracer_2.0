@@ -90,7 +90,9 @@ line-length = 100
 select = ["E", "F", "I", "N", "W", "UP"]
 
 [tool.mypy]
-python_version = "3.9"
+# Runtime still supports Python 3.9, but type-checking targets 3.10 because
+# some upstream dependencies (e.g. tifffile) use 3.10+ syntax internally.
+python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
