@@ -1,5 +1,5 @@
-import { Text, render } from 'ink';
-
-const App = () => <Text>Hello Fiber Tracer</Text>;
+import React from "react";
+import { render } from "ink";
+import { App } from "./app";
 
 render(<App />);
