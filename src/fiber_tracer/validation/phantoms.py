@@ -42,7 +42,8 @@ def _sample_direction(rng: np.random.Generator, mode: str, axis: int = 2) -> np.
     """Return a unit fiber direction according to *mode*."""
     if mode == "random":
         direction = rng.normal(size=3)
-        return direction / np.linalg.norm(direction)
+        norm = float(np.linalg.norm(direction))
+        return direction / norm
     if mode == "aligned":
         direction = np.zeros(3)
         direction[axis] = 1.0
@@ -79,7 +80,7 @@ def _clip_fiber_length(
     voxel_spacing_um: tuple[float, float, float],
 ) -> float:
     """Return the in-bounds length for a fiber centered at *center*."""
-    diag = np.linalg.norm(np.array(shape) * np.array(voxel_spacing_um))
+    diag = float(np.linalg.norm(np.array(shape) * np.array(voxel_spacing_um)))
     if length_um <= 0 or length_um > diag:
         return diag
     return length_um

@@ -87,5 +87,5 @@ class MLSegmentationBackend(SegmentationBackend):
             patch_size = self._checkpoint.get("patch_size", (32, 32, 32))
         else:
             patch_size = (32, 32, 32)
-        prob = self.model.predict_volume(volume, patch_size=patch_size, overlap=16)
+        prob: np.ndarray = self.model.predict_volume(volume, patch_size=patch_size, overlap=16)
         return (prob > 0.5).astype(np.uint8)

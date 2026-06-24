@@ -1,4 +1,9 @@
-"""PyTorch dataset for mixed synthetic/real fiber XCT patches."""
+"""Dataset for mixed synthetic/real fiber XCT patches.
+
+The dataset returns NumPy arrays so that it can be tested and inspected without
+installing PyTorch.  Training scripts are responsible for converting samples to
+``torch.Tensor`` before feeding them to a model.
+"""
 
 from __future__ import annotations
 
@@ -7,14 +12,16 @@ import random
 from pathlib import Path
 
 import numpy as np
-import torch
-from torch.utils.data import Dataset
 
 from fiber_tracer.training.augment import augment_patch
 
 
-class FiberVolumeDataset(Dataset):
+class FiberVolumeDataset:
     """Load 3D patch shards produced by ``prepare_training_data.py``.
+
+    This class intentionally does not inherit from ``torch.utils.data.Dataset``
+    and does not import PyTorch, so it remains usable in environments where the
+    ``ml`` extra is not installed.
 
     Parameters
     ----------
@@ -66,7 +73,7 @@ class FiberVolumeDataset(Dataset):
     def __len__(self) -> int:
         return len(self.patch_files)
 
-    def __getitem__(self, idx: int) -> tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, idx: int) -> tuple[np.ndarray, np.ndarray]:
         data = np.load(self.patch_files[idx])
         volume = data["volume"].astype(np.float32)
         mask = data["mask"].astype(np.float32)
@@ -76,4 +83,11 @@ class FiberVolumeDataset(Dataset):
                 mask,
                 seed=self.rng.randint(0, 2**31 - 1),
             )
-        return torch.from_numpy(volume).unsqueeze(0), torch.from_numpy(mask).unsqueeze(0)
+        return volume[np.newaxis, ...], mask[np.newaxis, ...]
+
+
+def numpy_collate(batch: list[tuple[np.ndarray, np.ndarray]]) -> tuple[np.ndarray, np.ndarray]:
+    """Collate a list of (volume, mask) NumPy samples into batched arrays."""
+    volumes = np.stack([item[0] for item in batch], axis=0)
+    masks = np.stack([item[1] for item in batch], axis=0)
+    return volumes, masks

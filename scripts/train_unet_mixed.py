@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from fiber_tracer.backends.unet3d import UNet3D
-from fiber_tracer.training.dataset import FiberVolumeDataset
+from fiber_tracer.training.dataset import FiberVolumeDataset, numpy_collate
 
 
 def _dice_score(pred: torch.Tensor, target: torch.Tensor, eps: float = 1e-6) -> torch.Tensor:
@@ -57,7 +57,8 @@ def _evaluate(
     n_fg_batches = 0
     with torch.no_grad():
         for inputs, targets in loader:
-            inputs, targets = inputs.to(device), targets.to(device)
+            inputs = torch.from_numpy(inputs).to(device)
+            targets = torch.from_numpy(targets).to(device)
             with torch.autocast(device_type=device.type, enabled=use_amp):
                 outputs = model(inputs)
             loss = criterion(outputs, targets)
@@ -154,9 +155,19 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     train_sampler = OversampledFiberSampler(train_ds, seed=args.seed)
     train_loader = DataLoader(
-        train_ds, batch_size=args.batch_size, sampler=train_sampler, num_workers=0
+        train_ds,
+        batch_size=args.batch_size,
+        sampler=train_sampler,
+        num_workers=0,
+        collate_fn=numpy_collate,
     )
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=0)
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=0,
+        collate_fn=numpy_collate,
+    )
 
     features = tuple(args.features)
     model = UNet3D(
@@ -183,7 +194,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         epoch_loss = 0.0
         pbar = tqdm(train_loader, desc=f"Epoch {epoch}/{args.epochs}")
         for inputs, targets in pbar:
-            inputs, targets = inputs.to(device), targets.to(device)
+            inputs = torch.from_numpy(inputs).to(device)
+            targets = torch.from_numpy(targets).to(device)
             optimizer.zero_grad()
             with torch.autocast(device_type=device.type, enabled=use_amp):
                 outputs = model(inputs)
