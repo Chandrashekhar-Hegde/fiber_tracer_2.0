@@ -10,7 +10,14 @@ export function loadHistory(): RunRecord[] {
   return readFileSync(HISTORY_PATH, "utf8")
     .split("\n")
     .filter(Boolean)
-    .map((line) => JSON.parse(line) as RunRecord);
+    .map((line) => {
+      try {
+        return JSON.parse(line) as RunRecord;
+      } catch {
+        return null;
+      }
+    })
+    .filter((record): record is RunRecord => record !== null);
 }
 
 export function appendHistory(record: RunRecord): void {

@@ -45,4 +45,12 @@ describe("history", () => {
     updateHistory({ ...makeRecord("b", "failed"), status: "success" });
     expect(loadHistory()[1].status).toBe("success");
   });
+
+  it("skips corrupted history lines", () => {
+    const fs = require("fs");
+    fs.writeFileSync(HISTORY_PATH, JSON.stringify(makeRecord("good")) + "\nnot valid json\n");
+    const records = loadHistory();
+    expect(records).toHaveLength(1);
+    expect(records[0].id).toBe("good");
+  });
 });
