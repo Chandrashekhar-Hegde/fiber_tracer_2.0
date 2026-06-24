@@ -7,19 +7,25 @@ on:
       - "scripts/**"
       - ".github/workflows/install.yml"
       - "pyproject.toml"
-      - "tui/**"
       - "src/**"
+      - "tui/**"
+      - "tests/**"
   pull_request:
     branches: [main, master]
     paths:
       - "scripts/**"
       - ".github/workflows/install.yml"
       - "pyproject.toml"
-      - "tui/**"
       - "src/**"
+      - "tui/**"
+      - "tests/**"
+
+permissions:
+  contents: read
 
 jobs:
   install-verify:
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
