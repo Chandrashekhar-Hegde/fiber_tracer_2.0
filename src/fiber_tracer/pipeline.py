@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import time
 from pathlib import Path
 from typing import Any
@@ -92,6 +94,17 @@ class FiberAnalysisPipeline:
 
         elapsed = time.perf_counter() - start
         summary["elapsed_seconds"] = elapsed
+        if os.environ.get("FIBER_TRACER_JSON_PROGRESS"):
+            print(
+                json.dumps(
+                    {
+                        "stage": "complete",
+                        "percent": 100,
+                        "elapsedSeconds": elapsed,
+                        "message": "Pipeline complete",
+                    }
+                )
+            )
         logger.info(f"Pipeline completed in {elapsed:.2f}s")
         return summary
 
