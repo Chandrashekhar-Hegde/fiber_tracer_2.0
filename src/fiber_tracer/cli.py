@@ -12,6 +12,8 @@ from typing import Any
 from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.pipeline import FiberAnalysisPipeline
 
+DEFAULT_UNET_FEATURES = (8, 16, 32)
+
 
 def _add_pipeline_args(parser: argparse.ArgumentParser) -> None:
     """Add RAFA pipeline arguments to *parser*."""
@@ -179,6 +181,19 @@ def _run_experiment_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def _validate_train_args(args: argparse.Namespace) -> str | None:
+    """Return an error message if train arguments are invalid, or None."""
+    if args.epochs <= 0:
+        return "--epochs must be greater than 0"
+    if args.batch_size <= 0:
+        return "--batch-size must be greater than 0"
+    if args.lr <= 0:
+        return "--lr must be greater than 0"
+    if not 0 < args.val_fraction < 1:
+        return "--val-fraction must be between 0 and 1 (exclusive)"
+    return None
+
+
 def _build_train_parser(subparsers: Any) -> None:
     parser = subparsers.add_parser("train", help="Train a segmentation model")
     parser.add_argument("--dataset-dir", required=True)
@@ -189,7 +204,7 @@ def _build_train_parser(subparsers: Any) -> None:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--val-fraction", type=float, default=0.1)
     parser.add_argument("--device", default="auto")
-    parser.add_argument("--features", nargs="+", type=int, default=None)
+    parser.add_argument("--features", nargs="+", type=int, default=DEFAULT_UNET_FEATURES)
     parser.add_argument("--name", default=None, help="Experiment name")
     parser.set_defaults(func=_run_train)
 
@@ -203,6 +218,11 @@ def _run_train(args: argparse.Namespace) -> int:
     model = registry.get_model(args.model_id)
     if model is None:
         print(f"Model {args.model_id} not found", file=sys.stderr)
+        return 1
+
+    error = _validate_train_args(args)
+    if error:
+        print(f"Invalid argument: {error}", file=sys.stderr)
         return 1
 
     store = ExperimentStore()
@@ -222,7 +242,7 @@ def _run_train(args: argparse.Namespace) -> int:
         artifact_dir=args.output_dir,
     )
 
-    features = tuple(args.features) if args.features else (8, 16, 32)
+    features = tuple(args.features)
     trainer = UNetTrainer(
         dataset_dir=args.dataset_dir,
         output_dir=args.output_dir,
@@ -233,7 +253,11 @@ def _run_train(args: argparse.Namespace) -> int:
         device=args.device,
         features=features,
     )
-    trainer.train(experiment_id=exp.id)
+    try:
+        trainer.train(experiment_id=exp.id)
+    except Exception as exc:
+        print(f"Training failed: {exc}", file=sys.stderr)
+        return 1
     return 0
 
 

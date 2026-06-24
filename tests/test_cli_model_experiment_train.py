@@ -5,6 +5,8 @@ import sys
 
 from fiber_tracer.experiments.store import ExperimentStore
 
+DEFAULT_BUNDLED_MODEL = "unet-v3.2"
+
 
 def run_cli(tmp_path, *args):
     """Run the CLI in an isolated config directory."""
@@ -23,7 +25,7 @@ def run_cli(tmp_path, *args):
 def test_model_list(tmp_path):
     result = run_cli(tmp_path, "model", "list")
     assert result.returncode == 0, result.stderr
-    assert "unet-v3.2" in result.stdout
+    assert DEFAULT_BUNDLED_MODEL in result.stdout
 
 
 def test_model_list_json(tmp_path):
@@ -31,7 +33,7 @@ def test_model_list_json(tmp_path):
     assert result.returncode == 0, result.stderr
     models = json.loads(result.stdout)
     assert isinstance(models, list)
-    assert any(m["model_id"] == "unet-v3.2" for m in models)
+    assert any(m["model_id"] == DEFAULT_BUNDLED_MODEL for m in models)
 
 
 def test_model_add_remove_and_set_default(tmp_path):
@@ -67,7 +69,7 @@ def test_model_add_remove_and_set_default(tmp_path):
     assert "(default)" in list_default_result.stdout
 
     # Switch default back to bundled model so local-1 can be removed.
-    reset_default_result = run_cli(tmp_path, "model", "set-default", "unet-v3.2")
+    reset_default_result = run_cli(tmp_path, "model", "set-default", DEFAULT_BUNDLED_MODEL)
     assert reset_default_result.returncode == 0, reset_default_result.stderr
 
     remove_result = run_cli(tmp_path, "model", "remove", "local-1")
@@ -84,7 +86,7 @@ def test_experiment_list_json(tmp_path, monkeypatch):
     monkeypatch.setenv("FIBER_TRACER_CONFIG_DIR", str(config_dir))
 
     store = ExperimentStore()
-    exp = store.create(name="smoke", type="train", model_id="unet-v3.2", dataset="/data")
+    exp = store.create(name="smoke", type="train", model_id=DEFAULT_BUNDLED_MODEL, dataset="/data")
 
     result = run_cli(tmp_path, "experiment", "list", "--json")
     assert result.returncode == 0, result.stderr
