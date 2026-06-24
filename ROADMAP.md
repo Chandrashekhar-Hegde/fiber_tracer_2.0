@@ -25,7 +25,8 @@ This document describes where the project is headed and how you can help. For de
 - [ ] Add a GitHub Actions release workflow that builds wheels/sdists and attaches artifacts.
 - [ ] Add a separate CI job for ML-backend tests that installs the `ml` extra.
 - [ ] Add a Dockerfile for reproducible CPU/MPS inference.
-- [ ] Build an interactive Terminal UI (TUI) with Bun, Ink, and termcn for guided analysis, dashboards, model registry, and experiments.
+- [x] Build an interactive Terminal UI (TUI) with Bun, Ink, and termcn for guided analysis, dashboards, model registry, and experiments.
+- [x] Add model registry, experiment tracking, and `fiber-tracer train` CLI for local U-Net training.
 
 ### Community
 

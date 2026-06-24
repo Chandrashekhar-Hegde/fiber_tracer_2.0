@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Design spec for an interactive Terminal UI (TUI) in `docs/superpowers/specs/2026-06-25-fiber-tracer-tui-design.md`.
 - Interactive terminal UI (TUI) in `tui/` with themes, wizard, dashboard, history, logs, and future-proof placeholders.
 - GitHub Actions CI workflow for the TUI.
+- Added local model registry.
+- Added experiment tracking store.
+- Added `fiber-tracer train` command with JSON progress.
+- Added cross-platform install/verify scripts.
+- Added GitHub Actions install-and-verify workflow.
+- Updated TUI Model Registry, Experiments, and Training screens to live data.
 
 ### Changed
 - **Minimum supported Python version raised from 3.9 to 3.10.**

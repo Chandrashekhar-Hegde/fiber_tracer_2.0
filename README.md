@@ -17,7 +17,9 @@ Fiber Tracer is a Python toolkit that analyzes fiber-reinforced polymer composit
 - [What this tool does not do](#what-this-tool-does-not-do)
 - [Installation](#installation)
 - [Quick start](#quick-start)
+- [First analysis](#first-analysis)
 - [CLI overview](#cli-overview)
+- [Model Registry, Experiments, and Training](#model-registry-experiments-and-training)
 - [Terminal UI (TUI)](#terminal-ui-tui)
 - [Working with real data](#working-with-real-data)
 - [Visualization](#visualization)
@@ -109,6 +111,19 @@ fiber-tracer --help
 
 ## Quick start
 
+Install and launch the terminal UI in one step:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/llMr-Sweetll/fiber_tracer_2.0/main/scripts/install.sh | bash
+cd fiber_tracer_2.0
+source .venv/bin/activate
+cd tui && bun run dev
+```
+
+For a manual install or Windows PowerShell, see [`docs/INSTALL.md`](docs/INSTALL.md).
+
+## First analysis
+
 Generate a deterministic synthetic phantom and analyze it in the resolved regime:
 
 ```bash
@@ -160,7 +175,7 @@ PY
 
 ## CLI overview
 
-`fiber-tracer` exposes five subcommands. Top-level flags such as `--data`, `--output`, `--config`, `--voxel-spacing`, `--fiber-diameter`, and `--regime` are accepted for backward compatibility and are equivalent to `fiber-tracer run ...`.
+`fiber-tracer` exposes eight subcommands. Top-level flags such as `--data`, `--output`, `--config`, `--voxel-spacing`, `--fiber-diameter`, and `--regime` are accepted for backward compatibility and are equivalent to `fiber-tracer run ...`.
 
 | Subcommand         | Alias | Purpose                                               | Example one-liner                                                                 |
 |--------------------|-------|-------------------------------------------------------|-------------------------------------------------------------------------------------|
@@ -169,8 +184,56 @@ PY
 | `view`             | —     | Open raw data and results in napari.                  | `fiber-tracer view --data stack.tif --output results/`                              |
 | `report-viz`       | —     | Generate an interactive Plotly HTML report.           | `fiber-tracer report-viz --summary output/summary.json --output report.html`       |
 | `batch`            | —     | Process multiple volumes from a YAML/JSON config.     | `fiber-tracer batch --config batch.yaml --aggregate-csv batch_summary.csv`         |
+| `model`            | —     | Manage registered segmentation models.                | `fiber-tracer model list`                                                           |
+| `experiment`       | —     | Manage and compare training experiments.              | `fiber-tracer experiment list`                                                      |
+| `train`            | —     | Train a 3D U-Net from a dataset directory.            | `fiber-tracer train --dataset-dir data/training/ --output-dir models/exp-001/`    |
 
 Run `fiber-tracer <subcommand> --help` for detailed options.
+
+## Model Registry, Experiments, and Training
+
+Fiber Tracer includes local, file-based management for segmentation models and training experiments. Data is stored under `~/.config/fiber-tracer/` and surfaced in both the CLI and the TUI.
+
+### Model Registry
+
+Register local checkpoints so they can be referenced by ID:
+
+```bash
+fiber-tracer model add \
+  --model-id fiber_unet_v2_full \
+  --name "Production 3D U-Net" \
+  --path models/fiber_unet_v2_full.pt
+
+fiber-tracer model list
+fiber-tracer model set-default fiber_unet_v2_full
+```
+
+### Experiments
+
+Training runs are recorded as experiments with hyper-parameters and metrics:
+
+```bash
+fiber-tracer experiment list
+fiber-tracer experiment show exp-20260624-abc123
+fiber-tracer experiment compare exp-001 exp-002 --metric val_dice
+```
+
+### Training
+
+Train a 3D U-Net from a prepared dataset directory:
+
+```bash
+fiber-tracer train \
+  --dataset-dir data/processed/training/ \
+  --output-dir models/experiments/exp-001/ \
+  --model-id fiber_unet_v3 \
+  --name "v3 mixed training" \
+  --epochs 20 \
+  --batch-size 4 \
+  --device auto
+```
+
+See [`docs/MODEL_REGISTRY.md`](docs/MODEL_REGISTRY.md) for the full guide, and [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) for model limitations and retraining advice.
 
 ## Terminal UI (TUI)
 
@@ -399,6 +462,7 @@ Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persis
 |----------|-------------|
 | [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) | Beginner-to-intermediate walkthrough: regimes, first analysis, configuration, batching, visualization. |
 | [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) | Complete `fiber-tracer` command-line reference generated from the actual CLI. |
+| [`docs/MODEL_REGISTRY.md`](docs/MODEL_REGISTRY.md) | Model registry, experiment tracking, and the `fiber-tracer train` quick-start guide. |
 | [`docs/INSTALL.md`](docs/INSTALL.md) | Detailed installation instructions, extras, platform notes, and verification. |
 | [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) | Common errors, causes, and fixes. |
 | [`docs/parameter_guide.md`](docs/parameter_guide.md) | Complete configuration reference, CLI flags, and practical guidance by regime. |
