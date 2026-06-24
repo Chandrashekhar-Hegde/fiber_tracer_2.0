@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import { useInput, useApp } from "ink";
 import { Layout } from "./components/layout";
 import { WizardShell } from "./components/wizard-shell";
@@ -10,7 +10,7 @@ import { Dashboard } from "./components/dashboard";
 import { History } from "./components/history";
 import { Experiments } from "./components/experiments";
 import { ModelRegistry } from "./components/model-registry";
-import { Training } from "./components/training";
+import { Training, TrainingRef } from "./components/training";
 import { Logs } from "./components/logs";
 import { Settings } from "./components/settings";
 import { useConfig } from "./hooks/useConfig";
@@ -18,7 +18,7 @@ import { useBridge } from "./hooks/useBridge";
 import { useHistory } from "./hooks/useHistory";
 import { loadTheme } from "./theme";
 import type { Section } from "./components/sidebar";
-import type { AnalysisConfig } from "./types";
+import type { AnalysisConfig, Model, Experiment, TrainingOptions } from "./types";
 
 const DEFAULT_CONFIG: AnalysisConfig = {
   dataPath: "",
@@ -43,6 +43,7 @@ export function App() {
   const bridge = useBridge();
   const history = useHistory();
   const theme = loadTheme(config.theme);
+  const trainingRef = useRef<TrainingRef>(null);
 
   const onInput = useCallback(
     (input: string, key: { rightArrow: boolean; leftArrow: boolean }) => {
@@ -62,6 +63,9 @@ export function App() {
           setWizardStep(3);
           bridge.run(analysisConfig);
         }
+      }
+      if (section === "training" && input === "s") {
+        trainingRef.current?.start();
       }
     },
     [exit, section, wizardStep, bridge, analysisConfig]
@@ -98,7 +102,7 @@ export function App() {
       {section === "history" && <History history={history.history} theme={theme} />}
       {section === "experiments" && <Experiments theme={theme} />}
       {section === "model-registry" && <ModelRegistry theme={theme} />}
-      {section === "training" && <Training theme={theme} />}
+      {section === "training" && <Training ref={trainingRef} theme={theme} />}
       {section === "logs" && <Logs logs={bridge.logs} theme={theme} />}
       {section === "settings" && <Settings config={config} onChange={setConfig} theme={theme} />}
     </Layout>
