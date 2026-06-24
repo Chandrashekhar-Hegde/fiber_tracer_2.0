@@ -1,4 +1,5 @@
 """Checkpoint helpers with metadata."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -27,4 +28,9 @@ def save_checkpoint(
 
 def load_checkpoint(path: str | Path) -> dict[str, Any]:
     """Load a checkpoint produced by ``save_checkpoint``."""
-    return torch.load(path, map_location="cpu", weights_only=False)
+    checkpoint = torch.load(path, map_location="cpu", weights_only=True)
+    if not isinstance(checkpoint, dict):
+        raise ValueError("Checkpoint must be a dict.")
+    if "model_state_dict" not in checkpoint:
+        raise ValueError("Checkpoint must contain 'model_state_dict'.")
+    return checkpoint
