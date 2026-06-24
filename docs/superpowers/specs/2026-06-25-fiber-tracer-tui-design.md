@@ -45,6 +45,34 @@ Build a keyboard-driven, beautiful terminal user interface (TUI) for Fiber Trace
 
 The bridge can initially be a simple subprocess wrapper that runs `fiber-tracer` with JSON output. Later it may evolve into a long-running JSON-RPC server for live progress streaming.
 
+## 4.1 Backend Integration
+
+The TUI is a thin client over the existing Fiber Tracer engine.
+
+### Current engine bindings
+
+| TUI action | Existing backend entry point |
+|------------|------------------------------|
+| Load volume preview | `fiber_tracer.io.load_tiff_stack` + `get_shape_info` |
+| Validate config | `fiber_tracer.config.Config.validate` |
+| Run analysis | `fiber-tracer run --config <tmp.yaml>` or `FiberAnalysisPipeline.run()` |
+| List models | Scan `models/` + read `docs/MODEL_CARD.md` metadata |
+| View results | Read `results/<run>/summary.json` + `report.csv` + `labels.tif` |
+| Batch processing | `fiber_tracer.batch.process_batch` with batch YAML |
+
+### Future engine bindings
+
+| Future capability | Planned backend entry point |
+|-------------------|----------------------------|
+| Train new model | `scripts/train_unet_mixed.py` / future `fiber_tracer train` CLI |
+| Validate model | `scripts/validate_gfpa66.py` / future `fiber_tracer validate` CLI |
+| Download model | GitHub Release asset download + checksum verification |
+| Domain adaptation | Future `fiber_tracer.domain_adapt` script |
+| Plugin backends | Manifest in `~/.config/fiber-tracer/backends.json` |
+| Benchmark leaderboard | Read `benchmark_results/benchmark_results.json` |
+
+The bridge normalizes all of these into a small set of commands/events so the TUI does not need to know whether a feature is implemented today or planned for v3.3.0.
+
 ## 5. Navigation Model
 
 A **persistent left sidebar** doubles as the wizard step list. This gives newcomers a clear path while letting experts jump directly to any section.
