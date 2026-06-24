@@ -10,8 +10,8 @@ All registry and experiment data lives in:
 
 ```text
 ~/.config/fiber-tracer/
-├── models.json      # registered models and default model pointer
-└── experiments.json # training experiment records
+├── models.json       # registered models and default model pointer
+└── experiments.jsonl # training experiment records (JSON Lines)
 ```
 
 On macOS this resolves to `~/.config/fiber-tracer` by default. If the directory does not exist, it is created automatically when you first run `model add`, `train`, or the TUI.

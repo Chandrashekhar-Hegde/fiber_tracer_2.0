@@ -147,3 +147,29 @@ def test_batch_command(tmp_path, monkeypatch):
     mock_process.assert_called_once_with(
         str(config_path), aggregate_csv=str(tmp_path / "aggregate.csv")
     )
+
+
+def test_cli_config_file_not_overridden_by_defaults(tmp_path, monkeypatch):
+    """CLI defaults for --regime and --batch-size must not override config file values."""
+    stack_path, out_dir = _make_resolved_output(tmp_path)
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        f"data_path: {stack_path}\n"
+        f"output_dir: {out_dir / 'config_out'}\n"
+        "voxel_spacing_um: [1.0, 1.0, 1.0]\n"
+        "fiber_diameter_um: 4.0\n"
+        "regime: resolved\n"
+        "segmentation:\n"
+        "  method: otsu\n"
+        "  batch_size: 8\n"
+    )
+
+    mock_pipeline_cls = MagicMock()
+    monkeypatch.setattr("fiber_tracer.cli.FiberAnalysisPipeline", mock_pipeline_cls)
+
+    rc = main(["--config", str(config_path)])
+
+    assert rc == 0
+    config = mock_pipeline_cls.call_args.args[0]
+    assert config.regime == "resolved"
+    assert config.segmentation.batch_size == 8

@@ -24,12 +24,12 @@ def _add_pipeline_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--voxel-spacing", nargs=3, type=float, metavar=("Z", "Y", "X"))
     parser.add_argument("--fiber-diameter", type=float)
     parser.add_argument(
-        "--regime", choices=["auto", "resolved", "marginal", "subvoxel"], default="auto"
+        "--regime", choices=["auto", "resolved", "marginal", "subvoxel"], default=None
     )
     parser.add_argument("--segmentation-method", choices=["otsu", "watershed", "unet"])
     parser.add_argument("--model-path", help="Path to a PyTorch checkpoint for method='unet'")
     parser.add_argument(
-        "--batch-size", type=int, default=1, help="Inference batch size for U-Net backend"
+        "--batch-size", type=int, default=None, help="Inference batch size for U-Net backend"
     )
 
 
@@ -334,13 +334,13 @@ def _run_pipeline(args: argparse.Namespace) -> int:
         config.voxel_spacing_um = VoxelSpacing(*args.voxel_spacing)
     if args.fiber_diameter:
         config.fiber_diameter_um = args.fiber_diameter
-    if args.regime:
+    if args.regime is not None:
         config.regime = args.regime
     if args.segmentation_method:
         config.segmentation.method = args.segmentation_method
     if args.model_path:
         config.segmentation.model_path = args.model_path
-    if args.batch_size:
+    if args.batch_size is not None:
         config.segmentation.batch_size = args.batch_size
 
     config.validate()

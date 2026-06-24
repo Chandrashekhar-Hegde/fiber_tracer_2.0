@@ -350,7 +350,7 @@ fiber-tracer model remove fiber_unet_v2_full
 
 ## `fiber-tracer experiment`
 
-Manage training experiment records. Experiment data is stored in `~/.config/fiber-tracer/experiments.json`.
+Manage training experiment records. Experiment data is stored in `~/.config/fiber-tracer/experiments.jsonl`.
 
 ### `fiber-tracer experiment list`
 
