@@ -8,6 +8,8 @@ import json
 import logging
 import sys
 from dataclasses import asdict
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from fiber_tracer.config import Config, VoxelSpacing
@@ -222,16 +224,38 @@ def _build_train_parser(subparsers: Any) -> None:
     parser.set_defaults(func=_run_train)
 
 
+def _upsert_registry_model(
+    registry: Any,
+    model_id: str,
+    checkpoint_path: Path,
+) -> None:
+    """Add or update a registry entry pointing at *checkpoint_path*."""
+    existing = registry.get_model(model_id)
+    if existing is not None:
+        registry.remove_model(model_id)
+    registry.add_model(
+        model_id=model_id,
+        name=model_id,
+        path=str(checkpoint_path),
+        architecture="unet3d",
+        version="unknown",
+        description=f"Checkpoint produced by fiber-tracer train ({datetime.now(timezone.utc).isoformat()})",
+    )
+
+
+def _resolve_model_path(registry: Any, model_path: str) -> str:
+    """Return the registered path if *model_path* is a registry ID, else itself."""
+    if not Path(model_path).is_file():
+        entry = registry.get_model(model_path)
+        if entry is not None:
+            return entry.path
+    return model_path
+
+
 def _run_train(args: argparse.Namespace) -> int:
     from fiber_tracer.experiments.store import ExperimentStore
     from fiber_tracer.models.registry import ModelRegistry
     from fiber_tracer.training.trainer import UNetTrainer
-
-    registry = ModelRegistry()
-    model = registry.get_model(args.model_id)
-    if model is None:
-        print(f"Model {args.model_id} not found", file=sys.stderr)
-        return 1
 
     error = _validate_train_args(args)
     if error:
@@ -271,6 +295,16 @@ def _run_train(args: argparse.Namespace) -> int:
     except Exception as exc:
         print(f"Training failed: {exc}", file=sys.stderr)
         return 1
+
+    registry = ModelRegistry()
+    checkpoint_path = Path(args.output_dir) / "checkpoint.pt"
+    try:
+        _upsert_registry_model(registry, args.model_id, checkpoint_path)
+    except (FileNotFoundError, ValueError, KeyError) as exc:
+        print(f"Failed to register checkpoint: {exc}", file=sys.stderr)
+        return 1
+
+    print(f"Registered checkpoint for model {args.model_id} at {checkpoint_path}")
     return 0
 
 
@@ -339,7 +373,10 @@ def _run_pipeline(args: argparse.Namespace) -> int:
     if args.segmentation_method:
         config.segmentation.method = args.segmentation_method
     if args.model_path:
-        config.segmentation.model_path = args.model_path
+        from fiber_tracer.models.registry import ModelRegistry
+
+        registry = ModelRegistry()
+        config.segmentation.model_path = _resolve_model_path(registry, args.model_path)
     if args.batch_size is not None:
         config.segmentation.batch_size = args.batch_size
 
