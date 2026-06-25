@@ -8,7 +8,7 @@ from copy import deepcopy
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from fiber_tracer.utils.paths import get_config_dir
 
@@ -42,7 +42,7 @@ class ModelRegistry:
         if not self.manifest_path.exists():
             return self._default_manifest()
         try:
-            data = json.loads(self.manifest_path.read_text())
+            data = cast(dict[str, Any], json.loads(self.manifest_path.read_text()))
             if "models" not in data:
                 return self._default_manifest()
             return data

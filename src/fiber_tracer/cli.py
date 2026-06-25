@@ -251,7 +251,7 @@ def _resolve_model_path(registry: Any, model_path: str) -> str:
     if not Path(model_path).is_file():
         entry = registry.get_model(model_path)
         if entry is not None:
-            return entry.path
+            return str(entry.path)
     return model_path
 
 
@@ -432,11 +432,11 @@ def main(argv: list | None = None) -> int:
     if args.command == "batch":
         return _run_batch(args)
     if args.command == "model":
-        return args.func(args)
+        return int(args.func(args))
     if args.command == "experiment":
-        return args.func(args)
+        return int(args.func(args))
     if args.command == "train":
-        return args.func(args)
+        return int(args.func(args))
 
     parser.print_help()
     return 1
