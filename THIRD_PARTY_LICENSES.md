@@ -26,6 +26,13 @@
 - **dask** — BSD-3-Clause — https://www.dask.org/
 - **h5py** — BSD-3-Clause — https://www.h5py.org/
 
+## Terminal UI dependencies
+
+- **Bun** — MIT — https://bun.sh/
+- **Ink** — MIT — https://github.com/vadimdemedes/ink
+- **@inkjs/ui** — MIT — https://github.com/inkjs/ui
+- **React** — MIT — https://react.dev/
+
 ## Development / test dependencies
 
 - **pytest** — MIT — https://pytest.org/

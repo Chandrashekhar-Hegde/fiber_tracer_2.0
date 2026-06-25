@@ -25,15 +25,15 @@ This document describes where the project is headed and how you can help. For de
 - [ ] Add a GitHub Actions release workflow that builds wheels/sdists and attaches artifacts.
 - [ ] Add a separate CI job for ML-backend tests that installs the `ml` extra.
 - [ ] Add a Dockerfile for reproducible CPU/MPS inference.
-- [x] Build an interactive Terminal UI (TUI) with Bun, Ink, and termcn for guided analysis, dashboards, model registry, and experiments.
+- [x] Build an interactive Terminal UI (TUI) with Bun, Ink, and @inkjs/ui for guided analysis, dashboards, model registry, and experiments.
 - [x] Add model registry, experiment tracking, and `fiber-tracer train` CLI for local U-Net training.  
   _Implemented on `main`; pending the v3.3.0 release._
 
 ### Community
 
 - [ ] Enable GitHub Discussions.
-- [ ] Add issue templates and PR template.
-- [ ] Add `CONTRIBUTING.md`, `CONTRIBUTORS.md`, and `CODE_OF_CONDUCT.md`.
+- [x] Add issue templates and PR template.
+- [x] Add `CONTRIBUTING.md`, `CONTRIBUTORS.md`, and `CODE_OF_CONDUCT.md`.
 - [ ] Open roadmap issues with labels and milestone.
 
 ## Medium term — v4.0.0 (target: 3 months)

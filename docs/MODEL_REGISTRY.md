@@ -140,7 +140,7 @@ fiber-tracer train \
 
 | Flag | Required | Default | Description |
 |------|----------|---------|-------------|
-| `--dataset-dir` | Yes | — | Directory with `images/` and `masks/` training patches. |
+| `--dataset-dir` | Yes | — | Directory produced by `scripts/prepare_training_data.py` containing `datasets.json` and `.npz` patch files. |
 | `--output-dir` | Yes | — | Directory for checkpoints, logs, and experiment artifacts. |
 | `--model-id` | No | `unet-v3.2` | ID used to register the resulting model in the registry. |
 | `--name` | No | generated | Experiment name. |

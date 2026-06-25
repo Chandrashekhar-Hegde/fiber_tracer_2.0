@@ -4,6 +4,7 @@
 [![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/github/license/llMr-Sweetll/fiber_tracer_2.0)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/llMr-Sweetll/fiber_tracer_2.0/ci.yml?branch=main&label=CI)](https://github.com/llMr-Sweetll/fiber_tracer_2.0/actions/workflows/ci.yml)
+[![Install & Verify](https://img.shields.io/github/actions/workflow/status/llMr-Sweetll/fiber_tracer_2.0/install.yml?branch=main&label=install)](https://github.com/llMr-Sweetll/fiber_tracer_2.0/actions/workflows/install.yml)
 
 **Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites.**
 
@@ -508,11 +509,18 @@ black --check .
 mypy src/fiber_tracer
 ```
 
+Or run the full cross-platform install + verification script locally:
+
+```bash
+./scripts/install.sh
+./scripts/verify.sh
+```
+
 Full contributor guidance, including how to add backends, regimes, and visualizations, is in [`docs/developer_guide.md`](docs/developer_guide.md).
 
 ## Citations and license
 
-Fiber Tracer is released under the MIT License. See [`LICENSE`](LICENSE) for the full text.
+Fiber Tracer is released under the MIT License. Copyright © 2024–2026 Mr Sweet and contributors. See [`LICENSE`](LICENSE) for the full text.
 
 If you use this software in your research, please cite the relevant methods:
 

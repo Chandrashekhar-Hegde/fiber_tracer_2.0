@@ -16,6 +16,9 @@ After the script finishes:
 cd fiber_tracer_2.0
 source .venv/bin/activate
 fiber-tracer --help
+
+# Optional: launch the guided terminal UI
+cd tui && bun run dev
 ```
 
 On Windows, use the PowerShell equivalent:
@@ -24,7 +27,7 @@ On Windows, use the PowerShell equivalent:
 Invoke-RestMethod -Uri https://raw.githubusercontent.com/llMr-Sweetll/fiber_tracer_2.0/main/scripts/install.ps1 | Invoke-Expression
 ```
 
-Both installers clone the repository, create a virtual environment, install the package with `structure`, `skeleton`, and `dev` extras, and run a quick verification step. If you prefer full control, follow the manual steps below.
+Both installers clone the repository, create a virtual environment, install the package with `structure`, `skeleton`, `ml`, and `dev` extras, install Bun if it is missing, install TUI dependencies with `bun install`, and run a quick verification step. If you prefer full control, follow the manual steps below.
 
 ## System requirements
 

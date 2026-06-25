@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `mypy` pin to `>=1.0,<3.0`.
 - Updated GitHub Actions to latest major versions.
 - TUI Model Registry, Experiments, and Training screens now show live data.
+- Updated `LICENSE` copyright to 2024–2026 and "Mr Sweet and contributors".
+- Updated `THIRD_PARTY_LICENSES.md` with Terminal UI dependencies (Bun, Ink, @inkjs/ui, React).
+- Refreshed `README.md`, `docs/INSTALL.md`, `docs/MODEL_REGISTRY.md`, and `ROADMAP.md` to reflect the latest CLI/TUI features.
 
 ### Fixed
 - CI type-check failures caused by `mypy` 2.x and dependency source syntax.
