@@ -5,11 +5,13 @@ Complete command-line reference for **Fiber Tracer (RAFA) v3.2.0**, generated fr
 ## Synopsis
 
 ```text
-fiber-tracer [-h] [--log-level LOG_LEVEL]
+fiber-tracer [-h] [--version] [--log-level LOG_LEVEL]
              [--data DATA] [--output OUTPUT] [--config CONFIG]
              [--voxel-spacing Z Y X] [--fiber-diameter FIBER_DIAMETER]
              [--regime {auto,resolved,marginal,subvoxel}]
-             {run,analyze,view,report-viz,batch} ...
+             [--segmentation-method {otsu,watershed,unet}]
+             [--model-path MODEL_PATH] [--batch-size BATCH_SIZE]
+             {run,analyze,view,report-viz,batch,model,experiment,train} ...
 ```
 
 Top-level flags are retained for backward compatibility. Calling `fiber-tracer --data ... --output ...` without a subcommand is equivalent to `fiber-tracer run --data ... --output ...`.
@@ -39,6 +41,9 @@ Other useful extras: `structure`, `skeleton`, `ml`, `unet`, `tda`, `parallel`, `
 | `view` | — | Visualize results in napari (requires `viz`). |
 | `report-viz` | — | Generate an interactive Plotly HTML report from `summary.json` (requires `viz`). |
 | `batch` | — | Process multiple volumes from a YAML/JSON batch config. |
+| `model` | — | Manage registered segmentation models. |
+| `experiment` | — | Manage and compare training experiments. |
+| `train` | — | Train a 3D U-Net from a dataset directory. |
 
 ---
 
@@ -57,11 +62,11 @@ Run the Regime-Aware Fiber Analysis (RAFA) pipeline on one 3D volume.
 | `--fiber-diameter` | No | positive float | `10.0` | Expected fiber diameter in micrometres. |
 | `--regime` | No | `auto`, `resolved`, `marginal`, `subvoxel` | `auto` | Analysis regime. `auto` selects from the voxel/fiber ratio. |
 | `--segmentation-method` | No | `otsu`, `watershed`, `unet` | `otsu` | Segmentation backend. Use `unet` for the 3D U-Net model. |
-| `--model-path` | No* | file path | `models/fiber_unet_v2_full.pt` | Path to a PyTorch checkpoint for `unet`. |
+| `--model-path` | No** | file path or registered model ID | `models/fiber_unet_v2_full.pt` | Path to a PyTorch checkpoint for `unet`, or a model ID from the registry. |
 | `--batch-size` | No | positive integer | `1` | U-Net inference batch size. Increase for higher throughput if memory allows. |
 
 \* `--data` and `--output` are not individually marked required by the parser, but the run fails if either is not provided by CLI or config.  
-\*\* `--model-path` is required only when `--segmentation-method unet` is used.
+\*\* `--model-path` is relevant only when `--segmentation-method unet` is used; a default checkpoint is provided.
 
 ### Examples
 
@@ -89,7 +94,7 @@ fiber-tracer run \
   --voxel-spacing 1.0 1.0 1.0 \
   --fiber-diameter 6.0 \
   --segmentation-method unet \
-  --model-path models/fiber_unet_v2_full.pt
+  --model-path unet-v3.2
 
 # Use a config file and override the input data and output directory
 fiber-tracer run \
@@ -282,6 +287,148 @@ Example:
 ```bash
 fiber-tracer --log-level DEBUG run --data sample.tif --output results/
 ```
+
+---
+
+## `fiber-tracer model`
+
+Manage the local segmentation model registry. Registry data is stored in `~/.config/fiber-tracer/models.json`.
+
+### `fiber-tracer model list`
+
+List registered models.
+
+| Flag | Required | Default | Description |
+|------|----------|---------|-------------|
+| `--json` | No | `false` | Output as JSON. |
+
+```bash
+fiber-tracer model list
+fiber-tracer model list --json
+```
+
+### `fiber-tracer model add`
+
+Add a checkpoint to the registry.
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--model-id` | Yes | Short unique identifier. |
+| `--name` | Yes | Human-readable name. |
+| `--path` | Yes | Path to the `.pt` checkpoint. |
+| `--architecture` | No | Architecture, e.g. `unet3d`. |
+| `--version` | No | Version string. |
+| `--description` | No | Free-text description. |
+
+```bash
+fiber-tracer model add \
+  --model-id my-unet \
+  --name "My 3D U-Net" \
+  --path models/fiber_unet_v2_full.pt \
+  --architecture unet3d \
+  --version 1.0.0 \
+  --description "Trained on my dataset"
+```
+
+### `fiber-tracer model set-default`
+
+Set the default model used by the TUI and by `run` when `--model-path` is omitted.
+
+```bash
+fiber-tracer model set-default my-unet
+```
+
+### `fiber-tracer model remove`
+
+Remove a registry entry. The checkpoint file on disk is not deleted.
+
+```bash
+fiber-tracer model remove my-unet
+```
+
+---
+
+## `fiber-tracer experiment`
+
+Manage training experiment records. Experiment data is stored in `~/.config/fiber-tracer/experiments.jsonl`.
+
+### `fiber-tracer experiment list`
+
+| Flag | Required | Default | Description |
+|------|----------|---------|-------------|
+| `--json` | No | `false` | Output as JSON. |
+
+```bash
+fiber-tracer experiment list
+fiber-tracer experiment list --json
+```
+
+### `fiber-tracer experiment show`
+
+Show details for one experiment.
+
+```bash
+fiber-tracer experiment show exp-20260624-abc123
+```
+
+### `fiber-tracer experiment compare`
+
+Compare two or more experiments by a metric.
+
+| Flag | Required | Default | Description |
+|------|----------|---------|-------------|
+| `--metric` | No | `val_dice` | Metric to compare. |
+
+```bash
+fiber-tracer experiment compare exp-001 exp-002 --metric val_dice
+```
+
+---
+
+## `fiber-tracer train`
+
+Train a 3D U-Net from a dataset directory produced by `scripts/prepare_training_data.py`. The run is recorded as an experiment and the resulting checkpoint is added to (or updates) the model registry entry for `--model-id`.
+
+### Flags
+
+| Flag | Required | Default | Description |
+|------|----------|---------|-------------|
+| `--dataset-dir` | Yes | — | Training dataset directory. |
+| `--output-dir` | Yes | — | Output directory for checkpoints and logs. |
+| `--model-id` | No | `unet-v3.2` | Registry ID for the trained model. |
+| `--name` | No | generated | Experiment name. |
+| `--epochs` | No | `10` | Training epochs. |
+| `--batch-size` | No | `4` | Batch size. |
+| `--lr` | No | `1e-3` | Learning rate. |
+| `--val-fraction` | No | `0.1` | Validation split fraction. |
+| `--device` | No | `auto` | `cpu`, `cuda`, `mps`, or `auto`. |
+| `--features` | No | `(8, 16, 32)` | U-Net encoder feature channels. |
+
+### Example
+
+```bash
+fiber-tracer train \
+  --dataset-dir data/processed/training/ \
+  --output-dir models/experiments/exp-001/ \
+  --model-id unet-v3.2 \
+  --name "v3 mixed training" \
+  --epochs 10 \
+  --batch-size 4 \
+  --lr 1e-3 \
+  --device auto
+```
+
+**Note:** Training requires the `ml` extra: `pip install -e ".[ml]"`.
+
+### JSON progress
+
+`train` emits compact JSON progress lines to stdout, for example:
+
+```json
+{"stage":"train","percent":20,"message":"epoch 2/10","metrics":{"epoch":2,"train_loss":0.12,"val_loss":0.11,"val_dice":0.75}}
+```
+
+These lines are parsed by the TUI Training screen and can be consumed by external orchestrators.
 
 ---
 

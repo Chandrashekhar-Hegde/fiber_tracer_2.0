@@ -2,6 +2,30 @@
 
 This guide covers installing `fiber-tracer` from source. For everyday use we recommend an editable install inside a Python virtual environment so updates and configuration changes are picked up immediately.
 
+## One-line installer
+
+The fastest way to get the repository, virtual environment, and CLI ready is the install script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/llMr-Sweetll/fiber_tracer_2.0/main/scripts/install.sh | bash
+```
+
+After the script finishes:
+
+```bash
+cd fiber_tracer_2.0
+source .venv/bin/activate
+fiber-tracer --help
+```
+
+On Windows, use the PowerShell equivalent:
+
+```powershell
+Invoke-RestMethod -Uri https://raw.githubusercontent.com/llMr-Sweetll/fiber_tracer_2.0/main/scripts/install.ps1 | Invoke-Expression
+```
+
+Both installers clone the repository, create a virtual environment, install the package with `structure`, `skeleton`, and `dev` extras, and run a quick verification step. If you prefer full control, follow the manual steps below.
+
 ## System requirements
 
 - **Python:** `>=3.10` (Python 3.10, 3.11, and 3.12 are supported).
@@ -101,6 +125,10 @@ Installs all backends and development tools. On Linux this includes the `unet` e
 ```bash
 pip install -e ".[all]"
 ```
+
+### Training
+
+**Note:** The `fiber-tracer train` command requires the `ml` extra: `pip install -e ".[ml]"`.
 
 ## Verification commands
 

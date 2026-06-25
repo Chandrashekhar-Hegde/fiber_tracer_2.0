@@ -46,3 +46,61 @@ export interface BridgeResult {
 }
 
 export type BridgeStatus = "idle" | "running" | "success" | "error" | "cancelled";
+
+export type ModelSource = "bundled" | "local" | "remote";
+export type ModelStatus =
+  | "ready"
+  | "planned"
+  | "downloading"
+  | "error"
+  | "missing"
+  | "loading";
+export type ExperimentType = "train" | "analyze";
+export type ExperimentStatus =
+  | "pending"
+  | "running"
+  | "completed"
+  | "failed"
+  | "cancelled";
+export type TrainingDevice = "auto" | "cpu" | "cuda" | "mps";
+
+export interface Model {
+  id: string;
+  name: string;
+  architecture: string;
+  source: ModelSource;
+  path: string;
+  version: string;
+  createdAt: string;
+  tags: string[];
+  description: string;
+  status: ModelStatus;
+  isDefault: boolean;
+}
+
+export interface Experiment {
+  id: string;
+  name: string;
+  type: ExperimentType;
+  modelId: string;
+  dataset: string;
+  configSnapshot: Record<string, unknown>;
+  status: ExperimentStatus;
+  metrics: Record<string, unknown>;
+  history: Record<string, unknown>;
+  startedAt: string;
+  finishedAt?: string;
+  artifactDir: string;
+  errorMessage?: string;
+}
+
+export interface TrainingOptions {
+  datasetDir: string;
+  modelId: string;
+  outputDir: string;
+  name: string;
+  epochs: number;
+  batchSize: number;
+  lr: number;
+  device: TrainingDevice;
+}

@@ -1,6 +1,8 @@
 import json
 from unittest.mock import MagicMock
 
+import pytest
+
 from fiber_tracer.cli import main
 from fiber_tracer.config import Config, VoxelSpacing
 from fiber_tracer.io import save_tiff_stack
@@ -32,6 +34,14 @@ def _make_resolved_output(tmp_path, shape=(32, 32, 32)):
     )
     FiberAnalysisPipeline(config).run()
     return stack_path, out_dir
+
+
+def test_cli_version_command(capsys):
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--version"])
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "fiber-tracer" in captured.out
 
 
 def test_cli_view_command_runs_napari_viewer(tmp_path, monkeypatch):
@@ -137,3 +147,29 @@ def test_batch_command(tmp_path, monkeypatch):
     mock_process.assert_called_once_with(
         str(config_path), aggregate_csv=str(tmp_path / "aggregate.csv")
     )
+
+
+def test_cli_config_file_not_overridden_by_defaults(tmp_path, monkeypatch):
+    """CLI defaults for --regime and --batch-size must not override config file values."""
+    stack_path, out_dir = _make_resolved_output(tmp_path)
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        f"data_path: {stack_path}\n"
+        f"output_dir: {out_dir / 'config_out'}\n"
+        "voxel_spacing_um: [1.0, 1.0, 1.0]\n"
+        "fiber_diameter_um: 4.0\n"
+        "regime: resolved\n"
+        "segmentation:\n"
+        "  method: otsu\n"
+        "  batch_size: 8\n"
+    )
+
+    mock_pipeline_cls = MagicMock()
+    monkeypatch.setattr("fiber_tracer.cli.FiberAnalysisPipeline", mock_pipeline_cls)
+
+    rc = main(["--config", str(config_path)])
+
+    assert rc == 0
+    config = mock_pipeline_cls.call_args.args[0]
+    assert config.regime == "resolved"
+    assert config.segmentation.batch_size == 8

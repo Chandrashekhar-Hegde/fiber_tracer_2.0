@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useRef, useState, useCallback } from "react";
 import { useInput, useApp } from "ink";
 import { Layout } from "./components/layout";
 import { WizardShell } from "./components/wizard-shell";
@@ -10,7 +10,7 @@ import { Dashboard } from "./components/dashboard";
 import { History } from "./components/history";
 import { Experiments } from "./components/experiments";
 import { ModelRegistry } from "./components/model-registry";
-import { Training } from "./components/training";
+import { Training, TrainingRef } from "./components/training";
 import { Logs } from "./components/logs";
 import { Settings } from "./components/settings";
 import { useConfig } from "./hooks/useConfig";
@@ -40,9 +40,10 @@ export function App() {
   const [section, setSection] = useState<Section>("new-analysis");
   const [wizardStep, setWizardStep] = useState(0);
   const [analysisConfig, setAnalysisConfig] = useState<AnalysisConfig>(DEFAULT_CONFIG);
-  const bridge = useBridge();
+  const { run: runAnalysis, status, progress, logs, error } = useBridge();
   const history = useHistory();
   const theme = loadTheme(config.theme);
+  const trainingRef = useRef<TrainingRef>(null);
 
   const onInput = useCallback(
     (input: string, key: { rightArrow: boolean; leftArrow: boolean }) => {
@@ -60,11 +61,14 @@ export function App() {
         if (key.leftArrow || input === "p") setWizardStep((s) => Math.max(0, s - 1));
         if (input === "r" && wizardStep === 2) {
           setWizardStep(3);
-          bridge.run(analysisConfig);
+          runAnalysis(analysisConfig);
         }
       }
+      if (section === "training" && input === "s") {
+        trainingRef.current?.start();
+      }
     },
-    [exit, section, wizardStep, bridge, analysisConfig]
+    [exit, section, wizardStep, runAnalysis, analysisConfig]
   );
 
   useInput(onInput);
@@ -72,7 +76,7 @@ export function App() {
   const footer =
     section === "new-analysis"
       ? ["← p", "→ n", "Enter select", "r run", "q quit"]
-      : ["1 Analysis", "2 Dashboard", "3 History", "4 Experiments", "5 Registry", "6 Training", "7 Logs", "8 Settings", "q quit"];
+      : ["1 Analysis", "2 Dashboard", "3 History", "4 Experiments", "5 Model Registry", "6 Training", "7 Logs", "8 Settings", "q quit"];
 
   return (
     <Layout section={section} wizardStep={wizardStep} footerShortcuts={footer} theme={theme}>
@@ -90,7 +94,7 @@ export function App() {
           )}
           {wizardStep === 2 && <Review config={analysisConfig} theme={theme} />}
           {wizardStep === 3 && (
-            <RunWatch status={bridge.status} progress={bridge.progress} logs={bridge.logs} error={bridge.error} theme={theme} />
+            <RunWatch status={status} progress={progress} logs={logs} error={error} theme={theme} />
           )}
         </WizardShell>
       )}
@@ -98,8 +102,8 @@ export function App() {
       {section === "history" && <History history={history.history} theme={theme} />}
       {section === "experiments" && <Experiments theme={theme} />}
       {section === "model-registry" && <ModelRegistry theme={theme} />}
-      {section === "training" && <Training theme={theme} />}
-      {section === "logs" && <Logs logs={bridge.logs} theme={theme} />}
+      {section === "training" && <Training ref={trainingRef} theme={theme} />}
+      {section === "logs" && <Logs logs={logs} theme={theme} />}
       {section === "settings" && <Settings config={config} onChange={setConfig} theme={theme} />}
     </Layout>
   );
