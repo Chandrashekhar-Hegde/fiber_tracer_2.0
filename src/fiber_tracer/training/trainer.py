@@ -62,6 +62,7 @@ class UNetTrainer:
         device: str = "auto",
         features: tuple[int, ...] = (8, 16, 32),
         seed: int = 42,
+        split_mode: str = "patch",
         progress_callback: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
         """Initialize the trainer.
@@ -77,6 +78,7 @@ class UNetTrainer:
         self.lr = lr
         self.val_fraction = val_fraction
         self.seed = seed
+        self.split_mode = split_mode
         self.features = features
         self.progress_callback = progress_callback
 
@@ -111,6 +113,7 @@ class UNetTrainer:
             val_fraction=self.val_fraction,
             augment=True,
             seed=self.seed,
+            split_mode=self.split_mode,
         )
         val_set = FiberVolumeDataset(
             registry_path=registry,
@@ -119,6 +122,7 @@ class UNetTrainer:
             val_fraction=self.val_fraction,
             augment=False,
             seed=self.seed,
+            split_mode=self.split_mode,
         )
         train_loader = DataLoader(
             train_set,

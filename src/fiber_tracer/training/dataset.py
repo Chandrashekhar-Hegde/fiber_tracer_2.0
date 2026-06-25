@@ -32,11 +32,15 @@ class FiberVolumeDataset:
     split :
         ``"train"`` or ``"val"``.
     val_fraction :
-        Fraction of patches per source reserved for validation.
+        Fraction of patches or sources reserved for validation.
     augment :
         Whether to apply ``augment_patch`` to training samples.
     seed :
         Random seed for reproducible train/val splits.
+    split_mode :
+        ``"patch"`` (default, legacy) or ``"volume"`` (recommended).  ``"volume"``
+        reserves whole source directories for validation to avoid information
+        leakage between overlapping patches.
     """
 
     def __init__(
@@ -47,6 +51,7 @@ class FiberVolumeDataset:
         val_fraction: float = 0.1,
         augment: bool = True,
         seed: int = 42,
+        split_mode: str = "patch",
     ) -> None:
         with open(registry_path) as f:
             registry = json.load(f)
@@ -54,20 +59,39 @@ class FiberVolumeDataset:
         self.augment = augment and split == "train"
         self.patch_files: list[Path] = []
         rng = random.Random(seed)
-        for entry in registry:
-            patch_dir = self.processed_root / entry["patch_dir"]
-            if not patch_dir.exists():
-                continue
-            files = sorted(patch_dir.glob("*.npz"))
-            if not files:
-                continue
-            rng.shuffle(files)
-            n_val = max(1, int(len(files) * val_fraction)) if len(files) > 1 else 0
+
+        if split_mode == "volume":
+            # Split at source level to avoid leakage.
+            entries = list(registry)
+            rng.shuffle(entries)
+            n_val = max(1, int(len(entries) * val_fraction)) if len(entries) > 1 else 0
             if split == "train":
-                files = files[n_val:]
+                selected = entries[n_val:]
             else:
-                files = files[:n_val]
-            self.patch_files.extend(files)
+                selected = entries[:n_val]
+            for entry in selected:
+                patch_dir = self.processed_root / entry["patch_dir"]
+                if not patch_dir.exists():
+                    continue
+                self.patch_files.extend(sorted(patch_dir.glob("*.npz")))
+        elif split_mode == "patch":
+            for entry in registry:
+                patch_dir = self.processed_root / entry["patch_dir"]
+                if not patch_dir.exists():
+                    continue
+                files = sorted(patch_dir.glob("*.npz"))
+                if not files:
+                    continue
+                rng.shuffle(files)
+                n_val = max(1, int(len(files) * val_fraction)) if len(files) > 1 else 0
+                if split == "train":
+                    files = files[n_val:]
+                else:
+                    files = files[:n_val]
+                self.patch_files.extend(files)
+        else:
+            raise ValueError(f"Unknown split_mode: {split_mode}")
+
         self.rng = random.Random(seed)
 
     def __len__(self) -> int:

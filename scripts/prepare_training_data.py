@@ -21,17 +21,70 @@ PATCH_SIZE = (64, 64, 64)
 PATCHES_PER_VOLUME = 64
 
 
-def _normalize(volume: np.ndarray) -> np.ndarray:
+def _normalize(
+    volume: np.ndarray,
+    mode: str = "minmax",
+    percentile_clip: tuple[float, float] = (0.5, 99.5),
+    target_mean: float | None = None,
+) -> np.ndarray:
+    """Normalize a volume to [0, 1].
+
+    Parameters
+    ----------
+    mode:
+        ``"minmax"`` (legacy) or ``"percentile"`` (recommended for real XCT).
+    percentile_clip:
+        Low/high percentiles used when ``mode="percentile"``.
+    target_mean:
+        If provided, scale the normalized volume so its mean approaches this
+        value (mean anchoring for multi-material harmonization).
+    """
     v = volume.astype(np.float32)
-    vmin, vmax = v.min(), v.max()
-    if vmax > vmin:
-        v = (v - vmin) / (vmax - vmin)
+    if mode == "minmax":
+        vmin, vmax = v.min(), v.max()
+        if vmax > vmin:
+            v = (v - vmin) / (vmax - vmin)
+    elif mode == "percentile":
+        lo, hi = np.percentile(v, percentile_clip)
+        if hi > lo:
+            v = np.clip((v - lo) / (hi - lo), 0.0, 1.0)
+        if target_mean is not None and v.mean() > 0:
+            v = np.clip(v * (target_mean / v.mean()), 0.0, 1.0)
+    else:
+        raise ValueError(f"Unknown normalization mode: {mode}")
     return v
 
 
 def _pseudo_label(volume: np.ndarray) -> np.ndarray:
     """Generate a binary foreground mask for unlabeled real data."""
     return segment_otsu_3d(volume)
+
+
+def _staged_thresholds_from_sample(
+    values: np.ndarray,
+    void_percentile: float = 1.0,
+) -> tuple[float, float]:
+    """Return (dark_threshold, fiber_threshold) for two-pass pseudo-labeling."""
+    from skimage import filters
+
+    dark_threshold = float(np.percentile(values, void_percentile))
+    non_void = values[values > dark_threshold]
+    if non_void.size == 0:
+        non_void = values
+    fiber_threshold = float(filters.threshold_otsu(non_void))
+    return dark_threshold, fiber_threshold
+
+
+def _staged_binary_mask(
+    volume: np.ndarray,
+    dark_threshold: float,
+    fiber_threshold: float,
+) -> np.ndarray:
+    """Return a binary fiber mask, suppressing dark void voxels."""
+    void_mask = volume < dark_threshold
+    fiber_mask = (volume > fiber_threshold).astype(np.float32)
+    fiber_mask[void_mask] = 0.0
+    return fiber_mask
 
 
 def _otsu_threshold_from_sample(values: np.ndarray) -> float:
@@ -289,7 +342,9 @@ def _extract_patches_streaming(
     n_patches: int,
     patch_size: tuple[int, int, int],
     seed: int,
-    threshold: float | None = None,
+    dark_threshold: float | None = None,
+    fiber_threshold: float | None = None,
+    normalize_mode: str = "percentile",
 ) -> tuple[list[np.ndarray], list[np.ndarray], str]:
     """Extract patches from a potentially large volume without loading it whole.
 
@@ -300,19 +355,19 @@ def _extract_patches_streaming(
     d, h, w = shape
     pd, ph, pw = patch_size
 
+    has_gt = _has_ground_truth(path, sub_key)
+    label_source = "ground_truth" if has_gt else "staged_otsu"
+
     if d < pd or h < ph or w < pw:
         # Load whole small volume and use the in-memory extractor.
-        volume = _normalize(_load_roi(path, sub_key, (0, d), (0, h), (0, w)).astype(np.float32))
-        if _has_ground_truth(path, sub_key):
+        raw = _load_roi(path, sub_key, (0, d), (0, h), (0, w)).astype(np.float32)
+        volume = _normalize(raw, mode=normalize_mode)
+        if has_gt:
             mask = _load_label_roi(path, sub_key, (0, d), (0, h), (0, w))
-            label_source = "ground_truth"
+        elif dark_threshold is not None and fiber_threshold is not None:
+            mask = _staged_binary_mask(volume, dark_threshold, fiber_threshold)
         else:
-            mask = (
-                (volume > threshold).astype(np.float32)
-                if threshold is not None
-                else _pseudo_label(volume).astype(np.float32)
-            )
-            label_source = "otsu"
+            mask = _pseudo_label(volume).astype(np.float32)
         vol_patches, msk_patches = _extract_patches(
             volume, mask, n_patches=n_patches, patch_size=patch_size, seed=seed
         )
@@ -326,21 +381,17 @@ def _extract_patches_streaming(
         x = rng.randint(0, w - pw)
         origins.append((z, y, x))
 
-    has_gt = _has_ground_truth(path, sub_key)
-    label_source = "ground_truth" if has_gt else "otsu"
     vol_patches: list[np.ndarray] = []
     msk_patches: list[np.ndarray] = []
     for z, y, x in origins:
         volume_roi = _load_roi(path, sub_key, (z, z + pd), (y, y + ph), (x, x + pw))
-        volume_roi = _normalize(volume_roi.astype(np.float32))
+        volume_roi = _normalize(volume_roi.astype(np.float32), mode=normalize_mode)
         if has_gt:
             mask_roi = _load_label_roi(path, sub_key, (z, z + pd), (y, y + ph), (x, x + pw))
+        elif dark_threshold is not None and fiber_threshold is not None:
+            mask_roi = _staged_binary_mask(volume_roi, dark_threshold, fiber_threshold)
         else:
-            mask_roi = (
-                (volume_roi > threshold).astype(np.float32)
-                if threshold is not None
-                else _pseudo_label(volume_roi).astype(np.float32)
-            )
+            mask_roi = _pseudo_label(volume_roi).astype(np.float32)
         vol_patches.append(volume_roi)
         msk_patches.append(mask_roi)
     return vol_patches, msk_patches, label_source
@@ -398,6 +449,8 @@ def _process_real_volume(
     sub_key: str | None = None,
     n_patches: int = PATCHES_PER_VOLUME,
     patch_size: tuple[int, int, int] = PATCH_SIZE,
+    material: str = "unknown",
+    normalize_mode: str = "percentile",
 ) -> dict | None:
     try:
         shape = _volume_shape(volume_path, sub_key)
@@ -410,11 +463,12 @@ def _process_real_volume(
         return None
 
     seed = hash(f"{volume_path.name}_{sub_key}") % 2**31
-    threshold: float | None = None
+    dark_threshold: float | None = None
+    fiber_threshold: float | None = None
     if not _has_ground_truth(volume_path, sub_key):
-        # Estimate Otsu threshold from a sample so we can stream patches.
+        # Estimate staged thresholds from a sample so we can stream patches.
         sample = _sample_intensities(volume_path, sub_key)
-        threshold = _otsu_threshold_from_sample(sample)
+        dark_threshold, fiber_threshold = _staged_thresholds_from_sample(sample)
 
     try:
         vol_patches, msk_patches, label_source = _extract_patches_streaming(
@@ -423,7 +477,9 @@ def _process_real_volume(
             n_patches=n_patches,
             patch_size=patch_size,
             seed=seed,
-            threshold=threshold,
+            dark_threshold=dark_threshold,
+            fiber_threshold=fiber_threshold,
+            normalize_mode=normalize_mode,
         )
     except Exception as exc:
         print(f"Skipping {volume_path}: {exc}")
@@ -442,6 +498,7 @@ def _process_real_volume(
         + (f"/{sub_key}" if sub_key else ""),
         "type": "real",
         "source": str(volume_path),
+        "material": material,
         "label_source": label_source,
         "n_patches": len(vol_patches),
         "patch_dir": str(shard_dir.relative_to(output_dir.parent)),
@@ -468,6 +525,23 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--n-synthetic", type=int, default=500)
     parser.add_argument("--n-patches-per-volume", type=int, default=PATCHES_PER_VOLUME)
     parser.add_argument("--skip-real", action="store_true")
+    parser.add_argument(
+        "--material",
+        default="unknown",
+        help="Material tag for real volumes (e.g. gfrp, cfrp, recycled).",
+    )
+    parser.add_argument(
+        "--normalize-mode",
+        choices=["minmax", "percentile"],
+        default="percentile",
+        help="Intensity normalization applied to real volumes.",
+    )
+    parser.add_argument(
+        "--void-percentile",
+        type=float,
+        default=1.0,
+        help="Dark percentile used to seed void detection in staged pseudo-labeling.",
+    )
     args = parser.parse_args(argv)
 
     args.output.mkdir(parents=True, exist_ok=True)
@@ -483,6 +557,7 @@ def main(argv: list[str] | None = None) -> int:
         {
             "name": "synthetic",
             "type": "synthetic",
+            "material": "synthetic",
             "n_patches": args.n_synthetic,
             "patch_dir": str(syn_dir.relative_to(args.output)),
         }
@@ -502,6 +577,10 @@ def main(argv: list[str] | None = None) -> int:
         for source_dir in sorted(args.raw.iterdir()):
             if not source_dir.is_dir():
                 continue
+            material = args.material
+            # Allow per-source material override from directory name.
+            if material == "unknown":
+                material = source_dir.name
             for volume_path, sub_key in tqdm(
                 _find_volumes(source_dir), desc=f"processing {source_dir.name}"
             ):
@@ -510,6 +589,8 @@ def main(argv: list[str] | None = None) -> int:
                     real_output,
                     sub_key=sub_key,
                     n_patches=args.n_patches_per_volume,
+                    material=material,
+                    normalize_mode=args.normalize_mode,
                 )
                 if entry is not None:
                     registry.append(entry)
