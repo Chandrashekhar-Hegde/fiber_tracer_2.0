@@ -1780,3 +1780,15 @@ Open `.github/workflows/install.yml` runs and ensure Ubuntu/macOS/Windows all pa
 - [ ] Tests: each new module has a failing test written before implementation.
 - [ ] Cross-platform: install/verify scripts and CI cover Unix and Windows.
 - [ ] Docs: README, INSTALL, CLI_REFERENCE, CHANGELOG, ROADMAP updated.
+
+
+## Implementation notes
+
+This section records intentional deviations between the original plan text and the merged implementation.
+
+- **Model identifier field:** The plan uses `id` for `ModelEntry`. The implementation uses `model_id` to avoid shadowing the built-in `id` function. The CLI JSON output uses `model_id`; the TUI bridge maps it to `Model.id`.
+- **Experiment record:** The implementation adds a `history` field to `Experiment` for per-epoch metric lists, separate from the scalar `metrics` field.
+- **Training dataset format:** The plan shows a simplified `datasets.json` with a single `patch_dir`. The implementation reuses the existing `FiberVolumeDataset`, which expects a `datasets.json` registry with a `sources` list of objects containing `patch_dir`.
+- **TUI bridge config serialization:** The plan shows YAML config serialization for `runAnalysis`. The implementation writes JSON (`config.json`) because the Python `Config` parser accepts JSON and it avoids YAML quoting edge cases in the bridge.
+- **Training checkpoint registration:** The plan did not explicitly require auto-registering the trained checkpoint. The implementation upserts the registry entry for `--model-id` after training and resolves registry IDs passed to `--model-path` in `fiber-tracer run`.
+- **Install script:** The implementation additionally installs the `dev` extra (`pip install -e ".[dev]"`) so that verification can run the full test suite.
