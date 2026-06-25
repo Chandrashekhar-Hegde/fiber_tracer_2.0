@@ -67,7 +67,7 @@ If `black` reports formatting issues, run `black .` to fix them.
 2. Update `CHANGELOG.md` for user-facing changes.
 3. Update relevant documentation (`README.md`, `docs/`, model card).
 4. If you add a dataset, cite it in `CITATIONS.md` and confirm its open license.
-5. Request review from a maintainer.
+5. Open the PR against `main`; the project owner will review it when time permits.
 
 ## Adding datasets
 
