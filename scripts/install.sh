@@ -46,7 +46,7 @@ fi
 source .venv/bin/activate
 
 pip install --upgrade pip
-pip install -e ".[dev]"
+pip install -e ".[dev,ml]"
 
 cd tui
 bun install

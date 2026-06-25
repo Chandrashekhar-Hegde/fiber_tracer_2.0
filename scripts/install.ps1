@@ -53,7 +53,7 @@ if (-not (Test-Path ".venv")) {
 & .venv\Scripts\Activate.ps1
 
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+python -m pip install -e ".[dev,ml]"
 
 Set-Location tui
 bun install
