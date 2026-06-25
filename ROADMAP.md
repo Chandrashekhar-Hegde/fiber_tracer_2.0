@@ -10,15 +10,27 @@ This document describes where the project is headed and how you can help. For de
 - Held-out validation on GF-PA66: Dice ≈ 0.90, IoU ≈ 0.81.
 - CI/CD, documentation, and honest model card are in place.
 
-## Short term — v3.3.0 (target: 4–6 weeks)
+## Current status — v3.3.0
 
-### Model and data
+- Regime-aware classical pipeline (`resolved`, `marginal`, `subvoxel`) is stable.
+- Optional 3D U-Net backend ships with `fiber_unet_v2_full.pt`.
+- Model registry, experiment tracking, and local training CLI are implemented.
+- **FiberTracer-X foundation model skeleton** is on `main`: synthetic corpus generator,
+  shared encoder + task adapters, multi-task trainer, and benchmark harness.
 
-- [ ] Benchmark the v3.2.0 U-Net on additional public datasets (OpenFiberSeg, more IVW/DTU volumes, low-res woven CFRP).
-- [ ] Add domain-randomization augmentation: contrast jitter, noise models, partial-volume simulation, synthetic beam-hardening.
-- [ ] Train `fiber_unet_v3.pt` on an expanded corpus (target 2,500–3,000 patches).
-- [ ] Validate v3 model target: GF-PA66 Dice ≥ 0.92, IoU ≥ 0.85.
-- [ ] Publish a public benchmark leaderboard in `docs/`.
+## Short term — v3.4.0 (target: 4–6 weeks)
+
+### FiberTracer-X
+
+- [x] Synthetic phantom architectures (UD, short-fiber, woven bundles, recycled) and XCT domain randomization.
+- [x] Shared 3D encoder with segmentation and orientation-regression adapters.
+- [x] Multi-task synthetic pre-training trainer (`FiberTracerXTrainer`).
+- [x] Volume-level train/val split option and staged pseudo-labeling.
+- [x] Benchmark harness + auto-generated leaderboard.
+- [ ] YOLO bundle-detection adapter for woven/twill composites.
+- [ ] Void/crack segmentation adapter.
+- [ ] Fine-tune segmentation adapter on GF-PA66 and at least one pultruded CFRP dataset.
+- [ ] Release a pre-trained FiberTracer-X encoder checkpoint on GitHub.
 
 ### Engineering
 
@@ -26,8 +38,7 @@ This document describes where the project is headed and how you can help. For de
 - [ ] Add a separate CI job for ML-backend tests that installs the `ml` extra.
 - [ ] Add a Dockerfile for reproducible CPU/MPS inference.
 - [x] Build an interactive Terminal UI (TUI) with Bun, Ink, and @inkjs/ui for guided analysis, dashboards, model registry, and experiments.
-- [x] Add model registry, experiment tracking, and `fiber-tracer train` CLI for local U-Net training.  
-  _Implemented on `main`; pending the v3.3.0 release._
+- [x] Add model registry, experiment tracking, and `fiber-tracer train` CLI for local U-Net training.
 
 ### Community
 

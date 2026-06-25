@@ -7,10 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- FiberTracer-X foundation model skeleton: shared 3D encoder + task adapters for segmentation and orientation regression.
+- Synthetic corpus generator (`scripts/generate_synthetic_corpus.py`) producing mixed-architecture XCT patches with domain randomization.
+- `FiberTracerXTrainer` for multi-task synthetic pre-training (segmentation + orientation tensor regression).
+- Benchmark harness (`src/fiber_tracer/benchmark/`) with segmentation metrics and leaderboard generator.
+- Extended phantom generator with short-fiber, woven-bundle, and recycled-fiber architectures plus XCT artifact simulation (beam hardening, partial-volume blur, Poisson noise, ring artifacts, contrast jitter).
+- Volume-level train/val split option in `FiberVolumeDataset`.
+- Staged pseudo-labeling and percentile-based normalization in `prepare_training_data.py`.
+- New documentation: `docs/FIBERTRACER_X.md` and `docs/BENCHMARK_LEADERBOARD.md`.
+
+### Changed
+- `ROADMAP.md` updated to reflect FiberTracer-X as the v3.4.0 direction.
+
 ### Planned
-- Expanded training corpus and `fiber_unet_v3.pt` model.
-- Domain-randomization augmentation for synthetic patches.
-- Public benchmark leaderboard in documentation.
+- YOLO bundle-detection adapter for woven/twill composites.
+- Void/crack segmentation adapter.
+- Fine-tuning scripts and pre-trained FiberTracer-X encoder release.
 - GitHub Actions release workflow and Docker image.
 
 ## [3.3.0] — 2026-06-25

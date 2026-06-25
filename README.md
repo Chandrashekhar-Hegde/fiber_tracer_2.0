@@ -239,6 +239,14 @@ fiber-tracer train \
 
 See [`docs/MODEL_REGISTRY.md`](docs/MODEL_REGISTRY.md) for the full guide, and [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) for model limitations and retraining advice.
 
+## FiberTracer-X (next-generation model)
+
+A task-aware foundation model is under active development. It uses a shared 3D
+encoder pre-trained on a large, domain-randomized synthetic corpus, with
+lightweight adapters for segmentation, orientation regression, and (soon) bundle
+detection. See [`docs/FIBERTRACER_X.md`](docs/FIBERTRACER_X.md) for design
+rationale, usage, and roadmap.
+
 ## Terminal UI (TUI)
 
 A guided, keyboard-driven terminal UI is available in the `tui/` directory. It provides a wizard for new analyses, a results dashboard, run history, logs, and settings with customizable themes.
