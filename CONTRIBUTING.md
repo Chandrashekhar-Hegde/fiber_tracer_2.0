@@ -88,6 +88,28 @@ Model checkpoints should be:
 - Uploaded to a GitHub Release, not committed to the repository.
 - Documented in `docs/MODEL_CARD.md` with architecture, training data, and limitations.
 
+## Contributing to the AI workflow
+
+The model registry, experiment tracking, training CLI, and TUI screens are the newest parts of the codebase. If you want to extend them, the relevant modules are:
+
+| Module / file | Responsibility |
+|---------------|----------------|
+| `src/fiber_tracer/models/registry.py` | Add/remove/default local model entries stored in `~/.config/fiber-tracer/models.json`. |
+| `src/fiber_tracer/experiments/store.py` | Create/update/list experiment records stored in `~/.config/fiber-tracer/experiments.jsonl`. |
+| `src/fiber_tracer/training/trainer.py` | The reusable `UNetTrainer` and JSON progress emission. |
+| `src/fiber_tracer/cli.py` | CLI subcommands `model`, `experiment`, and `train`. |
+| `tui/src/bridge.ts` | TypeScript bridge that calls the new CLI subcommands and parses JSON output. |
+| `tui/src/components/model-registry.tsx`, `experiments.tsx`, `training.tsx` | TUI screens that display live registry/experiment/training data. |
+
+Guidelines:
+
+- Keep the registry and store file-based and cross-platform (POSIX and Windows paths). Use `fiber_tracer.utils.paths.get_config_dir()` for the config directory.
+- Maintain backward compatibility when changing the JSON/JSONL schemas; provide a migration path for existing user data.
+- Add tests for new registry/store operations in `tests/test_model_registry.py` and `tests/test_experiment_store.py`.
+- Add CLI tests in `tests/test_cli_model_experiment_train.py` or `tests/test_cli_train_integration.py`.
+- Add TUI bridge tests in `tui/src/bridge.test.ts`.
+- Training changes should still run in a reasonable time on CPU for CI; use small synthetic patches for unit tests.
+
 ## Code of conduct
 
 This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code.

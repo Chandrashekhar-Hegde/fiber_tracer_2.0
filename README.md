@@ -1,6 +1,6 @@
-# Fiber Tracer (RAFA) v3.2.0
+# Fiber Tracer (RAFA) v3.3.0
 
-[![Version](https://img.shields.io/badge/version-3.2.0-blue)](https://github.com/llMr-Sweetll/fiber_tracer_2.0)
+[![Version](https://img.shields.io/badge/version-3.3.0-blue)](https://github.com/llMr-Sweetll/fiber_tracer_2.0)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/github/license/llMr-Sweetll/fiber_tracer_2.0)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/llMr-Sweetll/fiber_tracer_2.0/ci.yml?branch=main&label=CI)](https://github.com/llMr-Sweetll/fiber_tracer_2.0/actions/workflows/ci.yml)

@@ -15,6 +15,7 @@ This guide walks you through analyzing 3D X-ray computed tomography (XCT) volume
 - [Marginal-regime workflow](#marginal-regime-workflow)
 - [Subvoxel-regime workflow](#subvoxel-regime-workflow)
 - [Machine-learning segmentation workflow](#machine-learning-segmentation-workflow-3d-u-net)
+- [Model registry, experiments, and training](#model-registry-experiments-and-training)
 - [Configuration walkthrough](#configuration-walkthrough)
 - [Anisotropic voxel spacing](#anisotropic-voxel-spacing)
 - [Batch processing](#batch-processing)
@@ -361,6 +362,89 @@ These numbers are **not a guarantee** for your data. The model was trained on a 
 
 ---
 
+## Model registry, experiments, and training
+
+`fiber-tracer` includes a lightweight, local AI workflow for managing segmentation models and training experiments. Everything is stored as JSON files under `~/.config/fiber-tracer/` so project directories stay clean, and the same data is visible from both the CLI and the Terminal UI (`cd tui && bun run dev`).
+
+### How it is implemented
+
+| Component | Storage | What it does |
+|-----------|---------|--------------|
+| Model registry | `~/.config/fiber-tracer/models.json` | Catalog of local `.pt` checkpoints with architecture, version, tags, and a default-model pointer. |
+| Experiments | `~/.config/fiber-tracer/experiments.jsonl` | One JSON line per training/analysis run, recording hyper-parameters, metrics, and artifact directories. |
+| Training CLI | `fiber-tracer train` | Reusable `UNetTrainer` that streams nested JSON progress and auto-registers the resulting checkpoint. |
+| TUI screens | Model Registry / Experiments / Training | Live views over the same files, plus a keyboard shortcut to launch a training run. |
+
+### Register a model
+
+```bash
+fiber-tracer model add \
+  --model-id my-unet \
+  --name "My 3D U-Net" \
+  --path models/fiber_unet_v2_full.pt \
+  --architecture unet3d \
+  --version 1.0.0 \
+  --description "Trained on my dataset"
+
+fiber-tracer model list
+fiber-tracer model set-default my-unet
+```
+
+A registered model ID can be used anywhere `--model-path` expects a checkpoint:
+
+```bash
+fiber-tracer \
+  --data stack.tif --output results/ \
+  --voxel-spacing 1.0 1.0 1.0 --fiber-diameter 6.0 \
+  --segmentation-method unet --model-path my-unet
+```
+
+### Train a new model
+
+Prepare a dataset with `scripts/prepare_training_data.py` (it produces a `datasets.json` registry and `.npz` patch files) and start training:
+
+```bash
+fiber-tracer train \
+  --dataset-dir data/processed/training/ \
+  --output-dir models/experiments/exp-001/ \
+  --model-id unet-v3.2 \
+  --name "v3 mixed training" \
+  --epochs 10 --batch-size 4 --lr 1e-3 --device auto
+```
+
+Training requires the `ml` extra:
+
+```bash
+pip install -e ".[ml]"
+```
+
+`fiber-tracer train`:
+
+1. Creates an experiment record with status `pending`.
+2. Runs the 3D U-Net training loop and writes JSON progress to stdout.
+3. Saves the best checkpoint to `<output-dir>/checkpoint.pt`.
+4. Upserts the registry entry for `--model-id` with the new checkpoint path.
+5. Marks the experiment `completed` (or `failed` if an error occurs).
+
+### Compare experiments
+
+```bash
+fiber-tracer experiment list
+fiber-tracer experiment show exp-20260625-abc123
+fiber-tracer experiment compare exp-001 exp-002 --metric val_dice
+```
+
+### Terminal UI integration
+
+In the TUI, the **Model Registry**, **Experiments**, and **Training** screens read the same files. You can browse models, compare runs, and press `s` on the Training screen to start a quick training run.
+
+### Limitations
+
+- The registry and experiment store are local and file-based; there is no multi-user or remote synchronization.
+- Training currently supports the bundled 3D U-Net architecture; other architectures can be registered but require their own training scripts.
+
+---
+
 ## Configuration walkthrough
 
 Most analysis options are supplied through a YAML or JSON file. Command-line values take precedence over file values.
@@ -523,6 +607,7 @@ Open `report.html` in any modern web browser. The report is self-contained and d
 - **Command-line details:** [`docs/CLI_REFERENCE.md`](CLI_REFERENCE.md) lists every `fiber-tracer` subcommand and option.
 - **Troubleshoot problems:** [`docs/TROUBLESHOOTING.md`](TROUBLESHOOTING.md) covers common errors and how to fix them.
 - **Validate your setup:** [`docs/validation_protocol.md`](validation_protocol.md) explains the phantom benchmarks, the GF-PA66 public dataset, and what the acceptance thresholds mean.
+- **Manage models and training runs:** [`docs/MODEL_REGISTRY.md`](MODEL_REGISTRY.md) explains the model registry, experiment tracking, and `fiber-tracer train`.
 - **Understand the algorithms:** [`docs/methodology.md`](methodology.md) describes the structure tensor, Advani–Tucker tensor, and regime selection in detail.
 - **Extend the tool:** [`docs/architecture.md`](architecture.md) maps the package modules and explains how to add backends or regimes.
 

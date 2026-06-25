@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Planned
+- Expanded training corpus and `fiber_unet_v3.pt` model.
+- Domain-randomization augmentation for synthetic patches.
+- Public benchmark leaderboard in documentation.
+- GitHub Actions release workflow and Docker image.
+
+## [3.3.0] — 2026-06-25
+
 ### Added
 - GitHub issue templates, pull request template, and community documentation (`CONTRIBUTING.md`, `CONTRIBUTORS.md`, `CODE_OF_CONDUCT.md`, `ROADMAP.md`).
 - `ROADMAP.md` with short-, medium-, and long-term project direction.
@@ -30,18 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TUI Model Registry, Experiments, and Training screens now show live data.
 - Updated `LICENSE` copyright to 2024–2026 and "Mr Sweet and contributors".
 - Updated `THIRD_PARTY_LICENSES.md` with Terminal UI dependencies (Bun, Ink, @inkjs/ui, React).
-- Refreshed `README.md`, `docs/INSTALL.md`, `docs/MODEL_REGISTRY.md`, and `ROADMAP.md` to reflect the latest CLI/TUI features.
+- Refreshed `README.md`, `docs/INSTALL.md`, `docs/USER_GUIDE.md`, `docs/MODEL_REGISTRY.md`, `CONTRIBUTING.md`, and `ROADMAP.md` to reflect the latest CLI/TUI features.
 
 ### Fixed
 - CI type-check failures caused by `mypy` 2.x and dependency source syntax.
-
-## [3.3.0] — TBD
-
-### Planned
-- Expanded training corpus and `fiber_unet_v3.pt` model.
-- Domain-randomization augmentation for synthetic patches.
-- Public benchmark leaderboard in documentation.
-- GitHub Actions release workflow and Docker image.
 
 ## [3.2.0] — 2026-06-21
 

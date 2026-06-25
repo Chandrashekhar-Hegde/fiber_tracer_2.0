@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "fiber-tracer"
-version = "3.2.0"
+version = "3.3.0"
 description = "Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites"
 readme = "README.md"
 license = {text = "MIT"}

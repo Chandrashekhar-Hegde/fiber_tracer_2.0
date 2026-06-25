@@ -1,6 +1,6 @@
 # `fiber-tracer` CLI Reference
 
-Complete command-line reference for **Fiber Tracer (RAFA) v3.2.0**, generated from the actual CLI help text and source code.
+Complete command-line reference for **Fiber Tracer (RAFA) v3.3.0**, generated from the actual CLI help text and source code.
 
 ## Synopsis
 
