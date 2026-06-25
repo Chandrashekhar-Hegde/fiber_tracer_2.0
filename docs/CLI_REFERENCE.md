@@ -66,7 +66,7 @@ Run the Regime-Aware Fiber Analysis (RAFA) pipeline on one 3D volume.
 | `--batch-size` | No | positive integer | `1` | U-Net inference batch size. Increase for higher throughput if memory allows. |
 
 \* `--data` and `--output` are not individually marked required by the parser, but the run fails if either is not provided by CLI or config.  
-\*\* `--model-path` is required only when `--segmentation-method unet` is used.
+\*\* `--model-path` is relevant only when `--segmentation-method unet` is used; a default checkpoint is provided.
 
 ### Examples
 
@@ -94,7 +94,7 @@ fiber-tracer run \
   --voxel-spacing 1.0 1.0 1.0 \
   --fiber-diameter 6.0 \
   --segmentation-method unet \
-  --model-path models/fiber_unet_v2_full.pt
+  --model-path unet-v3.2
 
 # Use a config file and override the input data and output directory
 fiber-tracer run \
@@ -316,18 +316,18 @@ Add a checkpoint to the registry.
 | `--model-id` | Yes | Short unique identifier. |
 | `--name` | Yes | Human-readable name. |
 | `--path` | Yes | Path to the `.pt` checkpoint. |
-| `--architecture` | No | Architecture, e.g. `UNet3D`. |
+| `--architecture` | No | Architecture, e.g. `unet3d`. |
 | `--version` | No | Version string. |
 | `--description` | No | Free-text description. |
 
 ```bash
 fiber-tracer model add \
-  --model-id fiber_unet_v2_full \
-  --name "Production 3D U-Net" \
+  --model-id my-unet \
+  --name "My 3D U-Net" \
   --path models/fiber_unet_v2_full.pt \
-  --architecture UNet3D \
-  --version 3.2.0 \
-  --description "Trained on 2,152 mixed synthetic + XCT patches"
+  --architecture unet3d \
+  --version 1.0.0 \
+  --description "Trained on my dataset"
 ```
 
 ### `fiber-tracer model set-default`
@@ -335,7 +335,7 @@ fiber-tracer model add \
 Set the default model used by the TUI and by `run` when `--model-path` is omitted.
 
 ```bash
-fiber-tracer model set-default fiber_unet_v2_full
+fiber-tracer model set-default my-unet
 ```
 
 ### `fiber-tracer model remove`
@@ -343,7 +343,7 @@ fiber-tracer model set-default fiber_unet_v2_full
 Remove a registry entry. The checkpoint file on disk is not deleted.
 
 ```bash
-fiber-tracer model remove fiber_unet_v2_full
+fiber-tracer model remove my-unet
 ```
 
 ---
@@ -377,7 +377,7 @@ Compare two or more experiments by a metric.
 
 | Flag | Required | Default | Description |
 |------|----------|---------|-------------|
-| `--metric` | No | `val_loss` | Metric to compare. |
+| `--metric` | No | `val_dice` | Metric to compare. |
 
 ```bash
 fiber-tracer experiment compare exp-001 exp-002 --metric val_dice
@@ -387,7 +387,7 @@ fiber-tracer experiment compare exp-001 exp-002 --metric val_dice
 
 ## `fiber-tracer train`
 
-Train a 3D U-Net from a dataset directory containing `images/` and `masks/` subfolders. The run is recorded as an experiment and, when `--model-id` is supplied, the resulting checkpoint is added to the model registry.
+Train a 3D U-Net from a dataset directory produced by `scripts/prepare_training_data.py`. The run is recorded as an experiment and the resulting checkpoint is added to (or updates) the model registry entry for `--model-id`.
 
 ### Flags
 
@@ -395,14 +395,14 @@ Train a 3D U-Net from a dataset directory containing `images/` and `masks/` subf
 |------|----------|---------|-------------|
 | `--dataset-dir` | Yes | — | Training dataset directory. |
 | `--output-dir` | Yes | — | Output directory for checkpoints and logs. |
-| `--model-id` | No | generated | Registry ID for the trained model. |
+| `--model-id` | No | `unet-v3.2` | Registry ID for the trained model. |
 | `--name` | No | generated | Experiment name. |
-| `--epochs` | No | `20` | Training epochs. |
+| `--epochs` | No | `10` | Training epochs. |
 | `--batch-size` | No | `4` | Batch size. |
-| `--lr` | No | `1e-4` | Learning rate. |
-| `--val-fraction` | No | `0.2` | Validation split fraction. |
+| `--lr` | No | `1e-3` | Learning rate. |
+| `--val-fraction` | No | `0.1` | Validation split fraction. |
 | `--device` | No | `auto` | `cpu`, `cuda`, `mps`, or `auto`. |
-| `--features` | No | — | Optional feature flags. |
+| `--features` | No | `(8, 16, 32)` | U-Net encoder feature channels. |
 
 ### Example
 
@@ -410,11 +410,11 @@ Train a 3D U-Net from a dataset directory containing `images/` and `masks/` subf
 fiber-tracer train \
   --dataset-dir data/processed/training/ \
   --output-dir models/experiments/exp-001/ \
-  --model-id fiber_unet_v3 \
+  --model-id unet-v3.2 \
   --name "v3 mixed training" \
-  --epochs 20 \
+  --epochs 10 \
   --batch-size 4 \
-  --lr 1e-4 \
+  --lr 1e-3 \
   --device auto
 ```
 
@@ -425,7 +425,7 @@ fiber-tracer train \
 `train` emits compact JSON progress lines to stdout, for example:
 
 ```json
-{"epoch": 1, "train_loss": 0.421, "val_loss": 0.398, "val_dice": 0.72}
+{"stage":"train","percent":20,"message":"epoch 2/10","metrics":{"epoch":2,"train_loss":0.12,"val_loss":0.11,"val_dice":0.75}}
 ```
 
 These lines are parsed by the TUI Training screen and can be consumed by external orchestrators.

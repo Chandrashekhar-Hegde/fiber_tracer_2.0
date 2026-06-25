@@ -200,12 +200,12 @@ Register local checkpoints so they can be referenced by ID:
 
 ```bash
 fiber-tracer model add \
-  --model-id fiber_unet_v2_full \
-  --name "Production 3D U-Net" \
+  --model-id my-unet \
+  --name "My 3D U-Net" \
   --path models/fiber_unet_v2_full.pt
 
 fiber-tracer model list
-fiber-tracer model set-default fiber_unet_v2_full
+fiber-tracer model set-default my-unet
 ```
 
 ### Experiments
@@ -226,10 +226,11 @@ Train a 3D U-Net from a prepared dataset directory:
 fiber-tracer train \
   --dataset-dir data/processed/training/ \
   --output-dir models/experiments/exp-001/ \
-  --model-id fiber_unet_v3 \
+  --model-id unet-v3.2 \
   --name "v3 mixed training" \
-  --epochs 20 \
+  --epochs 10 \
   --batch-size 4 \
+  --lr 1e-3 \
   --device auto
 ```
 

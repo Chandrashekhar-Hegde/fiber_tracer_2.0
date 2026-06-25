@@ -42,12 +42,12 @@ Add a checkpoint to the registry.
 
 ```bash
 fiber-tracer model add \
-  --model-id fiber_unet_v2_full \
-  --name "Production 3D U-Net" \
+  --model-id my-unet \
+  --name "My 3D U-Net" \
   --path models/fiber_unet_v2_full.pt \
-  --architecture UNet3D \
-  --version 3.2.0 \
-  --description "Trained on 2,152 mixed synthetic + XCT patches"
+  --architecture unet3d \
+  --version 1.0.0 \
+  --description "Trained on my dataset"
 ```
 
 | Flag | Required | Description |
@@ -55,7 +55,7 @@ fiber-tracer model add \
 | `--model-id` | Yes | Short unique identifier used when selecting the model. |
 | `--name` | Yes | Human-readable name. |
 | `--path` | Yes | Absolute or relative path to the `.pt` checkpoint. |
-| `--architecture` | No | Model architecture, e.g. `UNet3D`. |
+| `--architecture` | No | Model architecture, e.g. `unet3d`. |
 | `--version` | No | Version string. |
 | `--description` | No | Free-text description. |
 
@@ -64,7 +64,7 @@ fiber-tracer model add \
 Choose the model that the TUI and omitted `--model-path` runs should prefer.
 
 ```bash
-fiber-tracer model set-default fiber_unet_v2_full
+fiber-tracer model set-default unet-v3.2
 ```
 
 ### `fiber-tracer model remove`
@@ -72,7 +72,7 @@ fiber-tracer model set-default fiber_unet_v2_full
 Remove a model from the registry. This only deletes the catalog entry; the checkpoint file on disk is left untouched.
 
 ```bash
-fiber-tracer model remove fiber_unet_v2_full
+fiber-tracer model remove unet-v3.2
 ```
 
 ---
@@ -104,13 +104,13 @@ Compare two or more experiments by a metric.
 fiber-tracer experiment compare exp-20260624-abc123 exp-20260625-def456 --metric val_dice
 ```
 
-If `--metric` is omitted, the CLI selects a sensible default such as `val_loss`.
+If `--metric` is omitted, the CLI defaults to `val_dice`.
 
 ---
 
 ## Training CLI
 
-The `train` subcommand is a thin wrapper around the synthetic-to-real U-Net training pipeline. It expects a dataset directory produced by `scripts/prepare_training_data.py` (or any directory containing `images` and `masks` subfolders in TIFF or NumPy format).
+The `train` subcommand is a thin wrapper around the synthetic-to-real U-Net training pipeline. It expects a dataset directory produced by `scripts/prepare_training_data.py` (a directory containing a `datasets.json` registry and `.npz` patch files).
 
 ### Quick-start example
 
@@ -126,11 +126,11 @@ python scripts/prepare_training_data.py \
 fiber-tracer train \
   --dataset-dir data/processed/training/ \
   --output-dir models/experiments/exp-001/ \
-  --model-id fiber_unet_v3 \
+  --model-id unet-v3.2 \
   --name "v3 mixed training" \
-  --epochs 20 \
+  --epochs 10 \
   --batch-size 4 \
-  --lr 1e-4 \
+  --lr 1e-3 \
   --device auto
 ```
 
@@ -142,21 +142,21 @@ fiber-tracer train \
 |------|----------|---------|-------------|
 | `--dataset-dir` | Yes | — | Directory with `images/` and `masks/` training patches. |
 | `--output-dir` | Yes | — | Directory for checkpoints, logs, and experiment artifacts. |
-| `--model-id` | No | generated | ID used to register the resulting model in the registry. |
+| `--model-id` | No | `unet-v3.2` | ID used to register the resulting model in the registry. |
 | `--name` | No | generated | Experiment name. |
-| `--epochs` | No | `20` | Training epochs. |
+| `--epochs` | No | `10` | Training epochs. |
 | `--batch-size` | No | `4` | Batch size. |
-| `--lr` | No | `1e-4` | Learning rate. |
-| `--val-fraction` | No | `0.2` | Fraction of data held out for validation. |
+| `--lr` | No | `1e-3` | Learning rate. |
+| `--val-fraction` | No | `0.1` | Fraction of data held out for validation. |
 | `--device` | No | `auto` | `cpu`, `cuda`, `mps`, or `auto`. |
-| `--features` | No | — | Optional feature flags for the training run. |
+| `--features` | No | `(8, 16, 32)` | U-Net encoder feature channels. |
 
 ### JSON progress
 
-When `train` is run from a terminal or orchestrator, it writes compact JSON progress lines to stdout so that logs can be parsed programmatically:
+When `train` is run from a terminal or orchestrator, it writes compact nested JSON progress lines to stdout so that logs can be parsed programmatically:
 
 ```json
-{"epoch": 1, "train_loss": 0.421, "val_loss": 0.398, "val_dice": 0.72}
+{"stage":"train","percent":20,"message":"epoch 2/10","metrics":{"epoch":2,"train_loss":0.12,"val_loss":0.11,"val_dice":0.75}}
 ```
 
 This format is consumed by the TUI Training screen to show live loss and metric curves.
