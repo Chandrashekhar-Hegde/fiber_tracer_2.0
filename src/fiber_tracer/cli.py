@@ -239,7 +239,10 @@ def _upsert_registry_model(
         path=str(checkpoint_path),
         architecture="unet3d",
         version="unknown",
-        description=f"Checkpoint produced by fiber-tracer train ({datetime.now(timezone.utc).isoformat()})",
+        description=(
+            f"Checkpoint produced by fiber-tracer train"
+            f" ({datetime.now(timezone.utc).isoformat()})"
+        ),
     )
 
 
