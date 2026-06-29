@@ -13,9 +13,15 @@ import numpy as np
 from scipy import ndimage
 from tqdm import tqdm
 
-from fiber_tracer.analysis.morphometry import equivalent_diameter_from_volume, per_fiber_volumes
+from fiber_tracer.analysis.morphometry import (
+    equivalent_diameter_from_volume,
+    ordered_path_length,
+    per_fiber_volumes,
+    tortuosity,
+)
 from fiber_tracer.backends import betti_numbers, persistence_summary
 from fiber_tracer.backends.ml_segmentation import MLSegmentationBackend
+from fiber_tracer.centerline.paths import extract_fiber_paths
 from fiber_tracer.centerline.skeleton import skeletonize_label_volume
 from fiber_tracer.config import Config
 from fiber_tracer.io import get_shape_info, load_tiff_stack, save_tiff_stack
@@ -39,8 +45,8 @@ from fiber_tracer.reporting import (
     write_json_report,
 )
 from fiber_tracer.segmentation.classical import (
+    binarize_volume,
     segment_connected_components_3d,
-    segment_otsu_3d,
     segment_watershed_3d,
 )
 
@@ -151,7 +157,7 @@ class FiberAnalysisPipeline:
         )
         direction_field = orientation_from_smallest_eigenvector(eigenvectors)
 
-        mask = segment_otsu_3d(volume)
+        mask = self._binarize(volume)
         if not np.any(mask):
             return np.zeros((0, 3), dtype=np.float64), mask
 
@@ -176,6 +182,18 @@ class FiberAnalysisPipeline:
             window_size = 3
         return window_size
 
+    def _binarize(self, volume: np.ndarray) -> np.ndarray:
+        """Threshold *volume* into a foreground mask using the configured method."""
+        seg = self.config.segmentation
+        return binarize_volume(
+            volume,
+            method=seg.threshold_method,
+            threshold_value=seg.threshold_value,
+            adaptive_block_size=seg.adaptive_block_size,
+            adaptive_offset=seg.adaptive_offset,
+            multiotsu_classes=seg.multiotsu_classes,
+        )
+
     def _run_resolved(self, volume: np.ndarray, out: Path) -> dict:
         """Resolved-regime pipeline: segmentation, labeling, skeletonization."""
         if self.config.segmentation.method == "unet":
@@ -190,7 +208,7 @@ class FiberAnalysisPipeline:
             else:
                 mask = segmentation
         else:
-            mask = segment_otsu_3d(volume)
+            mask = self._binarize(volume)
 
         # Remove small spurious foreground voxels and smooth boundaries while
         # keeping well-separated fibers distinct.
@@ -219,6 +237,9 @@ class FiberAnalysisPipeline:
             self.config.voxel_spacing_um.x,
         )
         volumes = per_fiber_volumes(labels)
+        fiber_paths: dict[int, np.ndarray] = {}
+        if self.config.analysis.compute_tracking:
+            fiber_paths = extract_fiber_paths(labels, skeleton)
         fibers: list[dict[str, Any]] = []
         for label_id, n_voxels in tqdm(volumes.items(), desc="fiber properties"):
             fiber: dict[str, Any] = {
@@ -232,6 +253,11 @@ class FiberAnalysisPipeline:
             if self.config.analysis.compute_morphometry:
                 diameter = equivalent_diameter_from_volume(n_voxels, spacing)
                 fiber["equivalent_diameter_um"] = float(diameter)
+            if self.config.analysis.compute_tracking:
+                path = fiber_paths.get(label_id)
+                if path is not None:
+                    fiber["length_um"] = ordered_path_length(path, spacing)
+                    fiber["tortuosity"] = tortuosity(path, spacing)
             fibers.append(fiber)
 
         save_tiff_stack(out / "normalized_input.tif", volume)
@@ -252,6 +278,8 @@ class FiberAnalysisPipeline:
             notes.append(
                 "Orientation tensor analysis disabled; per-fiber orientation not computed."
             )
+        if not self.config.analysis.compute_tracking:
+            notes.append("Centerline tracking disabled; fiber length and tortuosity not computed.")
         if notes:
             summary["notes"] = " ".join(notes)
         summary["config"] = self.config.to_dict()
@@ -268,7 +296,7 @@ class FiberAnalysisPipeline:
         """Marginal-regime pipeline: windowed second-order orientation tensor field."""
         summary: dict[str, Any]
         if not self.config.analysis.compute_orientation_tensor:
-            mask = segment_otsu_3d(volume)
+            mask = self._binarize(volume)
             summary = {
                 "regime": "marginal",
                 "n_voxels": int(mask.sum()),
@@ -364,7 +392,7 @@ class FiberAnalysisPipeline:
         """Subvoxel-regime pipeline: global orientation tensor and distribution."""
         summary: dict[str, Any]
         if not self.config.analysis.compute_orientation_tensor:
-            mask = segment_otsu_3d(volume)
+            mask = self._binarize(volume)
             summary = {
                 "regime": "subvoxel",
                 "n_voxels": int(mask.sum()),

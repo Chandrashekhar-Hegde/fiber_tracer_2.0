@@ -12,6 +12,7 @@ import yaml  # type: ignore[import-untyped]
 
 VALID_REGIMES = ("auto", "resolved", "marginal", "subvoxel")
 VALID_SEGMENTATION_METHODS = {"otsu", "watershed", "unet"}
+VALID_THRESHOLD_METHODS = {"otsu", "manual", "adaptive", "multiotsu"}
 
 
 def _dict_to_dataclass(data, cls):
@@ -74,6 +75,12 @@ class SegmentationConfig:
     min_fiber_diameter_um: float = 10.0
     max_fiber_diameter_um: float = 50.0
     watershed_seed_sigma_um: Optional[float] = None
+    # Thresholding (used by the classical otsu/watershed paths to build the mask).
+    threshold_method: str = "otsu"  # otsu, manual, adaptive, multiotsu
+    threshold_value: Optional[float] = None  # required for threshold_method="manual"
+    adaptive_block_size: int = 51  # cubic window (voxels) for adaptive thresholding
+    adaptive_offset: float = 0.02  # intensity margin above the local mean (adaptive)
+    multiotsu_classes: int = 3  # number of classes for multi-level Otsu
 
 
 @dataclass
@@ -88,6 +95,7 @@ class OrientationConfig:
 class AnalysisConfig:
     compute_morphometry: bool = True
     compute_orientation_tensor: bool = True
+    compute_tracking: bool = True
     compute_tda_descriptors: bool = False
 
 
@@ -116,6 +124,18 @@ class Config:
             raise ValueError(
                 f"segmentation.method must be one of {VALID_SEGMENTATION_METHODS}, "
                 f"got {self.segmentation.method}"
+            )
+        if self.segmentation.threshold_method not in VALID_THRESHOLD_METHODS:
+            raise ValueError(
+                f"segmentation.threshold_method must be one of {VALID_THRESHOLD_METHODS}, "
+                f"got {self.segmentation.threshold_method}"
+            )
+        if (
+            self.segmentation.threshold_method == "manual"
+            and self.segmentation.threshold_value is None
+        ):
+            raise ValueError(
+                "segmentation.threshold_value is required when threshold_method='manual'"
             )
 
     def to_dict(self) -> dict:
