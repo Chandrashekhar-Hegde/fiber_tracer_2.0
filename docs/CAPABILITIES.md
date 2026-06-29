@@ -1,0 +1,94 @@
+# Capabilities status & roadmap
+
+This document is the single source of truth for what Fiber Tracer can do today,
+how each capability is switched on, and what is planned next. It covers six
+focus areas: **segmentation, thresholding, fibre tracking, Digital Volume
+Correlation (DVC), Digital Image Correlation (DIC), and the digital twin**.
+
+Status legend: ✅ implemented · ⚠️ partial / not wired up · ❌ absent.
+
+## Status matrix
+
+| Area | Status | Where it lives / how it switches |
+|---|---|---|
+| Segmentation — Otsu | ✅ | `segmentation/classical.py::segment_otsu_3d`; `segmentation.method=otsu` (default) |
+| Segmentation — watershed | ✅ | `segmentation/classical.py::segment_watershed_3d`; `segmentation.method=watershed` |
+| Segmentation — connected components | ✅ | `segmentation/classical.py::segment_connected_components_3d` (labeling step) |
+| Segmentation — 3D U-Net | ✅ | `backends/unet3d.py`, `backends/ml_segmentation.py`; `segmentation.method=unet` + `--model-path` (needs `ml` extra) |
+| Segmentation — nnU-Net | ⚠️ | dependency declared in `pyproject.toml` (`unet` extra) but no pipeline path uses it |
+| Thresholding — global Otsu | ✅ | embedded in `segment_otsu_3d`; computed automatically when a mask is needed |
+| Thresholding — manual / adaptive / multi-level | ❌ | no parameter, no switch (always global Otsu) |
+| Pre-processing — normalize / Gaussian denoise | ✅ | `preprocess.py`; `processing.normalize`, `processing.denoise_sigma` |
+| Fibre tracking — skeletonization | ✅ | `centerline/skeleton.py::skeletonize_label_volume` |
+| Fibre tracking — per-fibre PCA orientation | ✅ | `orientation/pca.py::pca_orientation`; `analysis.compute_orientation_tensor` |
+| Fibre tracking — equivalent diameter | ✅ | `analysis/morphometry.py::equivalent_diameter_from_volume`; `analysis.compute_morphometry` |
+| Fibre tracking — centerline paths / length / tortuosity | ⚠️ | `ordered_path_length` and `tortuosity` exist in `analysis/morphometry.py` but are never called by the pipeline |
+| Fibre tracking — skeleton graph (skan) | ⚠️ | `centerline/graph.py::skeleton_to_skan` wrapper exists (needs `skeleton` extra) but is not integrated |
+| Orientation field (structure tensor) | ✅ | `orientation/structure_tensor.py`, `orientation/tensor.py` (marginal/subvoxel regimes) |
+| DVC (3D displacement/strain) | ❌ | not present |
+| DIC (2D displacement/strain) | ❌ | not present |
+| Digital twin | ❌ | not present; scope undefined for this tool |
+
+## How switches flow (frontend → backend)
+
+A single configuration object travels through four layers; any new switch must be
+threaded through all of them:
+
+1. **TUI** — `tui/src/types.ts` (`AnalysisConfig`) collects choices in the
+   wizard, then `tui/src/bridge.ts` (`buildJson`) serializes them to a JSON
+   config and spawns `fiber-tracer run --config <file>`.
+2. **CLI** — `cli.py` parses subcommands and flags, loads the config file, and
+   applies flag overrides (`cli.py` `_run_pipeline`, the override block around
+   `cli.py:369-383`).
+3. **Config** — `config.py` defines the typed schema and validates choices
+   (`Config`, `ProcessingConfig`, `SegmentationConfig`, `OrientationConfig`,
+   `AnalysisConfig`).
+4. **Pipeline** — `pipeline.py` detects the regime (`regime.py::detect_regime`)
+   and dispatches algorithms / backends (`pipeline.py:181-203`).
+
+Key switches today:
+
+| Switch | Config key | CLI flag | TUI field |
+|---|---|---|---|
+| Regime | `regime` | `--regime` | `regime` |
+| Segmentation method | `segmentation.method` | `--segmentation-method` | `method` |
+| Model | `segmentation.model_path` | `--model-path` | `model` |
+| Batch size | `segmentation.batch_size` | `--batch-size` | `batchSize` |
+| Voxel spacing | `voxel_spacing_um` | `--voxel-spacing` | `voxelSpacing` |
+| Fibre diameter | `fiber_diameter_um` | `--fiber-diameter` | `fiberDiameter` |
+| Morphometry / orientation / TDA toggles | `analysis.*` | (config file) | `computeMorphometry` / `computeOrientationTensor` / `computeTda` |
+
+## Roadmap
+
+Work is tracked as GitHub epics. The eight existing issues (#3–#10) all concern
+the ML / U-Net data and validation pipeline and roll up under *Segmentation
+quality*.
+
+### Milestone: thresholding + fibre tracking (next)
+
+- **Thresholding options** — add a `threshold_method` switch (otsu / manual /
+  adaptive / multi-Otsu) reusing scikit-image, threaded through config, CLI, and
+  TUI. Centralize binarization behind a single helper in
+  `segmentation/classical.py`.
+- **Complete fibre tracking** — extract ordered per-fibre centerlines and report
+  `length_um` and `tortuosity` (the maths already lives in
+  `analysis/morphometry.py`); optionally surface skan graph metrics when the
+  `skeleton` extra is installed.
+
+### Milestone: segmentation quality
+
+Umbrella for the open ML issues: patch foreground sampling (#10), advanced
+phantom generation (#4), domain-randomization augmentation (#5), domain
+adaptation / fine-tuning CLI (#6), uncertainty / ensemble inference (#7), dataset
+downloader expansion (#8, #3), public benchmark leaderboard (#9), plus
+integrating the declared nnU-Net backend.
+
+### Research track (spike first)
+
+- **DVC** — evaluate approaches (FFT cross-correlation, optical-flow, dedicated
+  libraries), define reference-vs-deformed I/O and displacement/strain outputs,
+  and a deformation-phantom validation, before committing to an implementation.
+- **DIC** — 2D counterpart; decide how much of a core it shares with DVC.
+- **Digital twin** — define what a digital twin means for this tool (e.g. a
+  parametric synthetic-microstructure model fitted to a scan with property/FE
+  export) before any build.
