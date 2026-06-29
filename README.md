@@ -472,6 +472,7 @@ Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persis
 
 | Document | Description |
 |----------|-------------|
+| [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md) | Capability status matrix, how switches flow from TUI to backend, and the roadmap. |
 | [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) | Beginner-to-intermediate walkthrough: regimes, first analysis, configuration, batching, visualization. |
 | [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) | Complete `fiber-tracer` command-line reference generated from the actual CLI. |
 | [`docs/MODEL_REGISTRY.md`](docs/MODEL_REGISTRY.md) | Model registry, experiment tracking, and the `fiber-tracer train` quick-start guide. |
