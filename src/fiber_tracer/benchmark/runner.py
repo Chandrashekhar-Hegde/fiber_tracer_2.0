@@ -12,7 +12,11 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from fiber_tracer.benchmark.tasks import SEGMENTATION_TASK, TaskDefinition
+from fiber_tracer.benchmark.tasks import (
+    ORIENTATION_TASK,
+    SEGMENTATION_TASK,
+    TaskDefinition,
+)
 from fiber_tracer.training.checkpoint import load_checkpoint
 from fiber_tracer.training.models.fibertracer_x import FiberTracerX
 from fiber_tracer.training.synthetic_dataset import (
@@ -76,7 +80,7 @@ class BenchmarkRunner:
         model = FiberTracerX(tasks=tasks, features=features).to(device_obj)
         model.load_state_dict(checkpoint["model_state_dict"])
 
-        task = SEGMENTATION_TASK if task_name == "segment" else SEGMENTATION_TASK
+        task = SEGMENTATION_TASK if task_name == "segment" else ORIENTATION_TASK
         return cls(model, task, device_obj)
 
     def _predict_segment(self, volume: torch.Tensor) -> np.ndarray:
