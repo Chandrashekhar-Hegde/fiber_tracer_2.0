@@ -5,10 +5,13 @@ export interface AnalysisConfig {
   fiberDiameter: number;
   regime: "auto" | "resolved" | "marginal" | "subvoxel";
   method: "otsu" | "watershed" | "unet";
+  thresholdMethod: "otsu" | "manual" | "adaptive" | "multiotsu";
+  thresholdValue?: number;
   model: string;
   batchSize: number;
   computeMorphometry: boolean;
   computeOrientationTensor: boolean;
+  computeTracking: boolean;
   computeTda: boolean;
 }
 

@@ -58,10 +58,12 @@ describe("bridge", () => {
       fiberDiameter: 10,
       regime: "auto",
       method: "otsu",
+      thresholdMethod: "otsu",
       model: "",
       batchSize: 1,
       computeMorphometry: true,
       computeOrientationTensor: true,
+      computeTracking: true,
       computeTda: false,
     });
     expect(result.success).toBe(false);

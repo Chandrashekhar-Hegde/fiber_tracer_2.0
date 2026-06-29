@@ -27,10 +27,12 @@ const DEFAULT_CONFIG: AnalysisConfig = {
   fiberDiameter: 10,
   regime: "auto",
   method: "otsu",
+  thresholdMethod: "otsu",
   model: "models/fiber_unet_v2_full.pt",
   batchSize: 1,
   computeMorphometry: true,
   computeOrientationTensor: true,
+  computeTracking: true,
   computeTda: false,
 };
 
