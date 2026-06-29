@@ -30,6 +30,7 @@ Fiber Tracer is a Python toolkit that analyzes fiber-reinforced polymer composit
 - [Configuration overview](#configuration-overview)
 - [Documentation index](#documentation-index)
 - [Development and testing](#development-and-testing)
+- [How to cite](#how-to-cite)
 - [Citations and license](#citations-and-license)
 - [Contact](#contact)
 
@@ -526,6 +527,37 @@ Or run the full cross-platform install + verification script locally:
 ```
 
 Full contributor guidance, including how to add backends, regimes, and visualizations, is in [`docs/developer_guide.md`](docs/developer_guide.md).
+
+## How to cite
+
+If you use Fiber Tracer in academic work, please cite it. The repository includes a
+machine-readable [`CITATION.cff`](CITATION.cff), so GitHub's **"Cite this repository"**
+button generates APA and BibTeX entries automatically. Cite the author,
+**Chandrashekhar Hegde** ([ORCID 0000-0002-8294-7657](https://orcid.org/0000-0002-8294-7657)),
+not the repository handle.
+
+**BibTeX**
+
+```bibtex
+@software{hegde_fiber_tracer_2026,
+  author  = {Hegde, Chandrashekhar},
+  title   = {{Fiber Tracer: Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites}},
+  year    = {2026},
+  version = {3.3.0},
+  url     = {https://github.com/llMr-Sweetll/fiber_tracer_2.0},
+  note    = {ORCID: 0000-0002-8294-7657}
+}
+```
+
+**APA**
+
+> Hegde, C. (2026). *Fiber Tracer: Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites* (Version 3.3.0) [Computer software]. https://github.com/llMr-Sweetll/fiber_tracer_2.0
+
+**IEEE**
+
+> C. Hegde, "Fiber Tracer: Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites," version 3.3.0, 2026. [Online]. Available: https://github.com/llMr-Sweetll/fiber_tracer_2.0
+
+Please also cite the underlying methods listed below where relevant.
 
 ## Citations and license
 
