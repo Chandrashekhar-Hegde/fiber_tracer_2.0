@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -48,7 +48,7 @@ class SegmentationLoss(nn.Module):
         self.ce_weight = ce_weight
 
     def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        ce = self.ce(logits, target)
+        ce: torch.Tensor = self.ce(logits, target)
         dice = 1.0 - _multiclass_dice(logits, target, self.n_classes).mean()
         return self.ce_weight * ce + (1.0 - self.ce_weight) * dice
 
@@ -81,9 +81,11 @@ class OrientationLoss(nn.Module):
 
     def forward(self, pred_components: torch.Tensor, target_a2: torch.Tensor) -> torch.Tensor:
         target_components = _a2_to_components(target_a2)
-        comp_loss = self.mse(pred_components, target_components)
+        comp_loss: torch.Tensor = self.mse(pred_components, target_components)
         pred_matrix = OrientationRegressorAdapter.components_to_matrix(pred_components)
-        matrix_loss = torch.linalg.matrix_norm(pred_matrix - target_a2, ord="fro").mean()
+        matrix_loss: torch.Tensor = torch.linalg.matrix_norm(
+            pred_matrix - target_a2, ord="fro"
+        ).mean()
         return comp_loss + self.matrix_weight * matrix_loss
 
 
@@ -206,7 +208,7 @@ class FiberTracerXTrainer:
         )
         return train_loader, val_loader
 
-    def _run_batch(self, batch: dict[str, torch.Tensor]) -> dict[str, float]:
+    def _run_batch(self, batch: dict[str, torch.Tensor]) -> dict[str, Any]:
         inputs = batch["volume"].to(self.device)
         semantic = batch["semantic"].to(self.device)
         a2 = batch["a2"].to(self.device)
@@ -329,7 +331,7 @@ class FiberTracerXTrainer:
             store.update(
                 experiment_id,
                 status="completed",
-                finished_at=datetime.now(timezone.utc).isoformat(),
+                finished_at=datetime.now(UTC).isoformat(),
                 history=history,
                 metrics=final_metrics,
                 artifact_dir=str(self.output_dir),
@@ -341,7 +343,7 @@ class FiberTracerXTrainer:
             store.update(
                 experiment_id,
                 status="failed",
-                finished_at=datetime.now(timezone.utc).isoformat(),
+                finished_at=datetime.now(UTC).isoformat(),
                 error_message=str(exc),
             )
             self._emit("error", 0, f"Pre-training failed: {exc}", {})

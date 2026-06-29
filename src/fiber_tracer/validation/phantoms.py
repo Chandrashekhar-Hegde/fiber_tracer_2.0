@@ -574,7 +574,7 @@ def add_beam_hardening(
         bias = strength * (r**2)
     else:
         raise ValueError(f"Unknown beam-hardening mode: {mode}")
-    return np.clip(volume + bias, 0.0, 1.0)
+    return np.asarray(np.clip(volume + bias, 0.0, 1.0))
 
 
 def add_partial_volume_blur(
@@ -587,7 +587,7 @@ def add_partial_volume_blur(
 
     sigma = tuple(sigma_voxels * f for f in anisotropic_factor)
     blurred = gaussian_filter(volume, sigma=sigma)
-    return np.clip(blurred, 0.0, 1.0)
+    return np.asarray(np.clip(blurred, 0.0, 1.0))
 
 
 def add_poisson_noise(
@@ -622,7 +622,7 @@ def add_ring_artifacts(
         z_slice = rng.integers(0, shape[0])
         sign = rng.choice([-1.0, 1.0])
         volume[z_slice][ring_mask] += sign * strength
-    return np.clip(volume, 0.0, 1.0)
+    return np.asarray(np.clip(volume, 0.0, 1.0))
 
 
 def add_contrast_jitter(
@@ -665,7 +665,7 @@ def apply_xct_domain_randomization(
         v = add_poisson_noise(v, scale=rng.uniform(500.0, 2000.0), rng=rng)
     if rng.random() < 0.3 * intensity:
         ring_strength = rng.uniform(0.02, 0.08) * intensity
-        v = add_ring_artifacts(v, n_rings=rng.integers(1, 4), strength=ring_strength, rng=rng)
+        v = add_ring_artifacts(v, n_rings=int(rng.integers(1, 4)), strength=ring_strength, rng=rng)
     if rng.random() < 0.7 * intensity:
         v = add_contrast_jitter(v, rng=rng)
-    return np.clip(v, 0.0, 1.0)
+    return np.asarray(np.clip(v, 0.0, 1.0))

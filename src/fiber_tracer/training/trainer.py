@@ -5,15 +5,15 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 
 from fiber_tracer.backends.unet3d import UNet3D
 from fiber_tracer.experiments.store import ExperimentStore
@@ -30,7 +30,7 @@ class BCEDiceLoss(nn.Module):
         self.bce_weight = bce_weight
 
     def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
-        bce = self.bce(pred, target)
+        bce: torch.Tensor = self.bce(pred, target)
         dice = 1.0 - _dice_score(pred, target).mean()
         return self.bce_weight * bce + (1.0 - self.bce_weight) * dice
 
@@ -124,15 +124,15 @@ class UNetTrainer:
             seed=self.seed,
             split_mode=self.split_mode,
         )
-        train_loader = DataLoader(
-            train_set,
+        train_loader: DataLoader = DataLoader(
+            cast(Dataset, train_set),
             batch_size=self.batch_size,
             shuffle=True,
             collate_fn=numpy_collate,
             num_workers=0,
         )
-        val_loader = DataLoader(
-            val_set,
+        val_loader: DataLoader = DataLoader(
+            cast(Dataset, val_set),
             batch_size=self.batch_size,
             shuffle=False,
             collate_fn=numpy_collate,
@@ -256,7 +256,7 @@ class UNetTrainer:
             store.update(
                 experiment_id,
                 status="completed",
-                finished_at=datetime.now(timezone.utc).isoformat(),
+                finished_at=datetime.now(UTC).isoformat(),
                 history=history,
                 metrics=final_metrics,
                 artifact_dir=str(self.output_dir),
@@ -268,7 +268,7 @@ class UNetTrainer:
             store.update(
                 experiment_id,
                 status="failed",
-                finished_at=datetime.now(timezone.utc).isoformat(),
+                finished_at=datetime.now(UTC).isoformat(),
                 error_message=str(exc),
             )
             self._emit("error", 0, f"Training failed: {exc}", {})

@@ -22,7 +22,7 @@ class SyntheticCorpusDataset(Dataset):
 
     def __init__(
         self,
-        corpus_dir: str,
+        corpus_dir: str | Path,
         split: str = "train",
         val_fraction: float = 0.1,
         seed: int = 42,

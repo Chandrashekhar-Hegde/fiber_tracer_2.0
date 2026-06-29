@@ -8,7 +8,7 @@ import json
 import logging
 import sys
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -240,8 +240,7 @@ def _upsert_registry_model(
         architecture="unet3d",
         version="unknown",
         description=(
-            f"Checkpoint produced by fiber-tracer train"
-            f" ({datetime.now(timezone.utc).isoformat()})"
+            f"Checkpoint produced by fiber-tracer train" f" ({datetime.now(UTC).isoformat()})"
         ),
     )
 
