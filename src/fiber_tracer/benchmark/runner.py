@@ -90,7 +90,7 @@ class BenchmarkRunner:
         """Predict semantic labels for a batch of volumes."""
         with torch.no_grad():
             logits = self.model(volume, task="segment")
-        return torch.argmax(logits, dim=1).cpu().numpy()
+        return np.asarray(torch.argmax(logits, dim=1).cpu().numpy())
 
     def _predict_orient(self, volume: torch.Tensor) -> np.ndarray:
         """Predict A2 tensor for a batch of volumes."""
