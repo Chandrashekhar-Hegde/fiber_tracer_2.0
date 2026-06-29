@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software in your research, please cite it as below."
+title: "Fiber Tracer: Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites"
+type: software
+authors:
+  - family-names: Hegde
+    given-names: Chandrashekhar
+    orcid: "https://orcid.org/0000-0002-8294-7657"
+version: "3.3.0"
+date-released: "2026-06-26"
+license: MIT
+repository-code: "https://github.com/llMr-Sweetll/fiber_tracer_2.0"
+url: "https://github.com/llMr-Sweetll/fiber_tracer_2.0"
+keywords:
+  - fiber analysis
+  - composite materials
+  - X-ray computed tomography
+  - fiber orientation
+  - structure tensor
+  - image processing

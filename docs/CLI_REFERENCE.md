@@ -10,6 +10,8 @@ fiber-tracer [-h] [--version] [--log-level LOG_LEVEL]
              [--voxel-spacing Z Y X] [--fiber-diameter FIBER_DIAMETER]
              [--regime {auto,resolved,marginal,subvoxel}]
              [--segmentation-method {otsu,watershed,unet}]
+             [--threshold-method {otsu,manual,adaptive,multiotsu}]
+             [--threshold-value THRESHOLD_VALUE]
              [--model-path MODEL_PATH] [--batch-size BATCH_SIZE]
              {run,analyze,view,report-viz,batch,model,experiment,train} ...
 ```
@@ -62,11 +64,14 @@ Run the Regime-Aware Fiber Analysis (RAFA) pipeline on one 3D volume.
 | `--fiber-diameter` | No | positive float | `10.0` | Expected fiber diameter in micrometres. |
 | `--regime` | No | `auto`, `resolved`, `marginal`, `subvoxel` | `auto` | Analysis regime. `auto` selects from the voxel/fiber ratio. |
 | `--segmentation-method` | No | `otsu`, `watershed`, `unet` | `otsu` | Segmentation backend. Use `unet` for the 3D U-Net model. |
+| `--threshold-method` | No | `otsu`, `manual`, `adaptive`, `multiotsu` | `otsu` | How the foreground mask is thresholded for the classical (`otsu`/`watershed`) paths. |
+| `--threshold-value` | No*** | float | — | Fixed intensity threshold; required when `--threshold-method manual`. |
 | `--model-path` | No** | file path or registered model ID | `models/fiber_unet_v2_full.pt` | Path to a PyTorch checkpoint for `unet`, or a model ID from the registry. |
 | `--batch-size` | No | positive integer | `1` | U-Net inference batch size. Increase for higher throughput if memory allows. |
 
 \* `--data` and `--output` are not individually marked required by the parser, but the run fails if either is not provided by CLI or config.  
-\*\* `--model-path` is relevant only when `--segmentation-method unet` is used; a default checkpoint is provided.
+\*\* `--model-path` is relevant only when `--segmentation-method unet` is used; a default checkpoint is provided.  
+\*\*\* `--threshold-value` is required only when `--threshold-method manual` is selected.
 
 ### Examples
 

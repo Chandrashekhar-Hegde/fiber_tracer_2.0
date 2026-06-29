@@ -17,6 +17,15 @@ export function Configure({ config, theme }: ConfigureProps) {
       <Text color={theme.foreground}>Fiber diameter: {config.fiberDiameter} µm</Text>
       <Text color={theme.foreground}>Regime: {config.regime}</Text>
       <Text color={theme.foreground}>Method: {config.method}</Text>
+      <Text color={theme.foreground}>
+        Threshold: {config.thresholdMethod}
+        {config.thresholdMethod === "manual" && config.thresholdValue !== undefined
+          ? ` (${config.thresholdValue})`
+          : ""}
+      </Text>
+      <Text color={theme.foreground}>
+        Centerline tracking: {config.computeTracking ? "on" : "off"}
+      </Text>
       <Text color={theme.foreground}>Batch size: {config.batchSize}</Text>
       <Text color={theme.muted}>Use ← → to navigate steps.</Text>
     </Box>

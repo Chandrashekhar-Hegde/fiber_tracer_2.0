@@ -136,7 +136,7 @@ def test_tda_descriptors_added_to_summary(tmp_path):
     known_mask[30:40, 30:40, 30:40] = True
 
     pipeline = FiberAnalysisPipeline(config)
-    with patch("fiber_tracer.pipeline.segment_otsu_3d", return_value=known_mask) as mock_otsu:
+    with patch("fiber_tracer.pipeline.binarize_volume", return_value=known_mask) as mock_otsu:
         with patch(
             "fiber_tracer.pipeline.betti_numbers", return_value=expected_betti
         ) as mock_betti:

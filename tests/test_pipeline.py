@@ -191,6 +191,71 @@ def test_resolved_pipeline_respects_analysis_flags(tmp_path):
         assert "orientation" not in fiber
 
 
+def test_resolved_pipeline_reports_tracking_metrics(tmp_path):
+    """Resolved pipeline reports per-fiber centerline length and tortuosity."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+    )
+
+    summary = FiberAnalysisPipeline(config).run()
+    assert summary["n_labels"] > 0
+    for fiber in summary["fibers"]:
+        assert "length_um" in fiber
+        assert "tortuosity" in fiber
+        assert fiber["length_um"] >= 0.0
+        assert fiber["tortuosity"] >= 1.0 - 1e-6
+
+
+def test_tracking_can_be_disabled(tmp_path):
+    """Setting analysis.compute_tracking=False omits centerline metrics."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+    )
+    config.analysis.compute_tracking = False
+
+    summary = FiberAnalysisPipeline(config).run()
+    assert summary["n_labels"] > 0
+    for fiber in summary["fibers"]:
+        assert "length_um" not in fiber
+        assert "tortuosity" not in fiber
+
+
 def test_resolved_pipeline_respects_normalize_flag(tmp_path):
     """Resolved pipeline respects processing.normalize=False by preserving raw scale."""
     data_dir = tmp_path / "data"

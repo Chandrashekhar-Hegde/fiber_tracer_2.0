@@ -36,6 +36,68 @@ def _make_resolved_output(tmp_path, shape=(32, 32, 32)):
     return stack_path, out_dir
 
 
+def test_cli_threshold_method_runs_end_to_end(tmp_path):
+    """The --threshold-method flag drives the pipeline and produces outputs."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+    phantom = generate_fiber_phantom(
+        shape=(32, 32, 32),
+        n_fibers=2,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    rc = main(
+        [
+            "run",
+            "--data",
+            str(stack_path),
+            "--output",
+            str(out_dir),
+            "--voxel-spacing",
+            "1.0",
+            "1.0",
+            "1.0",
+            "--fiber-diameter",
+            "4.0",
+            "--regime",
+            "resolved",
+            "--threshold-method",
+            "multiotsu",
+        ]
+    )
+    assert rc == 0
+    assert (out_dir / "summary.json").exists()
+
+
+def test_cli_manual_threshold_requires_value(tmp_path):
+    """Manual thresholding without a value fails validation."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    phantom = generate_fiber_phantom(shape=(16, 16, 16), n_fibers=1, seed=1)
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    with pytest.raises(ValueError):
+        main(
+            [
+                "run",
+                "--data",
+                str(stack_path),
+                "--output",
+                str(tmp_path / "out"),
+                "--regime",
+                "resolved",
+                "--threshold-method",
+                "manual",
+            ]
+        )
+
+
 def test_cli_version_command(capsys):
     with pytest.raises(SystemExit) as exc_info:
         main(["--version"])

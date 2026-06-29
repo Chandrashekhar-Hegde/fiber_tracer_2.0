@@ -25,6 +25,25 @@ def test_invalid_voxel_spacing_raises():
         cfg.validate()
 
 
+def test_invalid_threshold_method_raises(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    cfg = Config(data_path=str(data_dir), output_dir=str(tmp_path / "out"))
+    cfg.segmentation.threshold_method = "bogus"
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_manual_threshold_requires_value(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    cfg = Config(data_path=str(data_dir), output_dir=str(tmp_path / "out"))
+    cfg.segmentation.threshold_method = "manual"
+    cfg.segmentation.threshold_value = None
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
 def test_config_round_trip_yaml(tmp_path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()

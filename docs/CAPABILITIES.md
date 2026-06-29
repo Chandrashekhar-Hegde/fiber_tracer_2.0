@@ -16,13 +16,13 @@ Status legend: ✅ implemented · ⚠️ partial / not wired up · ❌ absent.
 | Segmentation — connected components | ✅ | `segmentation/classical.py::segment_connected_components_3d` (labeling step) |
 | Segmentation — 3D U-Net | ✅ | `backends/unet3d.py`, `backends/ml_segmentation.py`; `segmentation.method=unet` + `--model-path` (needs `ml` extra) |
 | Segmentation — nnU-Net | ⚠️ | dependency declared in `pyproject.toml` (`unet` extra) but no pipeline path uses it |
-| Thresholding — global Otsu | ✅ | embedded in `segment_otsu_3d`; computed automatically when a mask is needed |
-| Thresholding — manual / adaptive / multi-level | ❌ | no parameter, no switch (always global Otsu) |
+| Thresholding — global Otsu | ✅ | `segment_otsu_3d`; default of `binarize_volume` |
+| Thresholding — manual / adaptive / multi-Otsu | ✅ | `segmentation/classical.py::binarize_volume`; `segmentation.threshold_method` + `--threshold-method` / `--threshold-value` |
 | Pre-processing — normalize / Gaussian denoise | ✅ | `preprocess.py`; `processing.normalize`, `processing.denoise_sigma` |
 | Fibre tracking — skeletonization | ✅ | `centerline/skeleton.py::skeletonize_label_volume` |
 | Fibre tracking — per-fibre PCA orientation | ✅ | `orientation/pca.py::pca_orientation`; `analysis.compute_orientation_tensor` |
 | Fibre tracking — equivalent diameter | ✅ | `analysis/morphometry.py::equivalent_diameter_from_volume`; `analysis.compute_morphometry` |
-| Fibre tracking — centerline paths / length / tortuosity | ⚠️ | `ordered_path_length` and `tortuosity` exist in `analysis/morphometry.py` but are never called by the pipeline |
+| Fibre tracking — centerline paths / length / tortuosity | ✅ | `centerline/paths.py::extract_fiber_paths` feeds `ordered_path_length`/`tortuosity` in the resolved per-fiber loop; `analysis.compute_tracking` |
 | Fibre tracking — skeleton graph (skan) | ⚠️ | `centerline/graph.py::skeleton_to_skan` wrapper exists (needs `skeleton` extra) but is not integrated |
 | Orientation field (structure tensor) | ✅ | `orientation/structure_tensor.py`, `orientation/tensor.py` (marginal/subvoxel regimes) |
 | DVC (3D displacement/strain) | ❌ | not present |
@@ -52,6 +52,9 @@ Key switches today:
 |---|---|---|---|
 | Regime | `regime` | `--regime` | `regime` |
 | Segmentation method | `segmentation.method` | `--segmentation-method` | `method` |
+| Threshold method | `segmentation.threshold_method` | `--threshold-method` | `thresholdMethod` |
+| Manual threshold value | `segmentation.threshold_value` | `--threshold-value` | `thresholdValue` |
+| Centerline tracking | `analysis.compute_tracking` | (config file) | `computeTracking` |
 | Model | `segmentation.model_path` | `--model-path` | `model` |
 | Batch size | `segmentation.batch_size` | `--batch-size` | `batchSize` |
 | Voxel spacing | `voxel_spacing_um` | `--voxel-spacing` | `voxelSpacing` |

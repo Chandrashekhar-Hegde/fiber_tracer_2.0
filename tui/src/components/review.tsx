@@ -17,6 +17,10 @@ export function Review({ config, theme }: ReviewProps) {
       <Text color={theme.foreground}>Data: {config.dataPath}</Text>
       <Text color={theme.foreground}>Output: {config.outputDir}</Text>
       <Text color={theme.foreground}>Method: {config.method}</Text>
+      <Text color={theme.foreground}>Threshold: {config.thresholdMethod}</Text>
+      <Text color={theme.foreground}>
+        Tracking: {config.computeTracking ? "on" : "off"}
+      </Text>
       <Text color={theme.foreground}>Model: {config.model}</Text>
       <Text color={theme.success}>Press r to run</Text>
     </Box>

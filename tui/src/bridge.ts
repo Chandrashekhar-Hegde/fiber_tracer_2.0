@@ -59,10 +59,13 @@ function buildJson(config: AnalysisConfig): string {
       method: config.method,
       model_path: config.model,
       batch_size: config.batchSize,
+      threshold_method: config.thresholdMethod,
+      threshold_value: config.thresholdValue ?? null,
     },
     analysis: {
       compute_morphometry: config.computeMorphometry,
       compute_orientation_tensor: config.computeOrientationTensor,
+      compute_tracking: config.computeTracking,
       compute_tda_descriptors: config.computeTda,
     },
   });
