@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import torch
@@ -18,7 +18,10 @@ from fiber_tracer.benchmark.tasks import (
     TaskDefinition,
 )
 from fiber_tracer.training.checkpoint import load_checkpoint
-from fiber_tracer.training.models.fibertracer_x import FiberTracerX
+from fiber_tracer.training.models.fibertracer_x import (
+    FiberTracerX,
+    OrientationRegressorAdapter,
+)
 from fiber_tracer.training.synthetic_dataset import (
     SyntheticCorpusDataset,
     synthetic_collate,
@@ -93,8 +96,11 @@ class BenchmarkRunner:
         """Predict A2 tensor for a batch of volumes."""
         with torch.no_grad():
             components = self.model(volume, task="orient")
-        matrices = self.model.adapters["orient"].components_to_matrix(components)
-        return matrices.cpu().numpy()
+        adapter = cast(
+            OrientationRegressorAdapter, cast(FiberTracerX, self.model).adapters["orient"]
+        )
+        matrices = adapter.components_to_matrix(components)
+        return np.asarray(matrices.cpu().numpy())
 
     def run(
         self,
@@ -144,7 +150,7 @@ class BenchmarkRunner:
         result = {
             "run_name": run_name,
             "task": self.task.name,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "n_samples": len(pred_all),
             "inference_seconds": elapsed,
             "metrics": metrics,

@@ -8,7 +8,7 @@ task- / material-specific adapters are attached for downstream tasks.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, cast
 
 import torch
 import torch.nn as nn
@@ -116,7 +116,7 @@ class Segmentation3DAdapter(nn.Module):
             x = self._match_sizes(x, enc_out)
             x = torch.cat([enc_out, x], dim=1)
             x = decoder_block(x)
-        return self.final_conv(x)
+        return cast(torch.Tensor, self.final_conv(x))
 
 
 class OrientationRegressorAdapter(nn.Module):
@@ -145,7 +145,7 @@ class OrientationRegressorAdapter(nn.Module):
         bottleneck: torch.Tensor,
     ) -> torch.Tensor:
         x = self.pool(bottleneck)
-        return self.mlp(x)
+        return cast(torch.Tensor, self.mlp(x))
 
     @staticmethod
     def components_to_matrix(components: torch.Tensor) -> torch.Tensor:
@@ -220,9 +220,9 @@ class FiberTracerX(nn.Module):
         encoder_features, bottleneck = self.encoder(x)
         adapter = self.adapters[task]
         if task == "segment":
-            return adapter(bottleneck, encoder_features)
+            return cast(torch.Tensor, adapter(bottleneck, encoder_features))
         if task == "orient":
-            return adapter(encoder_features, bottleneck)
+            return cast(torch.Tensor, adapter(encoder_features, bottleneck))
         raise ValueError(f"Forward logic missing for task: {task}")
 
     def predict_segment(self, x: torch.Tensor) -> torch.Tensor:

@@ -6,7 +6,7 @@ import json
 import logging
 import uuid
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -19,11 +19,11 @@ _ALLOWED_STATUS = {"pending", "running", "completed", "failed", "cancelled"}
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _generate_id() -> str:
-    today = datetime.now(timezone.utc).strftime("%Y%m%d")
+    today = datetime.now(UTC).strftime("%Y%m%d")
     return f"exp-{today}-{uuid.uuid4().hex[:6]}"
 
 

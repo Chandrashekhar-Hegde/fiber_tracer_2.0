@@ -6,7 +6,7 @@ import json
 import logging
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -23,7 +23,7 @@ class ModelEntry:
     source: str
     path: str
     version: str = "unknown"
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     tags: list[str] = field(default_factory=list)
     description: str = ""
     status: str = "ready"
