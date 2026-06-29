@@ -29,6 +29,18 @@ def _add_pipeline_args(parser: argparse.ArgumentParser) -> None:
         "--regime", choices=["auto", "resolved", "marginal", "subvoxel"], default=None
     )
     parser.add_argument("--segmentation-method", choices=["otsu", "watershed", "unet"])
+    parser.add_argument(
+        "--threshold-method",
+        choices=["otsu", "manual", "adaptive", "multiotsu"],
+        default=None,
+        help="Thresholding method used to build the foreground mask",
+    )
+    parser.add_argument(
+        "--threshold-value",
+        type=float,
+        default=None,
+        help="Fixed intensity threshold for --threshold-method manual",
+    )
     parser.add_argument("--model-path", help="Path to a PyTorch checkpoint for method='unet'")
     parser.add_argument(
         "--batch-size", type=int, default=None, help="Inference batch size for U-Net backend"
@@ -374,6 +386,10 @@ def _run_pipeline(args: argparse.Namespace) -> int:
         config.regime = args.regime
     if args.segmentation_method:
         config.segmentation.method = args.segmentation_method
+    if args.threshold_method:
+        config.segmentation.threshold_method = args.threshold_method
+    if args.threshold_value is not None:
+        config.segmentation.threshold_value = args.threshold_value
     if args.model_path:
         from fiber_tracer.models.registry import ModelRegistry
 
