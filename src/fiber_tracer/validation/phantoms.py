@@ -119,21 +119,35 @@ def _generate_finite_fiber(
     length_um: float,
     voxel_spacing_um: tuple[float, float, float],
     intensity: float = 1.0,
+    supersample: int = 1,
 ) -> np.ndarray:
-    """Draw a finite-length cylinder (caps included) in a binary volume."""
+    """Draw a finite-length cylinder (caps included) on the voxel grid.
+
+    With ``supersample == 1`` each voxel is a hard in/out test at its centre, giving
+    aliased (staircase) fibre boundaries. With ``supersample = s > 1`` each voxel is
+    evaluated at ``s**3`` sub-voxel sample points and averaged, so edge voxels take a
+    fractional value in ``(0, 1)`` — an anti-aliased rasterisation that reproduces the
+    partial-volume effect seen in real X-ray CT.
+    """
     direction = direction / np.linalg.norm(direction)
-    z, y, x = np.indices(shape, dtype=float)
-    coords = np.stack([z, y, x], axis=-1)
-    center_vec = np.array(center)
-    to_center = coords - center_vec
-    projection = np.dot(to_center, direction)
-    perpendicular = to_center - projection[:, :, :, None] * direction
-    distance = np.linalg.norm(perpendicular, axis=-1)
+    center_vec = np.array(center, dtype=float)
     half_length_voxels = 0.5 * length_um / min(voxel_spacing_um)
-    volume = np.zeros(shape, dtype=float)
-    mask = (distance <= radius_voxels) & (np.abs(projection) <= half_length_voxels)
-    volume[mask] = intensity
-    return volume
+    axes = [np.arange(n, dtype=float) for n in shape]
+    # Sub-voxel sample offsets centred on the voxel: [0.0] when supersample == 1.
+    offsets = (np.arange(supersample) + 0.5) / supersample - 0.5
+    occupancy = np.zeros(shape, dtype=float)
+    for dz in offsets:
+        for dy in offsets:
+            for dx in offsets:
+                zz, yy, xx = np.meshgrid(axes[0] + dz, axes[1] + dy, axes[2] + dx, indexing="ij")
+                to_center = np.stack([zz, yy, xx], axis=-1) - center_vec
+                projection = to_center @ direction
+                perpendicular = to_center - projection[:, :, :, None] * direction
+                distance = np.linalg.norm(perpendicular, axis=-1)
+                inside = (distance <= radius_voxels) & (np.abs(projection) <= half_length_voxels)
+                occupancy += inside
+    occupancy /= supersample**3
+    return occupancy * intensity
 
 
 def _add_voids(
@@ -175,6 +189,7 @@ def generate_fiber_phantom(
     n_broken_pieces: int = 2,
     porosity: float = 0.0,
     seed: int | None = None,
+    supersample: int = 1,
 ) -> FiberPhantom:
     """Generate a phantom with configurable fiber architecture.
 
@@ -191,6 +206,10 @@ def generate_fiber_phantom(
         Number of segments per broken fiber.
     porosity:
         Probability of inserting spherical voids (porosity) into the matrix.
+    supersample:
+        Sub-voxel sampling factor for anti-aliased voxelisation.  ``1`` (default)
+        gives hard, aliased fibre edges; ``>1`` averages ``supersample**3`` sub-voxel
+        samples per voxel to reproduce the partial-volume effect of real X-ray CT.
     """
     rng = np.random.default_rng(seed)
     radius_voxels = 0.5 * fiber_diameter_um / min(voxel_spacing_um)
@@ -220,8 +239,9 @@ def generate_fiber_phantom(
                     radius_voxels,
                     segment_length * 0.9,  # tiny gap between pieces
                     voxel_spacing_um,
+                    supersample=supersample,
                 )
-                mask = fiber > 0
+                mask = fiber >= 0.5
                 if np.any(labels[mask] > 0):
                     continue
                 labels[mask] = next_label
@@ -232,9 +252,15 @@ def generate_fiber_phantom(
                 lengths.append(segment_length * 0.9)
         else:
             fiber = _generate_finite_fiber(
-                shape, tuple(center), direction, radius_voxels, length, voxel_spacing_um
+                shape,
+                tuple(center),
+                direction,
+                radius_voxels,
+                length,
+                voxel_spacing_um,
+                supersample=supersample,
             )
-            mask = fiber > 0
+            mask = fiber >= 0.5
             if np.any(labels[mask] > 0):
                 continue
             labels[mask] = next_label

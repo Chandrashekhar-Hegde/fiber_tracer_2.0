@@ -6,6 +6,29 @@ from fiber_tracer.validation.phantoms import (
 )
 
 
+def test_supersampling_produces_partial_volume_edges():
+    """supersample>1 anti-aliases fibre boundaries into fractional partial-volume voxels."""
+    kwargs = dict(
+        shape=(32, 32, 32),
+        n_fibers=1,
+        fiber_diameter_um=8.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        orientation_mode="aligned",
+        noise_std=0.0,
+        seed=1,
+    )
+    hard = generate_fiber_phantom(supersample=1, **kwargs)
+    soft = generate_fiber_phantom(supersample=4, **kwargs)
+
+    # Hard rasterisation is binary; supersampled has intermediate edge values.
+    assert not np.any((hard.volume > 0.01) & (hard.volume < 0.99))
+    assert np.any((soft.volume > 0.01) & (soft.volume < 0.99))
+
+    # Both recover the same single fibre.
+    assert len(np.unique(hard.labels[hard.labels > 0])) == 1
+    assert len(np.unique(soft.labels[soft.labels > 0])) == 1
+
+
 def test_phantom_has_expected_fibers():
     n_fibers = 3
     phantom = generate_fiber_phantom(

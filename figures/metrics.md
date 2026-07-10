@@ -1,0 +1,21 @@
+# RAFA before/after metrics
+
+| Panel | Metric | Value |
+| --- | --- | --- |
+| seg_synthetic | z | 64 |
+| seg_synthetic | best_method | otsu |
+| seg_synthetic | dice_otsu | 0.9999 |
+| seg_synthetic | dice_multiotsu | 0.9999 |
+| seg_synthetic | dice_adaptive | 0.2813 |
+| seg_gfpa66 | z | 11 |
+| seg_gfpa66 | best_method | otsu |
+| seg_gfpa66 | dice_otsu | 0.9664 |
+| seg_gfpa66 | dice_multiotsu | 0.8263 |
+| seg_gfpa66 | dice_adaptive | 0.9160 |
+| pipeline | n_fibers | 4 |
+| pipeline | dice | 0.9784 |
+| pipeline | angular_error_deg | 0.2009 |
+| robustness | dice_clean | 0.9784 |
+| robustness | dice_degraded | 0.9502 |
+| robustness | angular_error_clean_deg | 0.2009 |
+| robustness | angular_error_degraded_deg | 0.2482 |

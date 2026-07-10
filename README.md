@@ -1,7 +1,7 @@
 # Fiber Tracer (RAFA) v3.3.0
 
 [![Version](https://img.shields.io/badge/version-3.3.0-blue)](https://github.com/llMr-Sweetll/fiber_tracer_2.0)
-[![Python](https://img.shields.io/badge/python-%3E%3D3.10-blue)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.12-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/github/license/llMr-Sweetll/fiber_tracer_2.0)](LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/llMr-Sweetll/fiber_tracer_2.0/ci.yml?branch=main&label=CI)](https://github.com/llMr-Sweetll/fiber_tracer_2.0/actions/workflows/ci.yml)
 [![Install & Verify](https://img.shields.io/github/actions/workflow/status/llMr-Sweetll/fiber_tracer_2.0/install.yml?branch=main&label=install)](https://github.com/llMr-Sweetll/fiber_tracer_2.0/actions/workflows/install.yml)
@@ -63,7 +63,7 @@ Across all regimes the tool writes machine-readable JSON, CSV, and HTML reports 
 
 ## Installation
 
-Fiber Tracer requires Python ≥3.10 and is installed as `fiber-tracer`. The source repository is at `https://github.com/llMr-Sweetll/fiber_tracer_2.0`.
+Fiber Tracer requires Python ≥3.12 and is installed as `fiber-tracer`. The source repository is at `https://github.com/llMr-Sweetll/fiber_tracer_2.0`.
 
 ```bash
 # Clone the repository
@@ -367,6 +367,16 @@ python scripts/benchmark_phantoms.py
 ```
 
 A passing run reports a resolved-regime Dice score above 0.85 and a mean angular error below 5°. Typical observed values on the default phantom are approximately 0.98 and 0.09°, respectively. The script exits with code `0` when acceptance thresholds are met.
+
+### Reproduce the presentation figures
+
+To regenerate the before/after figure pack, metrics table, and a self-contained HTML results deck under [`figures/`](figures/):
+
+```bash
+python scripts/make_presentation.py
+```
+
+This runs the resolved pipeline on a seeded synthetic phantom and a real GF-PA66 CT patch, then writes `01_segmentation_*.png`, `02_pipeline.png`, `03_robustness.png`, `04_regimes.png`, `metrics.csv`/`metrics.md`, and `index.html`. It exits non-zero if the recovered Dice regresses, so it doubles as a smoke test.
 
 ### GF-PA66 public dataset
 
