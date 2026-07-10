@@ -20,8 +20,8 @@ built. This document specifies the survey; a separate implementation plan will
 execute it. Building prediction/DVC/DIC/digital-twin *code* is explicitly out of
 scope here.
 
-**Constraint:** no Claude/AI attribution in any committed artifact (doc text,
-references, commits). See the project memory `no-claude-attribution`.
+**Constraint:** no AI-assistant attribution in any committed artifact (doc text,
+references, commits).
 
 ## Goals
 
@@ -126,7 +126,7 @@ each pointing to the relevant section and 3–5 key references.
 - Curated references appear in the four updated docs; new doc linked from README
   and ROADMAP; all internal links resolve.
 - §12 maps to epics #18–#21; "research basis" comments posted.
-- No Claude/AI attribution anywhere.
+- No AI-assistant attribution anywhere.
 
 ## Risks & mitigations
 

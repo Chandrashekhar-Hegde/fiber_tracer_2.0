@@ -378,6 +378,12 @@ python scripts/make_presentation.py
 
 This runs the resolved pipeline on a seeded synthetic phantom and a real GF-PA66 CT patch, then writes `01_segmentation_*.png`, `02_pipeline.png`, `03_robustness.png`, `04_regimes.png`, `metrics.csv`/`metrics.md`, and `index.html`. It exits non-zero if the recovered Dice regresses, so it doubles as a smoke test.
 
+To assemble the slide deck (`presentation/RAFA_conference.pdf`, 16:9) from those figures:
+
+```bash
+python scripts/build_slides.py
+```
+
 ### GF-PA66 public dataset
 
 The GF-PA66 XCT dataset is used as an external reference for benchmarking. It is not redistributed with this package.

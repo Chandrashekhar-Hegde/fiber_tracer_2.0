@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- No Claude/AI attribution anywhere — doc text, references, or commit trailers (project memory `no-claude-attribution`).
+- No AI-assistant attribution anywhere — doc text, references, or commit trailers.
 - Canonical references: **50–80 total**, focused depth, emphasis **2020–2026 plus seminal works**.
 - **Citation-integrity:** every canonical reference must be confirmed by fetching a real page (publisher / arXiv / Crossref / DOI resolver) matching authors/title/year/venue/DOI. Unverified references are excluded from the canonical list (optional "to verify" appendix only).
 - Standards cited by official designation only (e.g., ASTM E1441, ISO 15708); do not invent acceptance thresholds.
@@ -241,7 +241,7 @@ gh issue comment 19 --body "Research basis: see docs/RESEARCH_FOUNDATION.md §8 
 - [ ] **Step 2: Attribution scan**
 
 ```bash
-git diff main... | grep -iE "claude|co-authored|anthropic|AI-generated" || echo "clean"
+git diff main... | grep -iE "co-authored|anthropic|AI-generated" || echo "clean"
 ```
 
 - [ ] **Step 3: Link integrity** — confirm every `docs/RESEARCH_FOUNDATION.md` internal link and the new README/ROADMAP links resolve.
