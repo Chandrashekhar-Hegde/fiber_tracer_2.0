@@ -152,19 +152,219 @@ that self-correct iteratively, improving mean IoU without manual annotation.
 
 ## 6. Fiber orientation & morphometry
 
-<!-- drafted in Task 3 -->
+Fiber orientation is the microstructural variable most tightly coupled to the
+stiffness and strength anisotropy of a composite, and its quantitative
+description in continuum models rests on the orientation-tensor formalism
+introduced by Advani and Tucker, who represented the orientation distribution
+function by its even-order moment tensors — most practically the second-order
+orientation tensor — enabling direct coupling between measured microstructure
+and process or structural simulation [A4-1]. Before volumetric CT was routine,
+three-dimensional orientation was inferred stereologically from the elliptical
+cross-sections fibers leave on a polished 2D section; Bay and Tucker derived
+orientation-dependent weighting functions and confidence limits to correct the
+sampling bias inherent in such area-based estimates [A4-2], a correction logic
+that still underlies section-based validation of CT-derived results.
+
+Volumetric CT enabled voxel-wise orientation estimation without prior fiber
+segmentation via the gradient structure tensor, whose local eigenvector
+decomposition yields the dominant fiber direction and an eigenvalue-based
+anisotropy measure at each voxel. Krause et al. combined the structure tensor
+with a local X-ray transform for simultaneous denoising and orientation
+mapping in ceramic- and glass-fiber composites [A4-3], building on practical
+algorithms for fiber orientation estimation from 3D image data established by
+Robb, Wirjadi, and Schladitz [A4-4]. The approach scales to industrial
+components: Baranowski et al. combined region-of-interest CT with
+texture-orientation analysis to map local fiber orientation across a large
+automotive bearing part, validating consistency across scan resolutions
+against simulated orientation tensors [A4-5], while Karamov et al. benchmarked
+structure-tensor orientation against high-fidelity, fully segmented
+fiber-identification methods in random-fiber composites, comparing the two
+families of method [A4-6]. Where individual fibers are already segmented,
+principal component analysis of each fiber's voxel point cloud offers an
+alternative, geometry-driven estimator: Salling et al. used PCA-based
+inclination segmentation to recover per-fiber orientation directly from CT
+[A4-7].
+
+Morphometric quantification — diameter, length, and tortuosity — complements
+orientation as direct input to micromechanical models. Zanini and Carmignato
+developed a physical reference object to establish measurement traceability
+for CT-based fiber length determination, addressing a persistent metrological
+gap [A4-8]. For curvilinear descriptors, Gomarasca et al. proposed a
+three-tier hierarchy of microstructural descriptors — single-fiber tortuosity,
+fiber-group behavior, and fiber-network interconnectivity — validated on CT of
+unidirectional carbon/PEEK tape [A4-9], and Julià i Juanola et al. addressed
+the ill-posedness of direct curvature/waviness computation on noisy,
+irregularly sampled centerlines with a Frenet–Serret-based algorithm that uses
+frequency-limited Gaussian low-pass filtering to separate genuine waviness
+from sampling noise [A4-10].
 
 ## 7. Fibre tracking & network analysis
 
-<!-- drafted in Task 3 -->
+Reconstructing individual fiber centerlines from a segmented CT volume is a
+prerequisite for per-fiber statistics, finite-element mesh generation, and
+network-level connectivity analysis. Two complementary strategies dominate:
+tracking, which grows a trajectory fiber-by-fiber through the volume, and
+skeletonization, which thins the entire binarized fiber phase to a
+one-voxel-wide medial-axis representation in a single pass. Czabaj, Riccio,
+and Whitacre demonstrated the tracking approach, combining 2D template
+matching for fiber-center detection with a multi-target Kalman-filter
+tracking estimator to reconstruct individual fiber paths through a
+sub-micron-resolution graphite/epoxy volume for direct numerical mesh
+reconstruction [A4-11]. Huang et al. demonstrated the skeletonization
+alternative, extracting curved fiber centerlines from micro-CT by linking
+neighboring skeleton segments according to orientation and radius similarity,
+a strategy validated on a highly porous sintered metal fiber sheet [A4-12].
+
+Skeletonization alone under-resolves regions where fibers physically touch,
+since topology-preserving thinning cannot separate contacting branches;
+Depriester et al. addressed this with a general fiber-separation algorithm,
+applicable across fiber geometries (straight or woven, circular or
+non-circular cross-section), that localizes fiber–fiber contacts independent
+of fiber orientation, extending centerline-based tracking to densely packed
+and textile composites [A4-13]. Once individual centerlines are recovered,
+they can be assembled into a graph in which fibers, contacts, and crossings
+become nodes and edges; Gomarasca et al.'s fiber-network-interconnectivity
+descriptor is an instance of this representation, treating the assembly's
+connectivity — rather than any single fiber's path — as the top tier of
+microstructural complexity [A4-9]. Fiber-tracking and network-graph outputs
+feed directly into as-built finite-element models, closing the loop between
+CT-observed microstructure and mechanical simulation.
 
 ## 8. Deformation measurement — DVC & DIC
 
-<!-- drafted in Task 3 -->
+Digital image correlation (DIC) and its volumetric extension, digital volume
+correlation (DVC), register grey-level patterns between a reference and a
+deformed image (or tomogram) to recover full-field displacement and strain
+without contact instrumentation. The subset-based formulation traces to
+Sutton et al. [A5-1], who established gradient-based subpixel registration of
+speckled 2D surfaces; Bay et al. [A5-2] extended the correlation principle to
+volumetric X-ray CT data, using the naturally occurring trabecular texture of
+bone as an internal speckle pattern and establishing DVC as a distinct
+discipline from surface DIC.
+
+Correlation algorithms divide into local and global formulations. Local
+(subset-based) methods independently register a regular grid of subvolumes or
+subsets against the reference image, are embarrassingly parallel, but yield
+noisy, discontinuous displacement fields with no inter-subset continuity
+constraint. Global methods instead solve a single minimisation over a
+finite-element mesh spanning the whole domain, enforcing displacement
+continuity (or, with enriched bases, controlled discontinuity) across element
+boundaries; Hild and Roux [A5-3] showed global correlation generally achieves
+better spatial-resolution/noise trade-offs than local correlation under
+matched conditions. Buljac et al. [A5-4] unify both paradigms within a single
+DVC framework and catalogue bias and uncertainty sources — spatial
+resolution, mesh/subset size, interpolation order, and image noise — that
+propagate into derived strain fields.
+
+Two further axes distinguish implementations. FFT-based approaches use
+Fourier cross-correlation (or phase correlation) to obtain a rapid, robust
+initial integer-voxel displacement estimate ahead of iterative subvoxel
+refinement (e.g., inverse-compositional Gauss-Newton); Bar-Kochba et al.'s
+fast iterative DVC (FIDVC) [A5-5] combined this with multi-pass refinement to
+reach large-deformation convergence in one to two minutes on commodity
+hardware. Optical-flow-based approaches instead treat correlation as dense
+per-voxel motion estimation; Wong et al.'s VolRAFT [A5-6] adapts the 2D RAFT
+optical-flow network to 3D, learning a displacement field directly from
+paired synchrotron micro-CT volumes and matching iterative DVC accuracy at
+inference-time cost, though — trained on bone-implant data — its transfer to
+fiber-composite microstructure is untested.
+
+Open-source tooling has substantially lowered the barrier to DVC/DIC adoption
+outside commercial packages such as LaVision DaVis, Correlated Solutions
+VIC-3D, and GOM Correlate. spam [A5-7] is a Python library offering local,
+global, and discrete (particle-level) correlation plus multimodal
+registration, widely used for granular and porous media and increasingly for
+composites; muDIC [A5-8] is a pure-Python 2D DIC toolkit using B-spline
+finite-element discretisation with an integrated synthetic-image generator
+for virtual experiments; Ncorr [A5-9] remains the most widely cited free
+subset-based 2D DIC package, offering a MATLAB/C++ alternative to commercial
+2D systems.
+
+Validation practice centres on interlaboratory benchmarking. The DVC
+Challenge circulated common CT datasets across multiple laboratories,
+algorithms, and scanners to isolate displacement/strain measurement
+uncertainty from true material response; Croom et al. [A5-10] report an
+update quantifying how CT equipment and scan parameters alone modulate DVC
+error across participating labs, underscoring that DVC-derived strain fields
+require reported, scan-specific uncertainty bounds before use as
+model-validation ground truth.
+
+For FRP composites specifically, surface DIC is routine for coupon-level
+strain mapping (off-axis tension, open-hole, notched specimens), while DVC
+adoption is more recent and growing: Mehdikhani et al. [A5-11] applied DVC to
+meso/micro in-situ tensile damage in CFRP directly from tomograms, exploiting
+the fiber architecture itself as a natural speckle; Wang et al. [A5-12]
+coupled DVC with deep-learning damage characterisation for in-situ CT
+testing. Holmes et al.'s review [A5-13] surveys DIC/DVC applications
+specifically across fiber-reinforced composites, and Jiang et al. [A5-14]
+situate DVC within a broader CT-deep-learning-finite-element pipeline for
+composite defect analysis, reflecting a broader convergence toward integrated
+analysis-to-simulation workflows.
 
 ## 9. Prediction of mechanical behavior
 
-<!-- drafted in Task 3 -->
+Predicting mechanical behavior from CT-derived microstructure connects
+segmentation and fiber-architecture measurement to structural performance,
+closing the loop between as-built geometry and design allowables. The
+theoretical basis is classical micromechanics: Eshelby's solution for the
+elastic field of an ellipsoidal inclusion in an infinite matrix [A6-1]
+underlies mean-field homogenization schemes, most notably the Mori–Tanaka
+method, which estimates the average stress in the matrix phase to predict
+effective stiffness of two-phase composites at arbitrary volume fraction
+[A6-2]. The semi-empirical Halpin–Tsai equations, derived from Hill's
+self-consistent framework, offer a computationally trivial alternative widely
+used for quick property estimation from fiber aspect ratio and volume
+fraction [A6-3]. Kanouté et al. review how these closed-form mean-field
+methods relate to full-field computational homogenization —
+asymptotic/periodic homogenization and unit-cell finite-element (FE) analysis
+— establishing the accuracy-versus-cost spectrum that CT-informed models must
+navigate [A6-4].
+
+Coupling homogenization with structural FE analysis is most rigorously
+realized in concurrent multiscale schemes: the FE² method of Feyel and
+Chaboche nests a microscale unit-cell FE solve at every macroscale
+integration point, propagating heterogeneous constitutive response without a
+closed-form homogenized law [A6-5]. Llorca et al. articulate a bottom-up
+"virtual testing" roadmap in which constituent- and microscale properties,
+measured or imaged directly, feed a hierarchy of models toward
+structural-scale prediction, reducing reliance on coupon testing [A6-6]. CT
+imaging increasingly supplies the geometric input to this hierarchy directly:
+Sinchuk et al. built multi-layer unit-cell FE models from segmented X-ray CT
+of carbon-fiber textile composites, meshing the as-scanned tow architecture
+to homogenize elastic properties and compare against idealized geometry
+[A6-7]. In ceramic-matrix composites, Ai et al. combined image-based FE
+models constructed from CT with in-situ XCT damage observation to track
+stress redistribution and matrix cracking through loading history in woven
+C/SiC, validating failure prediction directly against imaged crack paths
+[A6-8].
+
+Machine-learning surrogates are displacing repeated FE solves where many
+microstructure realizations or load cases must be evaluated. Convolutional
+networks trained on segmented microstructure images predict homogenized
+elastic and strength properties orders of magnitude faster than direct FE, as
+demonstrated by Sun et al. for fiber-reinforced polymer cross-sections
+[A6-9], while graph neural networks operating directly on fiber-topology
+graphs extend this to stiffness and fracture-initiation prediction under high
+phase-contrast, per Caliskan et al. [A6-10]. Huang et al. survey the broader
+landscape, organizing ML applications in composite micromechanics into
+microstructure–property mapping, multiphysics field prediction,
+constitutive-model learning, and inverse microstructure design [A6-11].
+Fatigue-life prediction, historically reliant on empirical S–N curves, has
+adopted similar data-driven regressors: Hemanth Kumar and Swamy trained
+artificial neural networks on experimental fatigue data for glass-fiber/epoxy
+laminates, reporting improved life prediction over classical curve-fitting
+[A6-12].
+
+Because both mean-field homogenization and learned surrogates are
+approximations calibrated on finite data, uncertainty quantification (UQ) is
+increasingly treated as integral to prediction rather than a post-hoc
+addendum. Balokas et al. applied Bayesian inverse UQ to calibrate microscale
+constitutive parameters against measured transverse tensile response,
+propagating experimental scatter into predicted composite strength
+distributions [A6-13]; García-Merino et al. used polynomial chaos expansion
+as a surrogate for periodic unit-cell homogenization, enabling efficient
+forward propagation of constituent-property uncertainty into effective
+stiffness statistics without repeated FE solves [A6-14].
 
 ## 10. Digital twins for composites
 
