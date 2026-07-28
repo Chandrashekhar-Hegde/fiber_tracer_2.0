@@ -7,7 +7,7 @@ This document describes the production 3D U-Net shipped with Fiber Tracer v3.2.0
 | Attribute | Value |
 |-----------|-------|
 | File | `models/fiber_unet_v2_full.pt` |
-| Release | <https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2> |
+| Release | <https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2> |
 | Architecture | 3D U-Net (`fiber_tracer.backends.unet3d.UNet3D`) |
 | Encoder features | `(16, 32, 64, 128)` |
 | Normalization | Batch normalization |
@@ -190,7 +190,7 @@ If you use this model in published work, please cite the Fiber Tracer repository
   title = {Fiber Tracer 2.0: Regime-Aware Fiber Analysis},
   author = {{Fiber Tracer contributors}},
   year = {2026},
-  url = {https://github.com/llMr-Sweetll/fiber_tracer_2.0}
+  url = {https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0}
 }
 
 @article{bertoldo2021modular,

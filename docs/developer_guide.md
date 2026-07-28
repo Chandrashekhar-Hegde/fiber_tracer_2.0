@@ -7,7 +7,7 @@ This guide is for contributors working on `fiber-tracer`. It covers setup, testi
 Clone the repository and create a virtual environment:
 
 ```bash
-git clone https://github.com/llMr-Sweetll/fiber_tracer_2.0.git
+git clone https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0.git
 cd fiber_tracer_2.0
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate

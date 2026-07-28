@@ -77,7 +77,7 @@ If you are new to `fiber-tracer`, start with the deterministic phantom from the 
 ### 1. Install the package
 
 ```bash
-git clone https://github.com/llMr-Sweetll/fiber_tracer_2.0.git
+git clone https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0.git
 cd fiber_tracer_2.0
 python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
@@ -307,7 +307,7 @@ Install the `ml` (or `unet`) extra:
 pip install -e ".[ml]"
 ```
 
-Download the pre-trained checkpoint from the [v3.2.0-unet-v2 release](https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2) and place it at `models/fiber_unet_v2_full.pt`.
+Download the pre-trained checkpoint from the [v3.2.0-unet-v2 release](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2) and place it at `models/fiber_unet_v2_full.pt`.
 
 ### Command-line usage
 

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - `ROADMAP.md` updated to reflect FiberTracer-X as the v3.4.0 direction.
+- Repository ownership references updated from `llMr-Sweetll` to `Chandrashekhar-Hegde` (GitHub org rename); `LICENSE` and `CONTRIBUTORS.md` updated from "Mr Sweet" to "Chandrashekhar Hegde" to match.
 
 ### Planned
 - YOLO bundle-detection adapter for woven/twill composites.

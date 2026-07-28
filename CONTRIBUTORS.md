@@ -4,7 +4,7 @@ This file recognizes people who have contributed to Fiber Tracer.
 
 ## Core maintainers
 
-- **llMr-Sweetll** — project lead, architecture, CLI, documentation.
+- **Chandrashekhar Hegde** — project lead, architecture, CLI, documentation.
 
 ## Contributions
 
@@ -12,7 +12,7 @@ Contributions include code, documentation, datasets, models, bug reports, and de
 
 | Name | Contribution type |
 |------|-------------------|
-| llMr-Sweetll | Code, documentation, models, validation |
+| Chandrashekhar Hegde | Code, documentation, models, validation |
 
 ## How to be added
 

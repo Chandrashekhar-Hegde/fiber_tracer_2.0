@@ -47,7 +47,7 @@ If you use `fiber-tracer` or the methods above in your research, the following B
 @software{fiber_tracer,
   author = {Hegde, Chandrashekhar},
   title = {Fiber Tracer (RAFA): Regime-aware 3D fiber analysis for X-ray CT},
-  url = {https://github.com/llMr-Sweetll/fiber_tracer_2.0},
+  url = {https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0},
   license = {MIT},
   year = {2026},
 }

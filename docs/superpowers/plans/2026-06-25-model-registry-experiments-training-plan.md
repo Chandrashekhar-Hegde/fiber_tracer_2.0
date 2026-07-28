@@ -1709,7 +1709,7 @@ Include:
 Add a "Quick start" section:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/llMr-Sweetll/fiber_tracer_2.0/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Chandrashekhar-Hegde/fiber_tracer_2.0/main/scripts/install.sh | bash
 source .venv/bin/activate
 bun run dev
 ```

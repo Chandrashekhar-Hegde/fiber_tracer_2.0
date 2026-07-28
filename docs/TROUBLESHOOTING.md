@@ -178,13 +178,13 @@ The U-Net backend requires a PyTorch checkpoint. The production model is not com
 
 ### Fix
 
-Download the checkpoint from the [v3.2.0-unet-v2 release](https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2) and place it at the path specified by `--model-path` (default: `models/fiber_unet_v2_full.pt`).
+Download the checkpoint from the [v3.2.0-unet-v2 release](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2) and place it at the path specified by `--model-path` (default: `models/fiber_unet_v2_full.pt`).
 
 ```bash
 # Example
 mkdir -p models
 curl -L -o models/fiber_unet_v2_full.pt \
-  https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/download/v3.2.0-unet-v2/fiber_unet_v2_full.pt
+  https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/releases/download/v3.2.0-unet-v2/fiber_unet_v2_full.pt
 ```
 
 ---

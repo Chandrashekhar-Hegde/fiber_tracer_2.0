@@ -7,7 +7,7 @@ Thank you for considering a contribution. This document explains how to set up a
 1. Fork and clone the repository:
 
    ```bash
-   git clone https://github.com/llMr-Sweetll/fiber_tracer_2.0.git
+   git clone https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0.git
    cd fiber_tracer_2.0
    ```
 
@@ -116,6 +116,6 @@ This project adheres to the [Contributor Covenant Code of Conduct](CODE_OF_CONDU
 
 ## Getting help
 
-- Open a [Discussion](https://github.com/llMr-Sweetll/fiber_tracer_2.0/discussions) for questions and ideas.
-- Open an [Issue](https://github.com/llMr-Sweetll/fiber_tracer_2.0/issues) for bugs and concrete feature requests.
+- Open a [Discussion](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/discussions) for questions and ideas.
+- Open an [Issue](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/issues) for bugs and concrete feature requests.
 - See `ROADMAP.md` for planned work.

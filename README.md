@@ -1,10 +1,10 @@
 # Fiber Tracer (RAFA) v3.3.0
 
-[![Version](https://img.shields.io/badge/version-3.3.0-blue)](https://github.com/llMr-Sweetll/fiber_tracer_2.0)
+[![Version](https://img.shields.io/badge/version-3.3.0-blue)](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.12-blue)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/github/license/llMr-Sweetll/fiber_tracer_2.0)](LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/llMr-Sweetll/fiber_tracer_2.0/ci.yml?branch=main&label=CI)](https://github.com/llMr-Sweetll/fiber_tracer_2.0/actions/workflows/ci.yml)
-[![Install & Verify](https://img.shields.io/github/actions/workflow/status/llMr-Sweetll/fiber_tracer_2.0/install.yml?branch=main&label=install)](https://github.com/llMr-Sweetll/fiber_tracer_2.0/actions/workflows/install.yml)
+[![License: MIT](https://img.shields.io/github/license/Chandrashekhar-Hegde/fiber_tracer_2.0)](LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/Chandrashekhar-Hegde/fiber_tracer_2.0/ci.yml?branch=main&label=CI)](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/actions/workflows/ci.yml)
+[![Install & Verify](https://img.shields.io/github/actions/workflow/status/Chandrashekhar-Hegde/fiber_tracer_2.0/install.yml?branch=main&label=install)](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/actions/workflows/install.yml)
 
 **Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites.**
 
@@ -63,11 +63,11 @@ Across all regimes the tool writes machine-readable JSON, CSV, and HTML reports 
 
 ## Installation
 
-Fiber Tracer requires Python ≥3.12 and is installed as `fiber-tracer`. The source repository is at `https://github.com/llMr-Sweetll/fiber_tracer_2.0`.
+Fiber Tracer requires Python ≥3.12 and is installed as `fiber-tracer`. The source repository is at `https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0`.
 
 ```bash
 # Clone the repository
-git clone https://github.com/llMr-Sweetll/fiber_tracer_2.0.git
+git clone https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0.git
 cd fiber_tracer_2.0
 
 # Create and activate a virtual environment (recommended)
@@ -116,7 +116,7 @@ fiber-tracer --help
 Install and launch the terminal UI in one step:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/llMr-Sweetll/fiber_tracer_2.0/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Chandrashekhar-Hegde/fiber_tracer_2.0/main/scripts/install.sh | bash
 cd fiber_tracer_2.0
 source .venv/bin/activate
 cd tui && bun run dev
@@ -469,7 +469,7 @@ Set `segmentation.method: "unet"` to use the lightweight 3D U-Net implemented in
 ```bash
 pip install -e ".[ml]"
 # Use the pre-trained production model (download from GitHub Releases)
-# https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2
+# https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/releases/tag/v3.2.0-unet-v2
 fiber-tracer --data stack.tif --output results/ \
   --segmentation-method unet --model-path models/fiber_unet_v2_full.pt
 
@@ -514,7 +514,7 @@ Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persis
 Clone the repository and install in editable mode with development dependencies:
 
 ```bash
-git clone https://github.com/llMr-Sweetll/fiber_tracer_2.0.git
+git clone https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0.git
 cd fiber_tracer_2.0
 python3 -m venv .venv
 source .venv/bin/activate
@@ -560,24 +560,24 @@ not the repository handle.
   title   = {{Fiber Tracer: Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites}},
   year    = {2026},
   version = {3.3.0},
-  url     = {https://github.com/llMr-Sweetll/fiber_tracer_2.0},
+  url     = {https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0},
   note    = {ORCID: 0000-0002-8294-7657}
 }
 ```
 
 **APA**
 
-> Hegde, C. (2026). *Fiber Tracer: Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites* (Version 3.3.0) [Computer software]. https://github.com/llMr-Sweetll/fiber_tracer_2.0
+> Hegde, C. (2026). *Fiber Tracer: Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites* (Version 3.3.0) [Computer software]. https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0
 
 **IEEE**
 
-> C. Hegde, "Fiber Tracer: Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites," version 3.3.0, 2026. [Online]. Available: https://github.com/llMr-Sweetll/fiber_tracer_2.0
+> C. Hegde, "Fiber Tracer: Regime-aware 3D fiber analysis for X-ray CT of fiber-reinforced composites," version 3.3.0, 2026. [Online]. Available: https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0
 
 Please also cite the underlying methods listed below where relevant.
 
 ## Citations and license
 
-Fiber Tracer is released under the MIT License. Copyright © 2024–2026 Mr Sweet and contributors. See [`LICENSE`](LICENSE) for the full text.
+Fiber Tracer is released under the MIT License. Copyright © 2024–2026 Chandrashekhar Hegde and contributors. See [`LICENSE`](LICENSE) for the full text.
 
 If you use this software in your research, please cite the relevant methods:
 
@@ -592,5 +592,5 @@ Additional software and dataset attributions are listed in [`CITATIONS.md`](CITA
 
 - **Author:** Chandrashekhar Hegde
 - **Email:** [hegde.g.chandrashekhar@gmail.com](mailto:hegde.g.chandrashekhar@gmail.com)
-- **Repository:** [https://github.com/llMr-Sweetll/fiber_tracer_2.0](https://github.com/llMr-Sweetll/fiber_tracer_2.0)
-- **Issues:** [https://github.com/llMr-Sweetll/fiber_tracer_2.0/issues](https://github.com/llMr-Sweetll/fiber_tracer_2.0/issues)
+- **Repository:** [https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0)
+- **Issues:** [https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/issues](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/issues)

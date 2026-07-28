@@ -7,7 +7,7 @@ This guide covers installing `fiber-tracer` from source. For everyday use we rec
 The fastest way to get the repository, virtual environment, and CLI ready is the install script:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/llMr-Sweetll/fiber_tracer_2.0/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Chandrashekhar-Hegde/fiber_tracer_2.0/main/scripts/install.sh | bash
 ```
 
 After the script finishes:
@@ -24,7 +24,7 @@ cd tui && bun run dev
 On Windows, use the PowerShell equivalent:
 
 ```powershell
-Invoke-RestMethod -Uri https://raw.githubusercontent.com/llMr-Sweetll/fiber_tracer_2.0/main/scripts/install.ps1 | Invoke-Expression
+Invoke-RestMethod -Uri https://raw.githubusercontent.com/Chandrashekhar-Hegde/fiber_tracer_2.0/main/scripts/install.ps1 | Invoke-Expression
 ```
 
 Both installers clone the repository, create a virtual environment, install the package with `structure`, `skeleton`, `ml`, and `dev` extras, install Bun if it is missing, install TUI dependencies with `bun install`, and run a quick verification step. If you prefer full control, follow the manual steps below.
@@ -43,7 +43,7 @@ Run these commands in a terminal. The example uses `.venv` for the virtual envir
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/llMr-Sweetll/fiber_tracer_2.0.git
+git clone https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0.git
 cd fiber_tracer_2.0
 
 # 2. Create a virtual environment
@@ -268,7 +268,7 @@ pip install -e .
 If you plan to modify `fiber-tracer`, use the development install and run the test suite and lint checks before committing. Full contributor guidance is in [`docs/developer_guide.md`](developer_guide.md).
 
 ```bash
-git clone https://github.com/llMr-Sweetll/fiber_tracer_2.0.git
+git clone https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0.git
 cd fiber_tracer_2.0
 python3 -m venv .venv
 source .venv/bin/activate

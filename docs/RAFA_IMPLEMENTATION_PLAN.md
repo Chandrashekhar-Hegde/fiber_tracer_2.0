@@ -148,10 +148,10 @@ all = ["fiber-tracer[structure,skeleton,ml,unet,tda,viz,parallel,dev]"]
 fiber-tracer = "fiber_tracer.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/llMr-Sweetll/fiber_tracer_2.0"
-Documentation = "https://github.com/llMr-Sweetll/fiber_tracer_2.0#readme"
-Repository = "https://github.com/llMr-Sweetll/fiber_tracer_2.0.git"
-Issues = "https://github.com/llMr-Sweetll/fiber_tracer_2.0/issues"
+Homepage = "https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0"
+Documentation = "https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0#readme"
+Repository = "https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0.git"
+Issues = "https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -39,7 +39,7 @@ jobs:
         if: contains(github.ref_name, 'unet')
         run: |
           curl -L -I -o /dev/null -w "%{http_code}" \
-            "https://github.com/llMr-Sweetll/fiber_tracer_2.0/releases/download/${{ github.ref_name }}/fiber_unet_v2_full.pt" || true
+            "https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/releases/download/${{ github.ref_name }}/fiber_unet_v2_full.pt" || true
 
   # Optional PyPI publish job — uncomment and configure trusted publishing
   # publish-to-pypi:

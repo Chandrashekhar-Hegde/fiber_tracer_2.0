@@ -65,7 +65,7 @@ This document describes where the project is headed and how you can help. For de
 
 ## How to propose roadmap items
 
-1. Check existing [issues](https://github.com/llMr-Sweetll/fiber_tracer_2.0/issues) and [discussions](https://github.com/llMr-Sweetll/fiber_tracer_2.0/discussions).
+1. Check existing [issues](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/issues) and [discussions](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/discussions).
 2. Open a discussion for high-level ideas.
 3. Open a focused issue for concrete, actionable work.
 4. Reference the roadmap issue or milestone when submitting a pull request.
