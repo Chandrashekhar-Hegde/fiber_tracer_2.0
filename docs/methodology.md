@@ -86,7 +86,7 @@ FA = sqrt(1.5 * Σ_i (λi - λ̄)^2 / Σ_i λi^2)
 
 ## Machine-learning backend (U-Net)
 
-An optional 3D U-Net segmentation backend (`segmentation.method: "unet"`) is available for cases where classical thresholding or watershed performs poorly. The architecture is a standard encoder–decoder 3D U-Net with batch normalization and dropout. It operates on 64³-voxel patches and produces a per-voxel fiber probability.
+An optional 3D U-Net segmentation backend (`segmentation.method: "unet"`) is available for cases where classical thresholding or watershed performs poorly. The architecture is a standard encoder–decoder 3D U-Net with batch normalization and dropout, following Ronneberger et al. (2015) and its 3D extension by Çiçek et al. (2016) — see `docs/RESEARCH_FOUNDATION.md` refs 23–24. It operates on 64³-voxel patches and produces a per-voxel fiber probability.
 
 ### Inference
 
@@ -134,4 +134,4 @@ XCT acquisition artifacts — beam hardening, ring artifacts, partial-volume blu
 - Advani, S. G., & Tucker III, C. L. (1987). The use of tensors to describe and predict fiber orientation in short fiber composites. *Journal of Rheology*, 31(8), 751–784. DOI:10.1122/1.549945
 - van der Walt, S., Schönberger, J. L., Nunez-Iglesias, J., Boulogne, F., Warner, J. D., Yager, N., Gouillart, E., & Yu, T. (2014). scikit-image: Image processing in Python. *PeerJ*, 2, e453.
 
-See also `CITATIONS.md` and `THIRD_PARTY_LICENSES.md` for software and dataset attributions.
+See also `CITATIONS.md` and `THIRD_PARTY_LICENSES.md` for software and dataset attributions, and `RESEARCH_FOUNDATION.md` for the broader literature survey underpinning this pipeline and its planned DVC/DIC/digital-twin extensions.

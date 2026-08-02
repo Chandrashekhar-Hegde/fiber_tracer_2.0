@@ -1,6 +1,6 @@
 # Fiber Tracer Roadmap
 
-This document describes where the project is headed and how you can help. For details on the current release, see [`CHANGELOG.md`](CHANGELOG.md). For a per-capability status matrix and how features are switched on, see [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md).
+This document describes where the project is headed and how you can help. For details on the current release, see [`CHANGELOG.md`](CHANGELOG.md). For a per-capability status matrix and how features are switched on, see [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md). For the literature survey backing the DVC/DIC/digital-twin research track below, see [`docs/RESEARCH_FOUNDATION.md`](docs/RESEARCH_FOUNDATION.md).
 
 ## Current status — v3.2.0
 

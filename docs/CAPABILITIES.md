@@ -88,6 +88,10 @@ integrating the declared nnU-Net backend.
 
 ### Research track (spike first)
 
+See [`RESEARCH_FOUNDATION.md`](RESEARCH_FOUNDATION.md) for the literature basis
+behind each of these (§8 for DVC/DIC, §10–§11 for digital twins and
+cross-cutting concerns, §12 for how these map to epics #18–#21).
+
 - **DVC** — evaluate approaches (FFT cross-correlation, optical-flow, dedicated
   libraries), define reference-vs-deformed I/O and displacement/strain outputs,
   and a deformation-phantom validation, before committing to an implementation.
