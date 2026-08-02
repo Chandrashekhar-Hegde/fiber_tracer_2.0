@@ -87,3 +87,33 @@ def compare_to_ground_truth(recovered_phi: np.ndarray, applied_phi: np.ndarray) 
         "recovered_zoom": recovered_z,
         "applied_zoom": applied_z,
     }
+
+
+def main() -> None:
+    reference, deformed, applied_phi = build_reference_and_deformed()
+    result = run_dvc(reference, deformed)
+    print(f"spam returnStatus={result['returnStatus']} error={result['error']:.6f}")
+
+    comparison = compare_to_ground_truth(result["Phi"], applied_phi)
+    print(f"applied displacement (voxels):   {comparison['applied_displacement']}")
+    print(f"recovered displacement (voxels): {comparison['recovered_displacement']}")
+    print(f"displacement error (voxels):     {comparison['displacement_error_voxels']:.4f}")
+    print(f"applied zoom:                    {comparison['applied_zoom']}")
+    print(f"recovered zoom:                  {comparison['recovered_zoom']}")
+    print(f"strain error (fraction):         {comparison['strain_error_fraction']:.4f}")
+
+    # ponytail: generous PoC tolerance, not a production accuracy bar -- the
+    # question here is "does it work at all," not "how accurate is it."
+    assert comparison["displacement_error_voxels"] < 0.5, (
+        "DVC displacement recovery outside PoC tolerance (>0.5 voxel) -- "
+        "see docs/superpowers/specs/2026-08-02-dvc-spike-design.md 'Not (yet) feasible'"
+    )
+    assert comparison["strain_error_fraction"] < 0.02, (
+        "DVC strain recovery outside PoC tolerance (>2% absolute) -- "
+        "see docs/superpowers/specs/2026-08-02-dvc-spike-design.md 'Not (yet) feasible'"
+    )
+    print("PoC self-check passed: DVC recovered the known deformation within tolerance.")
+
+
+if __name__ == "__main__":
+    main()
