@@ -8,11 +8,44 @@ section 13; every citation is verifiable.
 
 ## 1. Scope & motivation
 
-<!-- drafted in Task 5 -->
+This survey establishes the research foundation for a software pipeline that
+takes X-ray computed tomography (XCT) of fiber-reinforced polymer (FRP)
+composites through segmentation, fiber-level measurement, deformation
+quantification, and mechanical-property prediction, framed for
+high-reliability aerospace/defense use where NDE evidence must trace to
+governing standards and qualification records [A1-4, A1-7]. It covers the
+continuum from acquisition and segmentation (§3–§5), through fiber
+orientation, morphometry, and network-level tracking (§6–§7), to full-field
+deformation measurement (§8), mechanical-behavior prediction (§9), and the
+digital-twin and cross-cutting concerns that connect measured microstructure
+back to a qualification decision (§10–§11). The scope is deliberately bounded
+to methods with a demonstrated or plausible path to CT-derived, per-part
+analysis of FRP composites; adjacent fields (medical CT, general materials
+informatics) are cited only where they establish a technique or an
+evidenced risk (e.g., domain shift [A7-4]) that transfers directly.
 
 ## 2. Composites & XCT characterization — background
 
-<!-- drafted in Task 5 -->
+Fiber-reinforced polymer composites achieve high specific stiffness and
+strength by embedding continuous or discontinuous reinforcing fibers
+(typically carbon or glass) in a polymer matrix, but their performance is
+governed as much by processing-induced microstructural disorder — fiber
+misalignment and waviness, void content, tow nesting and crimp in woven
+architectures — as by the nominal constituent properties [A4-1, A4-9]. Unlike
+metals, FRP composites cannot be qualified by coupon testing alone at scale,
+because damage initiation and failure are locally controlled by this
+disorder; NDE must therefore resolve three-dimensional microstructure, not
+merely detect gross defects. XCT is the modality of choice because it is the
+only common technique that non-destructively resolves internal fiber
+architecture, porosity, and delamination in three dimensions at the
+fiber-diameter scale [A1-10]. Realizing that potential in practice, however,
+depends on the entire chain surveyed here: correcting acquisition artifacts
+that would otherwise bias measurement (§4), converting reconstructed
+grayscale volumes into a labeled fiber/matrix/void representation (§5),
+extracting orientation and per-fiber geometry from that representation
+(§6–§7), and — where the goal is validating or predicting mechanical
+response rather than only characterizing geometry — coupling CT-derived
+microstructure to deformation measurement (§8) and predictive models (§9).
 
 ## 3. Standards & qualification
 
@@ -437,7 +470,43 @@ asserted as a goal.
 
 ## 12. Synthesis & gap analysis
 
-<!-- drafted in Task 5 -->
+The literature surveyed above describes a continuum — acquisition and
+segmentation feed fiber-level measurement, which feeds deformation
+quantification and mechanical prediction, which in turn is the substrate for
+a per-part digital twin — but the maturity of each stage differs sharply, and
+the stages are rarely integrated end to end in a single published pipeline.
+Segmentation (§5) is the most mature stage, with deep-learning methods now
+routinely reaching near-98% Dice on curated datasets [A3-7] and foundation
+models beginning to close the domain gap for low-annotation settings
+[A3-13]; fiber orientation and morphometry (§6) similarly rest on a
+well-established formalism (Advani–Tucker [A4-1]) with multiple validated
+estimators. Deformation measurement (§8) and mechanical prediction (§9) are
+comparatively mature in method but weaker in FRP-specific validation: DVC
+adoption for composites is recent [A5-11] and interlaboratory studies show
+that measurement uncertainty is scan- and equipment-dependent rather than a
+fixed property of the algorithm [A5-10], while ML surrogate models for
+property prediction are demonstrated primarily on idealized or narrow
+microstructure sets [A6-9, A6-10]. Digital twins and cross-cutting concerns
+(§10–§11) are the least mature: as-manufactured-to-as-designed reconciliation
+for composites has been demonstrated mainly at coupon/subcomponent scale
+[A7-2], and no reviewed source establishes a full-structure, production-scale
+composite digital twin backed by CT-derived, uncertainty-quantified
+mechanical prediction.
+
+The following table maps the resulting gaps to this project's open roadmap
+epics:
+
+| Gap | Relevant sections | Epic |
+| --- | --- | --- |
+| Segmentation robustness under low fiber–matrix contrast and cross-scanner/cross-material domain shift | §5, §11 | #18 (segmentation quality) |
+| DVC accuracy/uncertainty for CT-derived fiber-composite microstructure specifically, as opposed to bone or granular media | §8, §11 | #19 (DVC) |
+| DIC/DVC integration at coupon-to-component scale with quantified, scan-specific uncertainty bounds | §8 | #20 (DIC) |
+| As-manufactured-to-as-designed reconciliation and model updating for composite digital twins beyond coupon scale, with an auditable qualification-traceability chain | §10, §11 | #21 (digital twin) |
+
+No single reviewed source spans this entire continuum for FRP composites;
+the pipeline this repository implements is, to that extent, an integration
+of separately validated stages rather than a reproduction of one established
+end-to-end system.
 
 ## 13. References
 
