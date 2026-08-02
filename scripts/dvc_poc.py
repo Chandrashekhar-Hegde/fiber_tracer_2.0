@@ -57,3 +57,33 @@ def build_reference_and_deformed(
     ).astype(np.float32)
 
     return reference, deformed, applied_phi
+
+
+def run_dvc(reference: np.ndarray, deformed: np.ndarray) -> dict:
+    """Whole-volume affine registration: recovers a single Phi mapping
+    reference -> deformed. Margin=10 gives room for the 2.5-voxel shift."""
+    return dic.register(
+        reference,
+        deformed,
+        margin=10,
+        maxIterations=50,
+        interpolationOrder=1,
+        verbose=False,
+    )
+
+
+def compare_to_ground_truth(recovered_phi: np.ndarray, applied_phi: np.ndarray) -> dict:
+    recovered = spam_defo.decomposePhi(recovered_phi)
+    applied = spam_defo.decomposePhi(applied_phi)
+    recovered_t = np.asarray(recovered["t"])
+    applied_t = np.asarray(applied["t"])
+    recovered_z = np.asarray(recovered["z"])
+    applied_z = np.asarray(applied["z"])
+    return {
+        "displacement_error_voxels": float(np.linalg.norm(recovered_t - applied_t)),
+        "strain_error_fraction": float(np.max(np.abs(recovered_z - applied_z))),
+        "recovered_displacement": recovered_t,
+        "applied_displacement": applied_t,
+        "recovered_zoom": recovered_z,
+        "applied_zoom": applied_z,
+    }
