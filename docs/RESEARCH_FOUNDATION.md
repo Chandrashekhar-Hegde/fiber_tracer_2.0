@@ -368,11 +368,72 @@ stiffness statistics without repeated FE solves [A6-14].
 
 ## 10. Digital twins for composites
 
-<!-- drafted in Task 4 -->
+The digital twin concept — a virtual representation of an individual physical
+asset, kept synchronized with it through sensor and inspection data over the
+asset's lifecycle — originated in aerospace structural life prediction. Tuegel
+et al. proposed reengineering aircraft structural life prediction around an
+"ultrahigh fidelity model of individual aircraft by tail number," integrating
+flight-condition-driven stress and thermal computation with damage and
+material-state evolution to assure structural integrity on a per-airframe
+basis [A7-1]. For fiber-reinforced composites specifically, the digital twin
+premise depends on faithfully representing the as-manufactured microstructure
+rather than the nominal as-designed geometry, because mechanical response is
+disproportionately sensitive to processing-induced disorder — fiber
+misalignment, waviness, void content, and tow nesting — that CT is uniquely
+positioned to capture. Recent work targets this microscale coupling directly:
+Hearley et al. describe a toolset combining convolutional segmentation with
+prompt-based annotation to accelerate the extraction of microscopy-derived
+microstructure into multiscale material digital twins for fiber-reinforced
+composites, aiming to lower the annotation burden that otherwise limits
+per-part digital twin construction [A7-2]. More broadly in manufacturing,
+systematic reviews of digital twins in additive manufacturing catalog the
+same underlying pattern — physical-to-virtual data flow, model updating from
+in-process sensing, and use of the twin for process control and quality
+prediction — while flagging scalability, data-quality integration, and
+real-time computational cost as persistent barriers [A7-3], concerns that
+transfer directly to CT-based composite twins given the size of volumetric CT
+datasets and the cost of high-fidelity finite-element or DVC-based updating.
+As-manufactured-to-as-designed reconciliation, the process of mapping
+measured dimensions, geometries, and internal features from registered 3D
+imaging data onto the nominal design model, is the mechanism by which a
+digital twin departs from a purely theoretical model and instead reflects the
+specific part under evaluation; this reconciliation step, together with data
+assimilation and Bayesian model updating to fuse sparse sensor or inspection
+observations with physics-based predictions, remains an active area with
+limited maturity for composite structures specifically, most published
+demonstrations still being at coupon or subcomponent scale rather than full
+airframe scale.
 
 ## 11. Cross-cutting concerns
 
-<!-- drafted in Task 4 -->
+Three concerns cut across every stage of the CT-to-simulation pipeline
+surveyed above: domain generalization of learned models, validation and
+benchmarking practice, and reproducibility/traceability of the analysis
+chain. Domain shift — degraded model performance when a segmentation or
+reconstruction network trained on one scanner, material, or acquisition
+protocol is applied to another — is a known risk wherever CT feature
+extraction relies on learned models, and industrial XCT is no exception: a
+review of machine learning in industrial X-ray CT surveys deep-learning use
+throughout reconstruction, segmentation, and feature characterization and
+notes that most reported models are trained and validated on narrow,
+instrument-specific datasets, leaving open how well they transfer across
+scanner vendors, voxel sizes, or fiber architectures [A7-4]. Validation and
+benchmarking practice in CT more generally is hampered by a scarcity of
+openly available, task-complete datasets and by inconsistent or undocumented
+implementations of reconstruction and evaluation methods; Polevoy et al.
+argue explicitly that the field's benchmarking culture undermines
+reproducibility because published comparisons rarely share raw projection
+data, ground-truth reconstructions, or full method implementations, making
+independent replication difficult even when results are reported honestly
+[A7-5]. For a pipeline that runs from raw CT projections through
+segmentation, fiber-orientation and DVC measurement, to structural
+prediction, this compounds: each stage's validation depends on artifacts
+(phantom scans, ground-truth microstructures, reference mechanical tests)
+that are seldom published alongside the methods that use them, and
+traceability from a qualification decision back to the specific scan,
+reconstruction parameters, and model version used to support it is rarely
+demonstrated end to end in the composites literature, as distinct from being
+asserted as a goal.
 
 ## 12. Synthesis & gap analysis
 
