@@ -33,6 +33,27 @@
 - plotly contributors. plotly. https://plotly.com/python/
 - napari contributors. napari. https://napari.org/
 
+## Research foundation
+
+For the broader literature backing planned DVC/DIC/digital-twin work and the
+existing segmentation/orientation pipeline, see
+[`docs/RESEARCH_FOUNDATION.md`](docs/RESEARCH_FOUNDATION.md). Key references by
+topic:
+
+- **Standards & qualification** — ASTM E1441/E1570/E1695/E2533, ISO 15708-2/-4,
+  CMH-17 Vol. 3 (RESEARCH_FOUNDATION.md refs 1–4, 6–7).
+- **Deep-learning segmentation** — Ronneberger et al. (U-Net), Çiçek et al. (3D
+  U-Net), Isensee et al. (nnU-Net), Kirillov et al. (Segment Anything)
+  (RESEARCH_FOUNDATION.md refs 23–25, 33).
+- **Digital Volume/Image Correlation (DVC/DIC)** — Sutton et al. (1983), Bay et
+  al. (1999), Hild & Roux (2012), Buljac et al. (2018) (RESEARCH_FOUNDATION.md
+  refs 51–54).
+- **Prediction of mechanical behavior** — Eshelby (1957), Mori & Tanaka (1973),
+  Halpin & Kardos (1976), Feyel & Chaboche (FE²) (RESEARCH_FOUNDATION.md refs
+  65–67, 69).
+- **Digital twin** — Tuegel et al. (2011), Hearley et al. (2026)
+  (RESEARCH_FOUNDATION.md refs 79–80).
+
 ## Validation data
 
 - Bertoldo J.P.C. et al. (2021). A Modular U-Net for Automated Segmentation of X-Ray Tomography Images in Composite Materials. *Front. Mater.* 8:761229. DOI:10.3389/fmats.2021.761229

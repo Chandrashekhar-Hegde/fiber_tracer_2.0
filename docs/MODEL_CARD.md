@@ -205,7 +205,11 @@ If you use this model in published work, please cite the Fiber Tracer repository
 }
 ```
 
-See [`CITATIONS.md`](../CITATIONS.md) for full dataset citations.
+See [`CITATIONS.md`](../CITATIONS.md) for full dataset citations, and
+[`RESEARCH_FOUNDATION.md`](RESEARCH_FOUNDATION.md) §5 (refs 23–37) for the
+deep-learning and foundation-model segmentation literature this architecture
+follows, and §9 (refs 65–78) for uncertainty-quantification approaches
+relevant to a future confidence-calibrated release of this model.
 
 ## Model maintenance
 
