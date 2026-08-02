@@ -72,9 +72,16 @@ def run_dvc(reference: np.ndarray, deformed: np.ndarray) -> dict:
     )
 
 
-def compare_to_ground_truth(recovered_phi: np.ndarray, applied_phi: np.ndarray) -> dict:
-    recovered = spam_defo.decomposePhi(recovered_phi)
-    applied = spam_defo.decomposePhi(applied_phi)
+def compare_to_ground_truth(
+    recovered_phi: np.ndarray, applied_phi: np.ndarray, volume_shape: tuple[int, int, int]
+) -> dict:
+    # spam.DIC.register's Phi is defined about the image centre (per its
+    # docstring), so it must be decomposed about that same centre -- decomposing
+    # about the origin (decomposePhi's default) leaks strain into an apparent
+    # translation of (zoom - 1) * centre on the strain axis.
+    centre = (np.asarray(volume_shape) - 1) / 2.0
+    recovered = spam_defo.decomposePhi(recovered_phi, PhiCentre=centre)
+    applied = spam_defo.decomposePhi(applied_phi, PhiCentre=[0.0, 0.0, 0.0])
     recovered_t = np.asarray(recovered["t"])
     applied_t = np.asarray(applied["t"])
     recovered_z = np.asarray(recovered["z"])
@@ -94,7 +101,7 @@ def main() -> None:
     result = run_dvc(reference, deformed)
     print(f"spam returnStatus={result['returnStatus']} error={result['error']:.6f}")
 
-    comparison = compare_to_ground_truth(result["Phi"], applied_phi)
+    comparison = compare_to_ground_truth(result["Phi"], applied_phi, reference.shape)
     print(f"applied displacement (voxels):   {comparison['applied_displacement']}")
     print(f"recovered displacement (voxels): {comparison['recovered_displacement']}")
     print(f"displacement error (voxels):     {comparison['displacement_error_voxels']:.4f}")
