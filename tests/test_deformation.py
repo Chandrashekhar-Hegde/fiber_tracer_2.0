@@ -12,6 +12,7 @@ from scipy.ndimage import affine_transform
 
 pytest.importorskip("spam")
 
+from fiber_tracer.correlation.dic import run_local_dic  # noqa: E402
 from fiber_tracer.correlation.dvc import (  # noqa: E402
     displacement_and_strain_per_node,
     estimate_noise_floor,
@@ -157,3 +158,94 @@ def test_boundary_nodes_are_excluded_not_falsely_converged():
     displacements = np.array([w["displacement_voxels"] for w in converged])
     mean_error = np.linalg.norm(displacements.mean(axis=0) - np.array([-1.0, 0.0, 0.0]))
     assert mean_error < 0.01, f"mean displacement error {mean_error:.4f} on interior nodes"
+
+
+# --- 2D DIC accuracy tests -------------------------------------------------
+# Same methodology as the 3D DVC tests above, on a single slice of the same
+# phantom. Confirms the DIC spike's finding (docs/superpowers/specs/
+# 2026-08-04-dic-spike-design.md): fiber_tracer.correlation.dic.run_local_dic
+# is the exact same engine as run_local_dvc, called with a (1, H, W) image.
+
+SHAPE_3D_FOR_SLICE = (20, 80, 80)
+SHIFT_PIXELS = np.array([2.5, 0.0])
+STRAIN_AXIS_2D = 1
+NODE_SPACING_2D = 20
+HALF_WINDOW_SIZE_2D = 10
+
+
+def _dense_phantom_slice(seed: int = 1) -> np.ndarray:
+    phantom = generate_fiber_phantom(
+        shape=SHAPE_3D_FOR_SLICE,
+        n_fibers=200,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        orientation_mode="random",
+        seed=seed,
+    )
+    slice_2d = phantom.volume[SHAPE_3D_FOR_SLICE[0] // 2].astype(np.float32)
+    return slice_2d[np.newaxis, ...]
+
+
+def _deform_2d(reference: np.ndarray) -> np.ndarray:
+    zoom = np.ones(2)
+    zoom[STRAIN_AXIS_2D] = 1.0 + STRAIN_FRACTION
+    matrix = np.diag(1.0 / zoom)
+    offset = -SHIFT_PIXELS / zoom
+    deformed_2d = affine_transform(
+        reference[0], matrix, offset=offset, order=1, mode="nearest"
+    ).astype(np.float32)
+    return deformed_2d[np.newaxis, ...]
+
+
+def test_local_dic_convergence_rate_meets_minimum():
+    """A dense phantom slice with adequate speckle content converges >=90% of nodes."""
+    reference = _dense_phantom_slice()
+    deformed = _deform_2d(reference)
+    result = run_local_dic(reference, deformed, NODE_SPACING_2D, HALF_WINDOW_SIZE_2D)
+    convergence_rate = float(np.mean(result["return_status"] == 2))
+    assert (
+        convergence_rate >= MIN_CONVERGENCE_RATE
+    ), f"2D convergence rate {convergence_rate:.2f} below {MIN_CONVERGENCE_RATE}"
+
+
+def test_local_dic_recovers_known_deformation_within_literature_bound():
+    """Recovered 2D displacement/strain must fall within the Croom et al. range."""
+    reference = _dense_phantom_slice()
+    deformed = _deform_2d(reference)
+    result = run_local_dic(reference, deformed, NODE_SPACING_2D, HALF_WINDOW_SIZE_2D)
+    nodes = displacement_and_strain_per_node(
+        result["phi_field"], result["node_positions"], result["return_status"]
+    )
+    converged = [n for n in nodes if n["converged"]]
+    assert converged, "no nodes converged; cannot assess accuracy"
+
+    displacements = np.array([n["displacement_voxels"] for n in converged])
+    strains = np.array([n["strain"] for n in converged])
+
+    # node_positions/Phi remain 3-component for a (1, H, W) image (spam treats
+    # it as a degenerate 3D grid with a fixed z=0 axis) -- index 0 is the
+    # singleton z axis, indices 1-2 are the real (y, x) image axes.
+    applied_shift = np.array([0.0, SHIFT_PIXELS[0], SHIFT_PIXELS[1]])
+    applied_strain = np.zeros(3)
+    applied_strain[STRAIN_AXIS_2D + 1] = STRAIN_FRACTION
+
+    displacement_error = np.linalg.norm(displacements.mean(axis=0) - applied_shift)
+    strain_error = np.max(np.abs(strains.mean(axis=0) - applied_strain))
+
+    assert displacement_error < MAX_DISPLACEMENT_ERROR_VOXELS, (
+        f"mean 2D displacement error {displacement_error:.4f} px exceeds "
+        f"{MAX_DISPLACEMENT_ERROR_VOXELS}"
+    )
+    assert (
+        strain_error < MAX_STRAIN_ERROR
+    ), f"mean 2D strain error {strain_error:.4f} exceeds {MAX_STRAIN_ERROR}"
+
+
+def test_dic_noise_floor_is_near_zero_on_self_correlation():
+    """estimate_noise_floor on a 2D undeformed self-correlation must report ~0."""
+    reference = _dense_phantom_slice()
+    noise = estimate_noise_floor(reference, NODE_SPACING_2D, HALF_WINDOW_SIZE_2D)
+
+    assert noise["convergence_rate"] >= MIN_CONVERGENCE_RATE
+    assert np.allclose(noise["displacement_std_voxels"], 0.0, atol=1e-6)
+    assert np.allclose(noise["strain_std"], 0.0, atol=1e-6)

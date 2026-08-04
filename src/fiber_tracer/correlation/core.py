@@ -68,15 +68,22 @@ def _import_spam():
 
 
 def _correlate_one_node(dic, reference, deformed, node_position, hws) -> tuple:
-    """Sequential equivalent of spam.DIC.ldic's internal per-node worker."""
+    """Sequential equivalent of spam.DIC.ldic's internal per-node worker.
+
+    `hws` is 0 on any singleton axis (a 2D image's degenerate z axis) -- the
+    search margin on that axis must be 0 too, or getImagettes tries to search
+    beyond a depth-1 volume and every node fails (see run_local_correlation).
+    """
     phi_init = np.eye(4)
+    axis_margin = np.where(hws == 0, 0, _SEARCH_MARGIN)
+    search_margin = [v for m in axis_margin for v in (-int(m), int(m))]
     imagette_returns = dic.getImagettes(
         reference,
         node_position,
         hws,
         phi_init.copy(),
         deformed,
-        [-3, 3, -3, 3, -3, 3],
+        search_margin,
         applyF="no",
     )
     if imagette_returns["returnStatus"] != 1:
@@ -106,8 +113,12 @@ def _correlate_one_node(dic, reference, deformed, node_position, hws) -> tuple:
 
 
 def _fits_in_bounds(node_position: np.ndarray, half_window_size: int, shape: tuple) -> bool:
-    clearance = half_window_size + _SEARCH_MARGIN
+    """A singleton axis (shape[axis] == 1, a 2D image's degenerate z axis)
+    needs no clearance -- there's no depth to search, and the node position on
+    that axis is always 0, which would otherwise always read as out-of-bounds.
+    """
     shape_arr = np.array(shape)
+    clearance = np.where(shape_arr == 1, 0, half_window_size + _SEARCH_MARGIN)
     return bool(
         np.all(node_position - clearance >= 0) and np.all(node_position + clearance < shape_arr)
     )
@@ -131,7 +142,10 @@ def run_local_correlation(
     """
     dic, _ = _import_spam()
     node_positions, _nodes_dim = dic.makeGrid(reference.shape, nodeSpacing=node_spacing)
-    hws = np.array([half_window_size, half_window_size, half_window_size])
+    # 0 on a singleton axis (a 2D image's degenerate z axis) -- there's no
+    # depth to build a window over.
+    shape_arr = np.array(reference.shape)
+    hws = np.where(shape_arr == 1, 0, half_window_size)
 
     n_nodes = len(node_positions)
     phi_field = np.zeros((n_nodes, 4, 4))
