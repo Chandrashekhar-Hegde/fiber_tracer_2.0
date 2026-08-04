@@ -114,6 +114,18 @@ class DVCConfig:
 
 
 @dataclass
+class DICConfig:
+    enabled: bool = False
+    reference_path: str = ""
+    deformed_path: str = ""
+    node_spacing_pixels: int = 20
+    half_window_size_pixels: int = 10
+    # See DVCConfig.min_convergence_rate -- same per-run convergence-gate
+    # rationale, applied to 2D image correlation instead of 3D volumes.
+    min_convergence_rate: float = 0.9
+
+
+@dataclass
 class Config:
     data_path: str = ""
     output_dir: str = ""
@@ -125,6 +137,7 @@ class Config:
     orientation: OrientationConfig = field(default_factory=OrientationConfig)
     analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
     dvc: DVCConfig = field(default_factory=DVCConfig)
+    dic: DICConfig = field(default_factory=DICConfig)
 
     def validate(self) -> None:
         if not self.data_path or not os.path.exists(self.data_path):
@@ -163,6 +176,17 @@ class Config:
                 raise ValueError("dvc.half_window_size_voxels must be positive")
             if not 0.0 <= self.dvc.min_convergence_rate <= 1.0:
                 raise ValueError("dvc.min_convergence_rate must be in [0, 1]")
+        if self.dic.enabled:
+            if not self.dic.reference_path or not os.path.exists(self.dic.reference_path):
+                raise ValueError(f"dic.reference_path does not exist: {self.dic.reference_path}")
+            if not self.dic.deformed_path or not os.path.exists(self.dic.deformed_path):
+                raise ValueError(f"dic.deformed_path does not exist: {self.dic.deformed_path}")
+            if self.dic.node_spacing_pixels <= 0:
+                raise ValueError("dic.node_spacing_pixels must be positive")
+            if self.dic.half_window_size_pixels <= 0:
+                raise ValueError("dic.half_window_size_pixels must be positive")
+            if not 0.0 <= self.dic.min_convergence_rate <= 1.0:
+                raise ValueError("dic.min_convergence_rate must be in [0, 1]")
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -196,6 +220,8 @@ class Config:
             data["analysis"] = _dict_to_dataclass(data["analysis"], AnalysisConfig)
         if "dvc" in data:
             data["dvc"] = _dict_to_dataclass(data["dvc"], DVCConfig)
+        if "dic" in data:
+            data["dic"] = _dict_to_dataclass(data["dic"], DICConfig)
         return cls(**data)
 
     @classmethod

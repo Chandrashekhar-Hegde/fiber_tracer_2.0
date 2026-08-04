@@ -4,6 +4,7 @@ import pytest
 from fiber_tracer.config import (
     AnalysisConfig,
     Config,
+    DICConfig,
     DVCConfig,
     OrientationConfig,
     ProcessingConfig,
@@ -158,6 +159,56 @@ def test_dvc_enabled_requires_existing_reference_path(tmp_path):
         data_path=str(data_dir),
         output_dir=str(tmp_path / "out"),
         dvc=DVCConfig(enabled=True, reference_path="", deformed_path=str(deformed)),
+    )
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_dic_config_round_trip_and_validation(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    reference = tmp_path / "reference"
+    deformed = tmp_path / "deformed"
+    reference.mkdir()
+    deformed.mkdir()
+
+    cfg = Config(
+        data_path=str(data_dir),
+        output_dir=str(tmp_path / "out"),
+        dic=DICConfig(
+            enabled=True,
+            reference_path=str(reference),
+            deformed_path=str(deformed),
+            node_spacing_pixels=28,
+            half_window_size_pixels=16,
+            min_convergence_rate=0.8,
+        ),
+    )
+    cfg.validate()
+
+    path = tmp_path / "config.yaml"
+    cfg.save(path)
+    loaded = Config.from_file(path)
+    loaded.validate()
+
+    assert isinstance(loaded.dic, DICConfig)
+    assert loaded.dic.enabled is True
+    assert loaded.dic.reference_path == str(reference)
+    assert loaded.dic.deformed_path == str(deformed)
+    assert loaded.dic.node_spacing_pixels == 28
+    assert loaded.dic.half_window_size_pixels == 16
+    assert loaded.dic.min_convergence_rate == pytest.approx(0.8)
+
+
+def test_dic_enabled_requires_existing_reference_path(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    deformed = tmp_path / "deformed"
+    deformed.mkdir()
+    cfg = Config(
+        data_path=str(data_dir),
+        output_dir=str(tmp_path / "out"),
+        dic=DICConfig(enabled=True, reference_path="", deformed_path=str(deformed)),
     )
     with pytest.raises(ValueError):
         cfg.validate()
