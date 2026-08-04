@@ -22,6 +22,12 @@ export function Review({ config, theme }: ReviewProps) {
         Tracking: {config.computeTracking ? "on" : "off"}
       </Text>
       <Text color={theme.foreground}>Model: {config.model}</Text>
+      <Text color={theme.foreground}>
+        DVC: {config.computeDvc ? "on" : "off"}
+        {config.computeDvc
+          ? ` (reference: ${config.dvcReferencePath || "none"}, deformed: ${config.dvcDeformedPath || "none"})`
+          : ""}
+      </Text>
       <Text color={theme.success}>Press r to run</Text>
     </Box>
   );

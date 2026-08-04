@@ -65,6 +65,9 @@ describe("bridge", () => {
       computeOrientationTensor: true,
       computeTracking: true,
       computeTda: false,
+      computeDvc: false,
+      dvcReferencePath: "",
+      dvcDeformedPath: "",
     });
     expect(result.success).toBe(false);
     expect(result.error).toContain("ENOENT");
