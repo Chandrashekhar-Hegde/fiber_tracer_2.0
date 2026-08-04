@@ -4,6 +4,7 @@ import pytest
 from fiber_tracer.config import (
     AnalysisConfig,
     Config,
+    DVCConfig,
     OrientationConfig,
     ProcessingConfig,
     SegmentationConfig,
@@ -104,6 +105,62 @@ def test_config_round_trip_yaml(tmp_path):
 
     assert loaded.fiber_diameter_um == pytest.approx(12.0)
     assert loaded.regime == "resolved"
+
+    assert isinstance(loaded.dvc, DVCConfig)
+    assert loaded.dvc.enabled is False
+    assert loaded.dvc.node_spacing_voxels == 20
+    assert loaded.dvc.half_window_size_voxels == 10
+    assert loaded.dvc.min_convergence_rate == pytest.approx(0.9)
+
+
+def test_dvc_config_round_trip_and_validation(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    reference = tmp_path / "reference"
+    deformed = tmp_path / "deformed"
+    reference.mkdir()
+    deformed.mkdir()
+
+    cfg = Config(
+        data_path=str(data_dir),
+        output_dir=str(tmp_path / "out"),
+        dvc=DVCConfig(
+            enabled=True,
+            reference_path=str(reference),
+            deformed_path=str(deformed),
+            node_spacing_voxels=28,
+            half_window_size_voxels=16,
+            min_convergence_rate=0.8,
+        ),
+    )
+    cfg.validate()
+
+    path = tmp_path / "config.yaml"
+    cfg.save(path)
+    loaded = Config.from_file(path)
+    loaded.validate()
+
+    assert isinstance(loaded.dvc, DVCConfig)
+    assert loaded.dvc.enabled is True
+    assert loaded.dvc.reference_path == str(reference)
+    assert loaded.dvc.deformed_path == str(deformed)
+    assert loaded.dvc.node_spacing_voxels == 28
+    assert loaded.dvc.half_window_size_voxels == 16
+    assert loaded.dvc.min_convergence_rate == pytest.approx(0.8)
+
+
+def test_dvc_enabled_requires_existing_reference_path(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    deformed = tmp_path / "deformed"
+    deformed.mkdir()
+    cfg = Config(
+        data_path=str(data_dir),
+        output_dir=str(tmp_path / "out"),
+        dvc=DVCConfig(enabled=True, reference_path="", deformed_path=str(deformed)),
+    )
+    with pytest.raises(ValueError):
+        cfg.validate()
 
 
 def test_config_from_dict_accepts_voxel_spacing_as_list():
