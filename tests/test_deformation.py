@@ -113,3 +113,47 @@ def test_noise_floor_is_near_zero_on_self_correlation():
     assert noise["convergence_rate"] >= MIN_CONVERGENCE_RATE
     assert np.allclose(noise["displacement_std_voxels"], 0.0, atol=1e-6)
     assert np.allclose(noise["strain_std"], 0.0, atol=1e-6)
+
+
+def test_boundary_nodes_are_excluded_not_falsely_converged():
+    """Nodes whose window extends past the volume edge must never report
+    converged=True with a bogus displacement.
+
+    Regression test: a 64^3 volume with node_spacing=20/half_window_size=10
+    has grid nodes at z/y/x=60, whose window+search-margin (10+3=13) reaches
+    voxel 73, past the 64-voxel boundary. Before the out-of-bounds guard,
+    spam.DIC.register on the resulting degenerate (edge-padded) imagette
+    falsely reported CONVERGED_STATUS with garbage displacement (observed:
+    -78 voxels reported as converged for a true -1 voxel shift).
+    """
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=100,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        orientation_mode="random",
+        seed=1,
+    )
+    reference = phantom.volume.astype(np.float32)
+    deformed = affine_transform(
+        reference, np.eye(3), offset=[1.0, 0.0, 0.0], order=1, mode="nearest"
+    ).astype(np.float32)
+
+    result = run_local_dvc(reference, deformed, NODE_SPACING, HALF_WINDOW_SIZE)
+    windows = displacement_and_strain_per_node(
+        result["phi_field"], result["node_positions"], result["return_status"]
+    )
+
+    boundary_node_z60 = [w for w in windows if w["node_position"][0] >= 60]
+    assert boundary_node_z60, "expected at least one boundary node in this grid"
+    for w in boundary_node_z60:
+        assert not w["converged"], (
+            f"boundary node {w['node_position']} falsely reported converged "
+            f"with displacement {w['displacement_voxels']}"
+        )
+
+    converged = [w for w in windows if w["converged"]]
+    assert converged, "no interior nodes converged"
+    displacements = np.array([w["displacement_voxels"] for w in converged])
+    mean_error = np.linalg.norm(displacements.mean(axis=0) - np.array([-1.0, 0.0, 0.0]))
+    assert mean_error < 0.01, f"mean displacement error {mean_error:.4f} on interior nodes"

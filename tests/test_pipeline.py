@@ -372,9 +372,12 @@ def test_dvc_enabled_writes_dvc_reports(tmp_path):
     stack_path = data_dir / "input.tif"
     save_tiff_stack(stack_path, main_phantom.volume)
 
+    # 80^3 with node_spacing=20/half_window_size=10 keeps every grid node's
+    # window (+ search margin) inside the volume; a smaller volume leaves most
+    # nodes out-of-bounds (see fiber_tracer.correlation.dvc.OUT_OF_BOUNDS_STATUS).
     dvc_phantom = generate_fiber_phantom(
-        shape=(64, 64, 64),
-        n_fibers=100,
+        shape=(80, 80, 80),
+        n_fibers=200,
         fiber_diameter_um=4.0,
         voxel_spacing_um=(1.0, 1.0, 1.0),
         seed=1,

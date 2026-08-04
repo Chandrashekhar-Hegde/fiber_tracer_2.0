@@ -20,6 +20,18 @@ from fiber_tracer.exceptions import BackendNotAvailableError
 # centering).
 CONVERGED_STATUS = 2
 
+# getImagettes' search margin (voxels beyond the half-window on each side,
+# needed so register() has room to find a shifted match). Nodes whose window
+# (half_window_size + this margin) extends past the volume boundary get a
+# degenerate, near-constant imagette from edge padding -- verified this makes
+# spam.DIC.register falsely report CONVERGED_STATUS with garbage displacement
+# (observed: -78 voxels reported as "converged" for a true -1 voxel shift, on
+# a node whose window ran past the volume edge). These nodes are excluded
+# before correlation, not just filtered after, so they can never masquerade
+# as converged.
+_SEARCH_MARGIN = 3
+OUT_OF_BOUNDS_STATUS = -8
+
 # spam.DIC.ldic()'s multiprocessing.Pool is not safe to call from here: spam
 # unconditionally forces multiprocessing.set_start_method("fork") on import
 # (across a dozen of its own modules), and forking while spam's own
@@ -87,6 +99,14 @@ def _correlate_one_node(dic, reference, deformed, node_position, hws) -> tuple:
     )
 
 
+def _fits_in_bounds(node_position: np.ndarray, half_window_size: int, shape: tuple) -> bool:
+    clearance = half_window_size + _SEARCH_MARGIN
+    shape_arr = np.array(shape)
+    return bool(
+        np.all(node_position - clearance >= 0) and np.all(node_position + clearance < shape_arr)
+    )
+
+
 def run_local_dvc(
     reference: np.ndarray,
     deformed: np.ndarray,
@@ -94,6 +114,10 @@ def run_local_dvc(
     half_window_size: int,
 ) -> dict:
     """Run grid-based local DVC between *reference* and *deformed* volumes.
+
+    Nodes whose correlation window would extend past the volume boundary are
+    excluded from correlation (see OUT_OF_BOUNDS_STATUS) rather than passed to
+    spam, which was observed to falsely report them as converged.
 
     Returns a dict with keys: node_positions (N,3), phi_field (N,4,4),
     return_status (N,) float array (2 == converged).
@@ -108,6 +132,14 @@ def run_local_dvc(
     error = np.zeros(n_nodes)
     iterations = np.zeros(n_nodes)
     for i in range(n_nodes):
+        if not _fits_in_bounds(node_positions[i], half_window_size, reference.shape):
+            bad_phi = np.eye(4)
+            bad_phi[0:3, 3] = np.nan
+            phi_field[i] = bad_phi
+            return_status[i] = OUT_OF_BOUNDS_STATUS
+            error[i] = np.inf
+            iterations[i] = 0
+            continue
         phi, status, err, its = _correlate_one_node(
             dic, reference, deformed, node_positions[i], hws
         )

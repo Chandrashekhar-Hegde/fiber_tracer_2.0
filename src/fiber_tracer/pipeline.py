@@ -164,6 +164,7 @@ class FiberAnalysisPipeline:
             mean_strain = [float("nan")] * 3
 
         dvc_summary: dict[str, Any] = {
+            "regime": "dvc",
             "convergence_rate": convergence_rate,
             "n_windows": len(windows),
             "n_converged": len(converged),

@@ -45,6 +45,48 @@ def _fibers_table(fibers: list[dict]) -> str:
     return f"<table>{head}{''.join(rows)}</table>"
 
 
+def _dvc_table(summary: dict) -> str:
+    windows = summary.get("dvc_windows", [])
+    if not windows:
+        return ""
+    noise = summary.get("noise_floor", {})
+    convergence_pct = summary.get("convergence_rate", 0.0) * 100
+    noise_convergence_pct = noise.get("convergence_rate", 0.0) * 100
+    summary_rows = (
+        f"<tr><td>Convergence rate</td><td>{convergence_pct:.1f}%</td>"
+        f"<td>{noise_convergence_pct:.1f}%</td></tr>"
+        f"<tr><td>Mean / noise-floor displacement (voxels, z, y, x)</td>"
+        f"<td>{_fmt_vec(summary.get('mean_displacement_voxels'))}</td>"
+        f"<td>{_fmt_vec(noise.get('displacement_std_voxels'))}</td></tr>"
+        f"<tr><td>Mean / noise-floor strain (z, y, x)</td>"
+        f"<td>{_fmt_vec(summary.get('mean_strain'))}</td>"
+        f"<td>{_fmt_vec(noise.get('strain_std'))}</td></tr>"
+    )
+    summary_table = (
+        "<table><tr><th>Statistic</th><th>Measured</th><th>Noise floor "
+        "(self-correlation)</th></tr>" + summary_rows + "</table>"
+    )
+
+    head = (
+        "<tr><th>Node (z, y, x)</th><th>Displacement (voxels)</th>"
+        "<th>Strain</th><th>Converged</th></tr>"
+    )
+    rows = []
+    for w in windows:
+        rows.append(
+            f"<tr><td>{_fmt_vec(w.get('node_position'))}</td>"
+            f"<td>{_fmt_vec(w.get('displacement_voxels'))}</td>"
+            f"<td>{_fmt_vec(w.get('strain'))}</td>"
+            f"<td>{'yes' if w.get('converged') else 'no'}</td></tr>"
+        )
+    windows_table = f"<table>{head}{''.join(rows)}</table>"
+
+    return (
+        f"<h2>DVC summary ({len(windows)} nodes)</h2>{summary_table}"
+        f"<h2>DVC per-node results</h2>{windows_table}"
+    )
+
+
 def _population_table(summary: dict) -> str:
     """Scalar population-level stats (marginal / subvoxel regimes)."""
     keys = ("fa", "global_fa", "n_windows", "principal_axis")
@@ -63,13 +105,15 @@ def write_html_report(path: str | Path, summary: dict) -> None:
     """Write a human-readable HTML report with a results table, caveats, and citations."""
     path = Path(path)
     regime = summary.get("regime", "unknown")
-    n_labels = summary.get("n_labels", summary.get("n_voxels", 0))
+    n_labels = summary.get("n_labels", summary.get("n_voxels", summary.get("n_windows", 0)))
     caveats = summary.get("caveats", REGIME_CAVEATS.get(regime, ""))
     citations = summary.get("citations", CITATIONS)
 
     fibers = summary.get("fibers")
     if fibers:
         results = f"<h2>Per-fibre results ({len(fibers)})</h2>{_fibers_table(fibers)}"
+    elif summary.get("dvc_windows"):
+        results = _dvc_table(summary)
     else:
         pop = _population_table(summary)
         results = f"<h2>Population statistics</h2>{pop}" if pop else ""
