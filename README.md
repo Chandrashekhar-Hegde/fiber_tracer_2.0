@@ -504,6 +504,7 @@ Set `analysis.compute_tda_descriptors: true` to compute Betti numbers and persis
 | [`docs/developer_guide.md`](docs/developer_guide.md) | Development setup, testing, linting, type checking, and contribution workflow. |
 | [`docs/RAFA_IMPLEMENTATION_PLAN.md`](docs/RAFA_IMPLEMENTATION_PLAN.md) | Original redesign plan for the RAFA pipeline. |
 | [`docs/RESEARCH_FOUNDATION.md`](docs/RESEARCH_FOUNDATION.md) | Literature survey (83 verified references) spanning standards, segmentation, orientation/tracking, DVC/DIC, prediction, and digital twins — the research basis for this pipeline and its roadmap. |
+| [`docs/DVC_BENCHMARK.md`](docs/DVC_BENCHMARK.md) | Digital Volume Correlation accuracy validation, voxelization-fidelity sweep, and cross-tool comparison. |
 | [`CHANGELOG.md`](CHANGELOG.md) | Version history and release notes. |
 | [`ROADMAP.md`](ROADMAP.md) | Short-, medium-, and long-term project roadmap. |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to set up a dev environment, run tests, and submit PRs. |

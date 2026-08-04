@@ -32,6 +32,14 @@ This document describes where the project is headed and how you can help. For de
 - [ ] Fine-tune segmentation adapter on GF-PA66 and at least one pultruded CFRP dataset.
 - [ ] Release a pre-trained FiberTracer-X encoder checkpoint on GitHub.
 
+### Digital Volume Correlation (epic #19)
+
+- [x] Feasibility spike validating `spam`-based DVC against a known applied deformation.
+- [x] Local grid-based DVC (`fiber_tracer.correlation.dvc`), wired through config/pipeline/reporting/TUI.
+- [x] Per-run noise-floor estimation and convergence-rate gating (Croom et al. methodology, `RESEARCH_FOUNDATION.md` ref 60).
+- [x] Accuracy benchmark (voxelization-fidelity sweep) and cross-tool comparison — see [`docs/DVC_BENCHMARK.md`](docs/DVC_BENCHMARK.md).
+- [ ] DIC (2D counterpart, epic #20) — spike first.
+
 ### Engineering
 
 - [ ] Add a GitHub Actions release workflow that builds wheels/sdists and attaches artifacts.

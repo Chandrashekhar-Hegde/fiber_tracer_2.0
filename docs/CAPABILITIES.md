@@ -25,7 +25,7 @@ Status legend: ✅ implemented · ⚠️ partial / not wired up · ❌ absent.
 | Fibre tracking — centerline paths / length / tortuosity | ✅ | `centerline/paths.py::extract_fiber_paths` feeds `ordered_path_length`/`tortuosity` in the resolved per-fiber loop; `analysis.compute_tracking` |
 | Fibre tracking — skeleton graph (skan) | ⚠️ | `centerline/graph.py::skeleton_to_skan` wrapper exists (needs `skeleton` extra) but is not integrated |
 | Orientation field (structure tensor) | ✅ | `orientation/structure_tensor.py`, `orientation/tensor.py` (marginal/subvoxel regimes) |
-| DVC (3D displacement/strain) | ❌ | not present |
+| DVC (3D displacement/strain) | ✅ | `correlation/dvc.py::run_local_dvc`; `dvc.enabled` — see [`DVC_BENCHMARK.md`](DVC_BENCHMARK.md) for accuracy/convergence figures |
 | DIC (2D displacement/strain) | ❌ | not present |
 | Digital twin | ❌ | not present; scope undefined for this tool |
 
@@ -60,6 +60,8 @@ Key switches today:
 | Voxel spacing | `voxel_spacing_um` | `--voxel-spacing` | `voxelSpacing` |
 | Fibre diameter | `fiber_diameter_um` | `--fiber-diameter` | `fiberDiameter` |
 | Morphometry / orientation / TDA toggles | `analysis.*` | (config file) | `computeMorphometry` / `computeOrientationTensor` / `computeTda` |
+| DVC enable + reference/deformed volumes | `dvc.enabled`, `dvc.reference_path`, `dvc.deformed_path` | (config file) | `computeDvc`, `dvcReferencePath`, `dvcDeformedPath` |
+| DVC grid/window/convergence tuning | `dvc.node_spacing_voxels`, `dvc.half_window_size_voxels`, `dvc.min_convergence_rate` | (config file) | (config file) |
 
 ## Roadmap
 
@@ -86,16 +88,23 @@ adaptation / fine-tuning CLI (#6), uncertainty / ensemble inference (#7), datase
 downloader expansion (#8, #3), public benchmark leaderboard (#9), plus
 integrating the declared nnU-Net backend.
 
+### Shipped: DVC (epic #19)
+
+Local grid-based DVC (`spam` backend) is implemented and wired through all
+four layers — see the status matrix above and
+[`DVC_BENCHMARK.md`](DVC_BENCHMARK.md) for accuracy/convergence figures and
+the cross-tool comparison. Preceded by a feasibility spike
+(`docs/superpowers/specs/2026-08-02-dvc-spike-design.md`).
+
 ### Research track (spike first)
 
 See [`RESEARCH_FOUNDATION.md`](RESEARCH_FOUNDATION.md) for the literature basis
-behind each of these (§8 for DVC/DIC, §10–§11 for digital twins and
+behind each of these (§8 for DIC, §10–§11 for digital twins and
 cross-cutting concerns, §12 for how these map to epics #18–#21).
 
-- **DVC** — evaluate approaches (FFT cross-correlation, optical-flow, dedicated
-  libraries), define reference-vs-deformed I/O and displacement/strain outputs,
-  and a deformation-phantom validation, before committing to an implementation.
-- **DIC** — 2D counterpart; decide how much of a core it shares with DVC.
+- **DIC** — 2D counterpart to DVC; decide how much of a core it shares
+  (`fiber_tracer.correlation` is structured to leave room for a `dic.py`
+  alongside `dvc.py`).
 - **Digital twin** — define what a digital twin means for this tool (e.g. a
   parametric synthetic-microstructure model fitted to a scan with property/FE
   export) before any build.
