@@ -376,6 +376,7 @@ def _run_pipeline(args: argparse.Namespace) -> int:
         segmentation=file_config.segmentation,
         orientation=file_config.orientation,
         analysis=file_config.analysis,
+        dvc=file_config.dvc,
     )
 
     if args.voxel_spacing:
