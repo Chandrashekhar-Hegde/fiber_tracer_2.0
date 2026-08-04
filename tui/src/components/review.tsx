@@ -28,6 +28,12 @@ export function Review({ config, theme }: ReviewProps) {
           ? ` (reference: ${config.dvcReferencePath || "none"}, deformed: ${config.dvcDeformedPath || "none"})`
           : ""}
       </Text>
+      <Text color={theme.foreground}>
+        DIC: {config.computeDic ? "on" : "off"}
+        {config.computeDic
+          ? ` (reference: ${config.dicReferencePath || "none"}, deformed: ${config.dicDeformedPath || "none"})`
+          : ""}
+      </Text>
       <Text color={theme.success}>Press r to run</Text>
     </Box>
   );

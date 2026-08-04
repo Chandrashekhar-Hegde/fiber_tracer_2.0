@@ -73,6 +73,11 @@ function buildJson(config: AnalysisConfig): string {
       reference_path: config.dvcReferencePath,
       deformed_path: config.dvcDeformedPath,
     },
+    dic: {
+      enabled: config.computeDic,
+      reference_path: config.dicReferencePath,
+      deformed_path: config.dicDeformedPath,
+    },
   });
 }
 
