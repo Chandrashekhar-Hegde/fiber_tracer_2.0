@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from fiber_tracer.cli import main
-from fiber_tracer.config import Config, DVCConfig, VoxelSpacing
+from fiber_tracer.config import Config, DICConfig, DVCConfig, VoxelSpacing
 from fiber_tracer.io import save_tiff_stack
 from fiber_tracer.pipeline import FiberAnalysisPipeline
 from fiber_tracer.validation.phantoms import generate_fiber_phantom
@@ -483,3 +483,64 @@ def test_dvc_config_survives_cli_config_file_round_trip(tmp_path):
     assert (
         out_dir / "dvc_summary.json"
     ).exists(), "dvc.enabled did not survive cli.py's Config reconstruction"
+
+
+def test_dic_config_survives_cli_config_file_round_trip(tmp_path):
+    """Same regression class as the dvc field: dic must not be dropped by
+    cli.py's explicit Config(...) reconstruction in _run_pipeline.
+    """
+    pytest.importorskip("spam")
+    import numpy as np
+    from scipy.ndimage import affine_transform
+
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    main_phantom = generate_fiber_phantom(
+        shape=(48, 48, 48),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, main_phantom.volume)
+
+    phantom_2d = generate_fiber_phantom(
+        shape=(20, 80, 80),
+        n_fibers=200,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=1,
+    )
+    reference = phantom_2d.volume[10].astype(np.float32)
+    deformed = affine_transform(
+        reference, np.eye(2), offset=[1.0, 0.0], order=1, mode="nearest"
+    ).astype(np.float32)
+    reference_path = data_dir / "dic_reference.tif"
+    deformed_path = data_dir / "dic_deformed.tif"
+    save_tiff_stack(reference_path, reference)
+    save_tiff_stack(deformed_path, deformed)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+        dic=DICConfig(
+            enabled=True,
+            reference_path=str(reference_path),
+            deformed_path=str(deformed_path),
+        ),
+    )
+    config_path = tmp_path / "config.yaml"
+    config.save(config_path)
+
+    rc = main(["--config", str(config_path)])
+
+    assert rc == 0
+    assert (
+        out_dir / "dic_summary.json"
+    ).exists(), "dic.enabled did not survive cli.py's Config reconstruction"
