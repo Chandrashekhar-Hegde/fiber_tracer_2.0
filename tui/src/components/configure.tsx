@@ -15,20 +15,36 @@ const TOGGLES: { key: keyof AnalysisConfig; label: string }[] = [
   { key: "computeTracking", label: "Centerline tracking" },
   { key: "computeTda", label: "TDA descriptors" },
   { key: "computeDvc", label: "DVC (digital volume correlation)" },
+  { key: "computeDic", label: "DIC (digital image correlation)" },
 ];
+
+const FILE_PICKER_KEYS = [
+  "dvcReferencePath",
+  "dvcDeformedPath",
+  "dicReferencePath",
+  "dicDeformedPath",
+] as const;
 
 // ponytail: reuses SelectData's hardcoded recent-files list rather than a
 // real file browser; matches the existing single-volume picker's scope.
 const RECENT_FILES = ["data/gfpa66_center.tif", "data/sample_a.tif", "data/sample_b.tif"];
 
 export function Configure({ config, onChange, theme }: ConfigureProps) {
-  const rows = config.computeDvc
-    ? [
-        ...TOGGLES,
-        { key: "dvcReferencePath" as const, label: "DVC reference volume" },
-        { key: "dvcDeformedPath" as const, label: "DVC deformed volume" },
-      ]
-    : TOGGLES;
+  const rows = [
+    ...TOGGLES,
+    ...(config.computeDvc
+      ? [
+          { key: "dvcReferencePath" as const, label: "DVC reference volume" },
+          { key: "dvcDeformedPath" as const, label: "DVC deformed volume" },
+        ]
+      : []),
+    ...(config.computeDic
+      ? [
+          { key: "dicReferencePath" as const, label: "DIC reference image" },
+          { key: "dicDeformedPath" as const, label: "DIC deformed image" },
+        ]
+      : []),
+  ];
   const [selectedIdx, setSelectedIdx] = useState(0);
   const clampedIdx = Math.min(selectedIdx, rows.length - 1);
 
@@ -37,7 +53,7 @@ export function Configure({ config, onChange, theme }: ConfigureProps) {
     if (key.downArrow) setSelectedIdx((i) => Math.min(rows.length - 1, i + 1));
     if (input === " " || key.return) {
       const row = rows[clampedIdx];
-      if (row.key === "dvcReferencePath" || row.key === "dvcDeformedPath") {
+      if ((FILE_PICKER_KEYS as readonly string[]).includes(row.key)) {
         const current = RECENT_FILES.indexOf(config[row.key] as string);
         const next = RECENT_FILES[(current + 1) % RECENT_FILES.length];
         onChange({ ...config, [row.key]: next });
@@ -64,7 +80,7 @@ export function Configure({ config, onChange, theme }: ConfigureProps) {
       <Text color={theme.foreground}>Batch size: {config.batchSize}</Text>
       <Box marginTop={1} flexDirection="column">
         {rows.map((row, idx) => {
-          const isFilePicker = row.key === "dvcReferencePath" || row.key === "dvcDeformedPath";
+          const isFilePicker = (FILE_PICKER_KEYS as readonly string[]).includes(row.key);
           const value = isFilePicker
             ? (config[row.key] as string) || "none"
             : config[row.key]

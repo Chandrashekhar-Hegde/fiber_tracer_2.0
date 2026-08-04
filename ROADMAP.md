@@ -38,7 +38,13 @@ This document describes where the project is headed and how you can help. For de
 - [x] Local grid-based DVC (`fiber_tracer.correlation.dvc`), wired through config/pipeline/reporting/TUI.
 - [x] Per-run noise-floor estimation and convergence-rate gating (Croom et al. methodology, `RESEARCH_FOUNDATION.md` ref 60).
 - [x] Accuracy benchmark (voxelization-fidelity sweep) and cross-tool comparison — see [`docs/DVC_BENCHMARK.md`](docs/DVC_BENCHMARK.md).
-- [ ] DIC (2D counterpart, epic #20) — spike first.
+
+### Digital Image Correlation (epic #20)
+
+- [x] Feasibility spike validating `spam.DIC.register` recovers a known 2D deformation, confirming it shares DVC's engine unchanged.
+- [x] Shared correlation engine extracted to `fiber_tracer.correlation.core`; `dvc.py`/`dic.py` are thin re-exports.
+- [x] Local grid-based DIC (`fiber_tracer.correlation.dic`), wired through config/pipeline/reporting/CLI/TUI.
+- [x] Same noise-floor/convergence-gating methodology as DVC, applied to 2D images.
 
 ### Engineering
 

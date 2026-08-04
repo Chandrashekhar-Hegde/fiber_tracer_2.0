@@ -16,6 +16,9 @@ export interface AnalysisConfig {
   computeDvc: boolean;
   dvcReferencePath: string;
   dvcDeformedPath: string;
+  computeDic: boolean;
+  dicReferencePath: string;
+  dicDeformedPath: string;
 }
 
 export interface RunRecord {

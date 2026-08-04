@@ -68,6 +68,9 @@ describe("bridge", () => {
       computeDvc: false,
       dvcReferencePath: "",
       dvcDeformedPath: "",
+      computeDic: false,
+      dicReferencePath: "",
+      dicDeformedPath: "",
     });
     expect(result.success).toBe(false);
     expect(result.error).toContain("ENOENT");

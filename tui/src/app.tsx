@@ -37,6 +37,9 @@ const DEFAULT_CONFIG: AnalysisConfig = {
   computeDvc: false,
   dvcReferencePath: "",
   dvcDeformedPath: "",
+  computeDic: false,
+  dicReferencePath: "",
+  dicDeformedPath: "",
 };
 
 export function App() {

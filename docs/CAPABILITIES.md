@@ -26,7 +26,7 @@ Status legend: ✅ implemented · ⚠️ partial / not wired up · ❌ absent.
 | Fibre tracking — skeleton graph (skan) | ⚠️ | `centerline/graph.py::skeleton_to_skan` wrapper exists (needs `skeleton` extra) but is not integrated |
 | Orientation field (structure tensor) | ✅ | `orientation/structure_tensor.py`, `orientation/tensor.py` (marginal/subvoxel regimes) |
 | DVC (3D displacement/strain) | ✅ | `correlation/dvc.py::run_local_dvc`; `dvc.enabled` — see [`DVC_BENCHMARK.md`](DVC_BENCHMARK.md) for accuracy/convergence figures |
-| DIC (2D displacement/strain) | ❌ | not present |
+| DIC (2D displacement/strain) | ✅ | `correlation/dic.py::run_local_dic`; `dic.enabled` — shares the engine in `correlation/core.py` with DVC |
 | Digital twin | ❌ | not present; scope undefined for this tool |
 
 ## How switches flow (frontend → backend)
@@ -62,6 +62,8 @@ Key switches today:
 | Morphometry / orientation / TDA toggles | `analysis.*` | (config file) | `computeMorphometry` / `computeOrientationTensor` / `computeTda` |
 | DVC enable + reference/deformed volumes | `dvc.enabled`, `dvc.reference_path`, `dvc.deformed_path` | (config file) | `computeDvc`, `dvcReferencePath`, `dvcDeformedPath` |
 | DVC grid/window/convergence tuning | `dvc.node_spacing_voxels`, `dvc.half_window_size_voxels`, `dvc.min_convergence_rate` | (config file) | (config file) |
+| DIC enable + reference/deformed images | `dic.enabled`, `dic.reference_path`, `dic.deformed_path` | (config file) | `computeDic`, `dicReferencePath`, `dicDeformedPath` |
+| DIC grid/window/convergence tuning | `dic.node_spacing_pixels`, `dic.half_window_size_pixels`, `dic.min_convergence_rate` | (config file) | (config file) |
 
 ## Roadmap
 
@@ -88,23 +90,25 @@ adaptation / fine-tuning CLI (#6), uncertainty / ensemble inference (#7), datase
 downloader expansion (#8, #3), public benchmark leaderboard (#9), plus
 integrating the declared nnU-Net backend.
 
-### Shipped: DVC (epic #19)
+### Shipped: DVC & DIC (epics #19, #20)
 
-Local grid-based DVC (`spam` backend) is implemented and wired through all
-four layers — see the status matrix above and
-[`DVC_BENCHMARK.md`](DVC_BENCHMARK.md) for accuracy/convergence figures and
-the cross-tool comparison. Preceded by a feasibility spike
-(`docs/superpowers/specs/2026-08-02-dvc-spike-design.md`).
+Local grid-based correlation is implemented for both 3D volumes (DVC) and 2D
+images (DIC), sharing one engine (`correlation/core.py`, `spam` backend) —
+the DIC spike (`docs/superpowers/specs/2026-08-04-dic-spike-design.md`)
+confirmed the same `spam.DIC.register` call needs no modality-specific
+algorithm code, just a `(1, H, W)`-shaped image instead of a full volume.
+`correlation/dvc.py` and `correlation/dic.py` are thin re-exports. See the
+status matrix above and [`DVC_BENCHMARK.md`](DVC_BENCHMARK.md) for the
+accuracy/convergence figures and cross-tool comparison (which applies to both,
+being the same engine). DVC was preceded by a feasibility spike
+(`docs/superpowers/specs/2026-08-02-dvc-spike-design.md`), DIC by
+`docs/superpowers/specs/2026-08-04-dic-spike-design.md`.
 
 ### Research track (spike first)
 
-See [`RESEARCH_FOUNDATION.md`](RESEARCH_FOUNDATION.md) for the literature basis
-behind each of these (§8 for DIC, §10–§11 for digital twins and
-cross-cutting concerns, §12 for how these map to epics #18–#21).
+See [`RESEARCH_FOUNDATION.md`](RESEARCH_FOUNDATION.md) §10–§11 for digital
+twins and cross-cutting concerns, §12 for how these map to epics #18–#21.
 
-- **DIC** — 2D counterpart to DVC; decide how much of a core it shares
-  (`fiber_tracer.correlation` is structured to leave room for a `dic.py`
-  alongside `dvc.py`).
 - **Digital twin** — define what a digital twin means for this tool (e.g. a
   parametric synthetic-microstructure model fitted to a scan with property/FE
   export) before any build.

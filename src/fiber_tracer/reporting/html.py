@@ -45,8 +45,11 @@ def _fibers_table(fibers: list[dict]) -> str:
     return f"<table>{head}{''.join(rows)}</table>"
 
 
-def _dvc_table(summary: dict) -> str:
-    windows = summary.get("dvc_windows", [])
+def _correlation_table(summary: dict, windows_key: str, label: str) -> str:
+    """Shared table builder for DVC (windows_key='dvc_windows') and DIC
+    (windows_key='dic_windows') reports -- same summary shape, produced by
+    the same underlying correlation engine (fiber_tracer.correlation.core)."""
+    windows = summary.get(windows_key, [])
     if not windows:
         return ""
     noise = summary.get("noise_floor", {})
@@ -82,8 +85,8 @@ def _dvc_table(summary: dict) -> str:
     windows_table = f"<table>{head}{''.join(rows)}</table>"
 
     return (
-        f"<h2>DVC summary ({len(windows)} nodes)</h2>{summary_table}"
-        f"<h2>DVC per-node results</h2>{windows_table}"
+        f"<h2>{label} summary ({len(windows)} nodes)</h2>{summary_table}"
+        f"<h2>{label} per-node results</h2>{windows_table}"
     )
 
 
@@ -113,7 +116,9 @@ def write_html_report(path: str | Path, summary: dict) -> None:
     if fibers:
         results = f"<h2>Per-fibre results ({len(fibers)})</h2>{_fibers_table(fibers)}"
     elif summary.get("dvc_windows"):
-        results = _dvc_table(summary)
+        results = _correlation_table(summary, "dvc_windows", "DVC")
+    elif summary.get("dic_windows"):
+        results = _correlation_table(summary, "dic_windows", "DIC")
     else:
         pop = _population_table(summary)
         results = f"<h2>Population statistics</h2>{pop}" if pop else ""

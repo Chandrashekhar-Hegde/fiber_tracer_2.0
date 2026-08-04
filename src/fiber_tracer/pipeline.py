@@ -24,6 +24,7 @@ from fiber_tracer.backends.ml_segmentation import MLSegmentationBackend
 from fiber_tracer.centerline.paths import extract_fiber_paths
 from fiber_tracer.centerline.skeleton import skeletonize_label_volume
 from fiber_tracer.config import Config
+from fiber_tracer.correlation.dic import run_local_dic
 from fiber_tracer.correlation.dvc import (
     displacement_and_strain_per_node,
     estimate_noise_floor,
@@ -105,6 +106,8 @@ class FiberAnalysisPipeline:
 
         if self.config.dvc.enabled:
             summary["dvc"] = self._run_dvc(out)
+        if self.config.dic.enabled:
+            summary["dic"] = self._run_dic(out)
 
         elapsed = time.perf_counter() - start
         summary["elapsed_seconds"] = elapsed
@@ -182,6 +185,71 @@ class FiberAnalysisPipeline:
         write_csv_report(out / "dvc_report.csv", dvc_summary)
         write_html_report(out / "dvc_report.html", dvc_summary)
         return dvc_summary
+
+    def _run_dic(self, out: Path) -> dict:
+        """Local DIC between config.dic.reference_path and config.dic.deformed_path.
+
+        Mirrors _run_dvc exactly, using the same shared correlation engine
+        (fiber_tracer.correlation.core) with 2D (1, H, W) images instead of
+        3D volumes -- see docs/superpowers/specs/2026-08-04-dic-spike-design.md.
+        """
+        dic_config = self.config.dic
+        reference = load_tiff_stack(dic_config.reference_path)
+        deformed = load_tiff_stack(dic_config.deformed_path)
+        if reference.ndim == 2:
+            reference = reference[np.newaxis, ...]
+        if deformed.ndim == 2:
+            deformed = deformed[np.newaxis, ...]
+
+        result = run_local_dic(
+            reference, deformed, dic_config.node_spacing_pixels, dic_config.half_window_size_pixels
+        )
+        windows = displacement_and_strain_per_node(
+            result["phi_field"], result["node_positions"], result["return_status"]
+        )
+        converged = [w for w in windows if w["converged"]]
+        convergence_rate = len(converged) / len(windows) if windows else 0.0
+
+        if convergence_rate < dic_config.min_convergence_rate:
+            logger.warning(
+                f"DIC convergence rate {convergence_rate:.2f} is below "
+                f"min_convergence_rate={dic_config.min_convergence_rate}; "
+                "aggregate displacement/strain statistics are computed from "
+                f"converged nodes only ({len(converged)}/{len(windows)})."
+            )
+
+        noise_floor = estimate_noise_floor(
+            reference, dic_config.node_spacing_pixels, dic_config.half_window_size_pixels
+        )
+
+        if converged:
+            displacements = np.array([w["displacement_voxels"] for w in converged])
+            strains = np.array([w["strain"] for w in converged])
+            mean_displacement = displacements.mean(axis=0).tolist()
+            mean_strain = strains.mean(axis=0).tolist()
+        else:
+            mean_displacement = [float("nan")] * 3
+            mean_strain = [float("nan")] * 3
+
+        dic_summary: dict[str, Any] = {
+            "regime": "dic",
+            "convergence_rate": convergence_rate,
+            "n_windows": len(windows),
+            "n_converged": len(converged),
+            "mean_displacement_voxels": mean_displacement,
+            "mean_strain": mean_strain,
+            "noise_floor": noise_floor,
+            "dic_windows": windows,
+            "config": {
+                "node_spacing_pixels": dic_config.node_spacing_pixels,
+                "half_window_size_pixels": dic_config.half_window_size_pixels,
+                "min_convergence_rate": dic_config.min_convergence_rate,
+            },
+        }
+        write_json_report(out / "dic_summary.json", dic_summary)
+        write_csv_report(out / "dic_report.csv", dic_summary)
+        write_html_report(out / "dic_report.html", dic_summary)
+        return dic_summary
 
     def _compute_local_directions(
         self,
