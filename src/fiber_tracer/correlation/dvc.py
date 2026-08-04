@@ -13,12 +13,28 @@ import numpy as np
 
 from fiber_tracer.exceptions import BackendNotAvailableError
 
-# spam.DIC.register centers Phi on the image centre; per-node ldic() results
+# spam.DIC.register centers Phi on the image centre; per-node results below
 # must instead be decomposed about each node's own position, or strain leaks
 # into apparent displacement (verified empirically: a zero-strain
 # self-correlation gives exactly 0.0 displacement/strain only with this
 # centering).
 CONVERGED_STATUS = 2
+
+# spam.DIC.ldic()'s multiprocessing.Pool is not safe to call from here: spam
+# unconditionally forces multiprocessing.set_start_method("fork") on import
+# (across a dozen of its own modules), and forking while spam's own
+# rich.progress.Progress live-refresh thread is active deadlocked reproducibly
+# under pytest (observed hanging indefinitely). Forcing "spawn" instead is not
+# a fix either: ldic()'s per-node worker is a dynamically-defined closure
+# (`global _multiprocessingCorrelateOneNode`) that only exists via fork's
+# copy-on-write semantics -- spawned workers re-import the module fresh and
+# crash with AttributeError. So this module bypasses ldic() entirely and
+# replicates its per-node algorithm sequentially (extract imagette pair via
+# getImagettes, then register()), which is exactly what each of ldic()'s
+# worker processes does -- just without the unsafe concurrency wrapper.
+# ponytail: sequential, not parallel; revisit if per-run correlation time
+# becomes a bottleneck (would need a process-pool strategy that survives
+# spam's forced fork context, e.g. a subprocess-per-call design).
 
 
 def _import_spam():
@@ -31,6 +47,44 @@ def _import_spam():
             "spam's compiled extension also needs `brew install gmp`."
         ) from exc
     return spam.DIC, spam.deformation
+
+
+def _correlate_one_node(dic, reference, deformed, node_position, hws) -> tuple:
+    """Sequential equivalent of spam.DIC.ldic's internal per-node worker."""
+    phi_init = np.eye(4)
+    imagette_returns = dic.getImagettes(
+        reference,
+        node_position,
+        hws,
+        phi_init.copy(),
+        deformed,
+        [-3, 3, -3, 3, -3, 3],
+        applyF="no",
+    )
+    if imagette_returns["returnStatus"] != 1:
+        bad_phi = np.eye(4)
+        bad_phi[0:3, 3] = np.nan
+        return bad_phi, imagette_returns["returnStatus"], np.inf, 0
+
+    initial_displacement = np.round(phi_init[0:3, 3]).astype(int)
+    phi_init[0:3, -1] -= initial_displacement
+    register_returns = dic.register(
+        imagette_returns["imagette1"],
+        imagette_returns["imagette2"],
+        im1mask=imagette_returns["imagette1mask"],
+        PhiInit=phi_init,
+        margin=1,
+        interpolationOrder=1,
+        verbose=False,
+    )
+    good_phi = register_returns["Phi"]
+    good_phi[0:3, -1] += initial_displacement
+    return (
+        good_phi,
+        register_returns["returnStatus"],
+        register_returns["error"],
+        register_returns["iterations"],
+    )
 
 
 def run_local_dvc(
@@ -47,9 +101,21 @@ def run_local_dvc(
     dic, _ = _import_spam()
     node_positions, _nodes_dim = dic.makeGrid(reference.shape, nodeSpacing=node_spacing)
     hws = np.array([half_window_size, half_window_size, half_window_size])
-    phi_field, return_status, error, iterations, delta_phi_norm = dic.ldic(
-        reference, deformed, node_positions, hws
-    )
+
+    n_nodes = len(node_positions)
+    phi_field = np.zeros((n_nodes, 4, 4))
+    return_status = np.zeros(n_nodes)
+    error = np.zeros(n_nodes)
+    iterations = np.zeros(n_nodes)
+    for i in range(n_nodes):
+        phi, status, err, its = _correlate_one_node(
+            dic, reference, deformed, node_positions[i], hws
+        )
+        phi_field[i] = phi
+        return_status[i] = status
+        error[i] = err
+        iterations[i] = its
+
     return {
         "node_positions": node_positions,
         "phi_field": phi_field,

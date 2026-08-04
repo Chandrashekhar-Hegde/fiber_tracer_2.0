@@ -24,6 +24,11 @@ from fiber_tracer.backends.ml_segmentation import MLSegmentationBackend
 from fiber_tracer.centerline.paths import extract_fiber_paths
 from fiber_tracer.centerline.skeleton import skeletonize_label_volume
 from fiber_tracer.config import Config
+from fiber_tracer.correlation.dvc import (
+    displacement_and_strain_per_node,
+    estimate_noise_floor,
+    run_local_dvc,
+)
 from fiber_tracer.io import get_shape_info, load_tiff_stack, save_tiff_stack
 from fiber_tracer.orientation.pca import pca_orientation
 from fiber_tracer.orientation.structure_tensor import (
@@ -98,6 +103,9 @@ class FiberAnalysisPipeline:
         else:
             raise ValueError(f"unsupported regime: {regime}")
 
+        if self.config.dvc.enabled:
+            summary["dvc"] = self._run_dvc(out)
+
         elapsed = time.perf_counter() - start
         summary["elapsed_seconds"] = elapsed
         if os.environ.get("FIBER_TRACER_JSON_PROGRESS"):
@@ -113,6 +121,66 @@ class FiberAnalysisPipeline:
             )
         logger.info(f"Pipeline completed in {elapsed:.2f}s")
         return summary
+
+    def _run_dvc(self, out: Path) -> dict:
+        """Local DVC between config.dvc.reference_path and config.dvc.deformed_path.
+
+        Independent of regime (correlates a separate volume pair, not the
+        pipeline's main data_path), so it writes its own report files rather
+        than being folded into a regime handler's summary.
+        """
+        dvc_config = self.config.dvc
+        reference = load_tiff_stack(dvc_config.reference_path)
+        deformed = load_tiff_stack(dvc_config.deformed_path)
+
+        result = run_local_dvc(
+            reference, deformed, dvc_config.node_spacing_voxels, dvc_config.half_window_size_voxels
+        )
+        windows = displacement_and_strain_per_node(
+            result["phi_field"], result["node_positions"], result["return_status"]
+        )
+        converged = [w for w in windows if w["converged"]]
+        convergence_rate = len(converged) / len(windows) if windows else 0.0
+
+        if convergence_rate < dvc_config.min_convergence_rate:
+            logger.warning(
+                f"DVC convergence rate {convergence_rate:.2f} is below "
+                f"min_convergence_rate={dvc_config.min_convergence_rate}; "
+                "aggregate displacement/strain statistics are computed from "
+                f"converged nodes only ({len(converged)}/{len(windows)})."
+            )
+
+        noise_floor = estimate_noise_floor(
+            reference, dvc_config.node_spacing_voxels, dvc_config.half_window_size_voxels
+        )
+
+        if converged:
+            displacements = np.array([w["displacement_voxels"] for w in converged])
+            strains = np.array([w["strain"] for w in converged])
+            mean_displacement = displacements.mean(axis=0).tolist()
+            mean_strain = strains.mean(axis=0).tolist()
+        else:
+            mean_displacement = [float("nan")] * 3
+            mean_strain = [float("nan")] * 3
+
+        dvc_summary: dict[str, Any] = {
+            "convergence_rate": convergence_rate,
+            "n_windows": len(windows),
+            "n_converged": len(converged),
+            "mean_displacement_voxels": mean_displacement,
+            "mean_strain": mean_strain,
+            "noise_floor": noise_floor,
+            "dvc_windows": windows,
+            "config": {
+                "node_spacing_voxels": dvc_config.node_spacing_voxels,
+                "half_window_size_voxels": dvc_config.half_window_size_voxels,
+                "min_convergence_rate": dvc_config.min_convergence_rate,
+            },
+        }
+        write_json_report(out / "dvc_summary.json", dvc_summary)
+        write_csv_report(out / "dvc_report.csv", dvc_summary)
+        write_html_report(out / "dvc_report.html", dvc_summary)
+        return dvc_summary
 
     def _compute_local_directions(
         self,
