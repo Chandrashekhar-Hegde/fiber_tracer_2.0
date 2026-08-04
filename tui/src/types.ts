@@ -13,6 +13,9 @@ export interface AnalysisConfig {
   computeOrientationTensor: boolean;
   computeTracking: boolean;
   computeTda: boolean;
+  computeDvc: boolean;
+  dvcReferencePath: string;
+  dvcDeformedPath: string;
 }
 
 export interface RunRecord {

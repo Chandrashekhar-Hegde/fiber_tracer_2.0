@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from fiber_tracer.cli import main
-from fiber_tracer.config import Config, VoxelSpacing
+from fiber_tracer.config import Config, DVCConfig, VoxelSpacing
 from fiber_tracer.io import save_tiff_stack
 from fiber_tracer.pipeline import FiberAnalysisPipeline
 from fiber_tracer.validation.phantoms import generate_fiber_phantom
@@ -321,3 +321,165 @@ def test_pipeline_runs_with_config_file_only(tmp_path):
     assert (out_dir / "labels.tif").exists()
     assert (out_dir / "skeleton.tif").exists()
     assert (out_dir / "normalized_input.tif").exists()
+
+
+def test_dvc_disabled_omits_dvc_summary(tmp_path):
+    """dvc.enabled=False (default) means no DVC step runs and no key is added."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+    )
+
+    summary = FiberAnalysisPipeline(config).run()
+    assert "dvc" not in summary
+    assert not (out_dir / "dvc_summary.json").exists()
+
+
+def test_dvc_enabled_writes_dvc_reports(tmp_path):
+    """dvc.enabled=True runs local DVC on the reference/deformed pair and writes reports."""
+    pytest.importorskip("spam")
+    import numpy as np
+    from scipy.ndimage import affine_transform
+
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    main_phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, main_phantom.volume)
+
+    # 80^3 with node_spacing=20/half_window_size=10 keeps every grid node's
+    # window (+ search margin) inside the volume; a smaller volume leaves most
+    # nodes out-of-bounds (see fiber_tracer.correlation.dvc.OUT_OF_BOUNDS_STATUS).
+    dvc_phantom = generate_fiber_phantom(
+        shape=(80, 80, 80),
+        n_fibers=200,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=1,
+    )
+    reference = dvc_phantom.volume.astype(np.float32)
+    deformed = affine_transform(
+        reference, np.eye(3), offset=[1.0, 0.0, 0.0], order=1, mode="nearest"
+    ).astype(np.float32)
+    reference_path = data_dir / "dvc_reference.tif"
+    deformed_path = data_dir / "dvc_deformed.tif"
+    save_tiff_stack(reference_path, reference)
+    save_tiff_stack(deformed_path, deformed)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+        dvc=DVCConfig(
+            enabled=True,
+            reference_path=str(reference_path),
+            deformed_path=str(deformed_path),
+            node_spacing_voxels=20,
+            half_window_size_voxels=10,
+        ),
+    )
+
+    summary = FiberAnalysisPipeline(config).run()
+
+    assert "dvc" in summary
+    assert summary["dvc"]["n_windows"] > 0
+    assert "noise_floor" in summary["dvc"]
+    assert (out_dir / "dvc_summary.json").exists()
+    assert (out_dir / "dvc_report.csv").exists()
+    assert (out_dir / "dvc_report.html").exists()
+
+    with open(out_dir / "dvc_summary.json") as f:
+        dvc_json = json.load(f)
+    assert dvc_json["n_windows"] == summary["dvc"]["n_windows"]
+
+
+def test_dvc_config_survives_cli_config_file_round_trip(tmp_path):
+    """Regression test: cli.py's _run_pipeline explicitly reconstructs Config
+    field-by-field from the loaded file_config; a field left out of that
+    reconstruction (dvc was, once) silently resets to defaults (enabled=False)
+    even though it round-trips correctly through Config.save/from_file on its
+    own. This must be caught at the `main()` entry point, not just by calling
+    FiberAnalysisPipeline directly (which bypasses cli.py's reconstruction).
+    """
+    pytest.importorskip("spam")
+    import numpy as np
+    from scipy.ndimage import affine_transform
+
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    main_phantom = generate_fiber_phantom(
+        shape=(48, 48, 48),
+        n_fibers=3,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, main_phantom.volume)
+
+    dvc_phantom = generate_fiber_phantom(
+        shape=(80, 80, 80),
+        n_fibers=200,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=1,
+    )
+    reference = dvc_phantom.volume.astype(np.float32)
+    deformed = affine_transform(
+        reference, np.eye(3), offset=[1.0, 0.0, 0.0], order=1, mode="nearest"
+    ).astype(np.float32)
+    reference_path = data_dir / "dvc_reference.tif"
+    deformed_path = data_dir / "dvc_deformed.tif"
+    save_tiff_stack(reference_path, reference)
+    save_tiff_stack(deformed_path, deformed)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+        dvc=DVCConfig(
+            enabled=True,
+            reference_path=str(reference_path),
+            deformed_path=str(deformed_path),
+        ),
+    )
+    config_path = tmp_path / "config.yaml"
+    config.save(config_path)
+
+    rc = main(["--config", str(config_path)])
+
+    assert rc == 0
+    assert (
+        out_dir / "dvc_summary.json"
+    ).exists(), "dvc.enabled did not survive cli.py's Config reconstruction"

@@ -68,6 +68,11 @@ function buildJson(config: AnalysisConfig): string {
       compute_tracking: config.computeTracking,
       compute_tda_descriptors: config.computeTda,
     },
+    dvc: {
+      enabled: config.computeDvc,
+      reference_path: config.dvcReferencePath,
+      deformed_path: config.dvcDeformedPath,
+    },
   });
 }
 

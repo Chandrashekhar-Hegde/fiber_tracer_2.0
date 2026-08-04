@@ -20,6 +20,27 @@ def _records_from_summary(summary: dict) -> list[dict[str, Any]]:
         record = {"regime": regime, "window_id": i}
         record.update(entry)
         records.append(record)
+    for i, window in enumerate(summary.get("dvc_windows", [])):
+        node_z, node_y, node_x = window["node_position"]
+        disp_z, disp_y, disp_x = window["displacement_voxels"]
+        strain_z, strain_y, strain_x = window["strain"]
+        records.append(
+            {
+                "regime": "dvc",
+                "window_id": i,
+                "node_z": node_z,
+                "node_y": node_y,
+                "node_x": node_x,
+                "displacement_z_voxels": disp_z,
+                "displacement_y_voxels": disp_y,
+                "displacement_x_voxels": disp_x,
+                "strain_z": strain_z,
+                "strain_y": strain_y,
+                "strain_x": strain_x,
+                "return_status": window["return_status"],
+                "converged": window["converged"],
+            }
+        )
     return records
 
 

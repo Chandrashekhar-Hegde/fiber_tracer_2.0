@@ -34,6 +34,9 @@ const DEFAULT_CONFIG: AnalysisConfig = {
   computeOrientationTensor: true,
   computeTracking: true,
   computeTda: false,
+  computeDvc: false,
+  dvcReferencePath: "",
+  dvcDeformedPath: "",
 };
 
 export function App() {
@@ -92,7 +95,11 @@ export function App() {
             />
           )}
           {wizardStep === 1 && (
-            <Configure config={analysisConfig} theme={theme} />
+            <Configure
+              config={analysisConfig}
+              onChange={setAnalysisConfig}
+              theme={theme}
+            />
           )}
           {wizardStep === 2 && <Review config={analysisConfig} theme={theme} />}
           {wizardStep === 3 && (

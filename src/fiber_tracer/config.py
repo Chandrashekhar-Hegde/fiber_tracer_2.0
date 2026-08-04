@@ -100,6 +100,20 @@ class AnalysisConfig:
 
 
 @dataclass
+class DVCConfig:
+    enabled: bool = False
+    reference_path: str = ""
+    deformed_path: str = ""
+    node_spacing_voxels: int = 20
+    half_window_size_voxels: int = 10
+    # Fraction of grid nodes that must converge (spam returnStatus == 2) before
+    # results are trusted; see docs/superpowers/specs/2026-08-02-dvc-spike-design.md
+    # and RESEARCH_FOUNDATION.md ref 60 (Croom et al.) for why this is not a fixed
+    # accuracy number but a per-run convergence gate.
+    min_convergence_rate: float = 0.9
+
+
+@dataclass
 class Config:
     data_path: str = ""
     output_dir: str = ""
@@ -110,6 +124,7 @@ class Config:
     segmentation: SegmentationConfig = field(default_factory=SegmentationConfig)
     orientation: OrientationConfig = field(default_factory=OrientationConfig)
     analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
+    dvc: DVCConfig = field(default_factory=DVCConfig)
 
     def validate(self) -> None:
         if not self.data_path or not os.path.exists(self.data_path):
@@ -137,6 +152,17 @@ class Config:
             raise ValueError(
                 "segmentation.threshold_value is required when threshold_method='manual'"
             )
+        if self.dvc.enabled:
+            if not self.dvc.reference_path or not os.path.exists(self.dvc.reference_path):
+                raise ValueError(f"dvc.reference_path does not exist: {self.dvc.reference_path}")
+            if not self.dvc.deformed_path or not os.path.exists(self.dvc.deformed_path):
+                raise ValueError(f"dvc.deformed_path does not exist: {self.dvc.deformed_path}")
+            if self.dvc.node_spacing_voxels <= 0:
+                raise ValueError("dvc.node_spacing_voxels must be positive")
+            if self.dvc.half_window_size_voxels <= 0:
+                raise ValueError("dvc.half_window_size_voxels must be positive")
+            if not 0.0 <= self.dvc.min_convergence_rate <= 1.0:
+                raise ValueError("dvc.min_convergence_rate must be in [0, 1]")
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -168,6 +194,8 @@ class Config:
             data["orientation"] = _dict_to_dataclass(data["orientation"], OrientationConfig)
         if "analysis" in data:
             data["analysis"] = _dict_to_dataclass(data["analysis"], AnalysisConfig)
+        if "dvc" in data:
+            data["dvc"] = _dict_to_dataclass(data["dvc"], DVCConfig)
         return cls(**data)
 
     @classmethod
