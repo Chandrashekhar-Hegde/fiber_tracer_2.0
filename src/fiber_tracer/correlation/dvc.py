@@ -182,9 +182,7 @@ def displacement_and_strain_per_node(
     return results
 
 
-def estimate_noise_floor(
-    volume: np.ndarray, node_spacing: int, half_window_size: int
-) -> dict:
+def estimate_noise_floor(volume: np.ndarray, node_spacing: int, half_window_size: int) -> dict:
     """Correlate *volume* against a copy of itself to measure the DVC
     measurement-noise floor for this volume/window configuration (Croom et al.
     practice, RESEARCH_FOUNDATION.md ref 60): any nonzero displacement/strain

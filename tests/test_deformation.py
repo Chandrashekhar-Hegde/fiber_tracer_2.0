@@ -100,9 +100,9 @@ def test_local_dvc_recovers_known_deformation_within_literature_bound():
         f"mean displacement error {displacement_error:.4f} voxels exceeds "
         f"{MAX_DISPLACEMENT_ERROR_VOXELS} (Croom et al. worst-case bound)"
     )
-    assert strain_error < MAX_STRAIN_ERROR, (
-        f"mean strain error {strain_error:.4f} exceeds {MAX_STRAIN_ERROR}"
-    )
+    assert (
+        strain_error < MAX_STRAIN_ERROR
+    ), f"mean strain error {strain_error:.4f} exceeds {MAX_STRAIN_ERROR}"
 
 
 def test_noise_floor_is_near_zero_on_self_correlation():

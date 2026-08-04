@@ -62,9 +62,9 @@ def _build_pair(supersample: int, seed: int = 1) -> tuple[np.ndarray, np.ndarray
     zoom[STRAIN_AXIS] = 1.0 + STRAIN_FRACTION
     matrix = np.diag(1.0 / zoom)
     offset = -SHIFT_VOXELS / zoom
-    deformed = affine_transform(
-        reference, matrix, offset=offset, order=1, mode="nearest"
-    ).astype(np.float32)
+    deformed = affine_transform(reference, matrix, offset=offset, order=1, mode="nearest").astype(
+        np.float32
+    )
     return reference, deformed
 
 

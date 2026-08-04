@@ -480,6 +480,6 @@ def test_dvc_config_survives_cli_config_file_round_trip(tmp_path):
     rc = main(["--config", str(config_path)])
 
     assert rc == 0
-    assert (out_dir / "dvc_summary.json").exists(), (
-        "dvc.enabled did not survive cli.py's Config reconstruction"
-    )
+    assert (
+        out_dir / "dvc_summary.json"
+    ).exists(), "dvc.enabled did not survive cli.py's Config reconstruction"
