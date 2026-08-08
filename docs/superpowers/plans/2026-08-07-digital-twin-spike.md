@@ -1,6 +1,6 @@
 # Digital Twin Spike Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Build the minimal PoC described in `docs/superpowers/specs/2026-08-07-digital-twin-spike-design.md`: fit synthetic-phantom parameters from a resolved-regime pipeline summary, regenerate a statistically-matched "twin" volume, and compute an effective modulus via Halpin-Tsai — validated by a round-trip check against a known-parameter phantom.
 
@@ -21,7 +21,7 @@
 **Files:**
 - Create: `scripts/digital_twin_poc.py`
 
-- [ ] **Step 1: Module docstring and imports**
+- [x] **Step 1: Module docstring and imports**
 
 ```python
 """Proof-of-concept: fit synthetic-phantom parameters from a resolved-regime
@@ -46,7 +46,7 @@ from fiber_tracer.validation.phantoms import FiberPhantom, generate_fiber_phanto
 ORIENTATION_MODES = ("aligned", "in_plane", "orthogonal", "woven", "twill", "random")
 ```
 
-- [ ] **Step 2: `fit_twin_parameters`**
+- [x] **Step 2: `fit_twin_parameters`**
 
 ```python
 def fit_twin_parameters(summary: dict) -> dict:
@@ -89,7 +89,7 @@ def fit_twin_parameters(summary: dict) -> dict:
     }
 ```
 
-- [ ] **Step 3: Run manually against a hand-built summary to sanity-check**
+- [x] **Step 3: Run manually against a hand-built summary to sanity-check**
 
 ```bash
 source .venv/bin/activate
@@ -109,7 +109,7 @@ print(fit_twin_parameters(summary))
 
 Expected: `fiber_diameter_um` near 4.0, `orientation_mode` 'aligned' (all three vectors point roughly the same direction, high FA).
 
-- [ ] **Step 4:** `black --check scripts/digital_twin_poc.py && ruff check scripts/digital_twin_poc.py && mypy scripts/digital_twin_poc.py`, then commit:
+- [x] **Step 4:** `black --check scripts/digital_twin_poc.py && ruff check scripts/digital_twin_poc.py && mypy scripts/digital_twin_poc.py`, then commit:
 
 ```bash
 git add scripts/digital_twin_poc.py
@@ -123,7 +123,7 @@ git commit -m "Add digital twin PoC: fit_twin_parameters from a resolved-regime 
 **Files:**
 - Modify: `scripts/digital_twin_poc.py`
 
-- [ ] **Step 1: `regenerate_twin`**
+- [x] **Step 1: `regenerate_twin`**
 
 ```python
 def regenerate_twin(
@@ -139,7 +139,7 @@ def regenerate_twin(
     )
 ```
 
-- [ ] **Step 2: `effective_modulus_halpin_tsai`**
+- [x] **Step 2: `effective_modulus_halpin_tsai`**
 
 Halpin-Tsai (RESEARCH_FOUNDATION.md ref 67): `E = E_m * (1 + xi*eta*Vf) / (1 - eta*Vf)`, `eta = (Ef/Em - 1) / (Ef/Em + xi)`, where `xi` depends on reinforcement geometry (2*aspect_ratio for longitudinal fiber loading is a standard choice).
 
@@ -157,7 +157,7 @@ def effective_modulus_halpin_tsai(
     return matrix_modulus_gpa * (1.0 + xi * eta * volume_fraction) / (1.0 - eta * volume_fraction)
 ```
 
-- [ ] **Step 3:** `black --check && ruff check && mypy`, then commit:
+- [x] **Step 3:** `black --check && ruff check && mypy`, then commit:
 
 ```bash
 git add scripts/digital_twin_poc.py
@@ -174,7 +174,7 @@ git commit -m "Add twin regeneration and Halpin-Tsai effective modulus to the Po
 **Interfaces:**
 - Consumes: `fit_twin_parameters`, `regenerate_twin`, `effective_modulus_halpin_tsai` from Tasks 1-2.
 
-- [ ] **Step 1: `main`**
+- [x] **Step 1: `main`**
 
 ```python
 def main() -> None:
@@ -251,7 +251,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: Run end to end**
+- [x] **Step 2: Run end to end**
 
 ```bash
 source .venv/bin/activate
@@ -260,7 +260,7 @@ python3 scripts/digital_twin_poc.py
 
 Expected: prints known vs. fitted parameters, twin volume info, estimated volume fraction and effective modulus, then either the pass message or an `AssertionError`. If `n_fibers` doesn't match exactly (e.g. some known fibers overlap and get skipped during rasterization, a known behavior of `generate_fiber_phantom`), loosen that assertion to a tolerance and note why in a comment rather than silently deleting the check.
 
-- [ ] **Step 3:** `black --check && ruff check && mypy`, then commit:
+- [x] **Step 3:** `black --check && ruff check && mypy`, then commit:
 
 ```bash
 git add scripts/digital_twin_poc.py
