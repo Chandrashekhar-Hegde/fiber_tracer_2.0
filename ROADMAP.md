@@ -41,6 +41,13 @@ This document describes where the project is headed and how you can help. For de
 - [x] Local grid-based DIC (`fiber_tracer.correlation.dic`), wired through config/pipeline/reporting/CLI/TUI.
 - [x] Same noise-floor/convergence-gating methodology as DVC, applied to 2D images.
 
+### Digital Twin (epic #21)
+
+- [x] Scope-definition spike (sign-off before build, per the epic's own acceptance criteria): fitted synthetic microstructure + Halpin-Tsai property export, chosen over CAD-reconciliation and DVC/DIC-coupling alternatives.
+- [x] `fiber_tracer.twin.fitting`: fit phantom parameters from a resolved-regime summary, regenerate a matched twin volume, estimate effective modulus.
+- [x] Wired through config/pipeline/CLI/TUI, gated to the resolved regime (skips with a warning otherwise).
+- [ ] [Issue #28](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/issues/28) — `extract_fiber_paths` centerline-extraction gap found while validating the twin's fit, affects tracking-length reporting generally.
+
 ### Engineering
 
 - [x] Add a GitHub Actions release workflow that builds wheels/sdists and attaches artifacts.
