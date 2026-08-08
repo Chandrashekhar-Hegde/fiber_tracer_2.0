@@ -126,6 +126,16 @@ class DICConfig:
 
 
 @dataclass
+class TwinConfig:
+    enabled: bool = False
+    # Halpin-Tsai constituent properties (RESEARCH_FOUNDATION.md ref 67);
+    # defaults are a typical glass-fiber/epoxy pairing, not universal.
+    fiber_modulus_gpa: float = 72.0
+    matrix_modulus_gpa: float = 3.0
+    aspect_ratio: float = 20.0
+
+
+@dataclass
 class Config:
     data_path: str = ""
     output_dir: str = ""
@@ -138,6 +148,7 @@ class Config:
     analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
     dvc: DVCConfig = field(default_factory=DVCConfig)
     dic: DICConfig = field(default_factory=DICConfig)
+    twin: TwinConfig = field(default_factory=TwinConfig)
 
     def validate(self) -> None:
         if not self.data_path or not os.path.exists(self.data_path):
@@ -187,6 +198,13 @@ class Config:
                 raise ValueError("dic.half_window_size_pixels must be positive")
             if not 0.0 <= self.dic.min_convergence_rate <= 1.0:
                 raise ValueError("dic.min_convergence_rate must be in [0, 1]")
+        if self.twin.enabled:
+            if self.twin.fiber_modulus_gpa <= 0:
+                raise ValueError("twin.fiber_modulus_gpa must be positive")
+            if self.twin.matrix_modulus_gpa <= 0:
+                raise ValueError("twin.matrix_modulus_gpa must be positive")
+            if self.twin.aspect_ratio <= 0:
+                raise ValueError("twin.aspect_ratio must be positive")
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -222,6 +240,8 @@ class Config:
             data["dvc"] = _dict_to_dataclass(data["dvc"], DVCConfig)
         if "dic" in data:
             data["dic"] = _dict_to_dataclass(data["dic"], DICConfig)
+        if "twin" in data:
+            data["twin"] = _dict_to_dataclass(data["twin"], TwinConfig)
         return cls(**data)
 
     @classmethod

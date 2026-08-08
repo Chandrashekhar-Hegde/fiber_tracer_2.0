@@ -9,6 +9,7 @@ from fiber_tracer.config import (
     OrientationConfig,
     ProcessingConfig,
     SegmentationConfig,
+    TwinConfig,
     VoxelSpacing,
 )
 
@@ -209,6 +210,46 @@ def test_dic_enabled_requires_existing_reference_path(tmp_path):
         data_path=str(data_dir),
         output_dir=str(tmp_path / "out"),
         dic=DICConfig(enabled=True, reference_path="", deformed_path=str(deformed)),
+    )
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_twin_config_round_trip_and_validation(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+
+    cfg = Config(
+        data_path=str(data_dir),
+        output_dir=str(tmp_path / "out"),
+        twin=TwinConfig(
+            enabled=True,
+            fiber_modulus_gpa=230.0,
+            matrix_modulus_gpa=3.5,
+            aspect_ratio=15.0,
+        ),
+    )
+    cfg.validate()
+
+    path = tmp_path / "config.yaml"
+    cfg.save(path)
+    loaded = Config.from_file(path)
+    loaded.validate()
+
+    assert isinstance(loaded.twin, TwinConfig)
+    assert loaded.twin.enabled is True
+    assert loaded.twin.fiber_modulus_gpa == pytest.approx(230.0)
+    assert loaded.twin.matrix_modulus_gpa == pytest.approx(3.5)
+    assert loaded.twin.aspect_ratio == pytest.approx(15.0)
+
+
+def test_twin_enabled_requires_positive_aspect_ratio(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    cfg = Config(
+        data_path=str(data_dir),
+        output_dir=str(tmp_path / "out"),
+        twin=TwinConfig(enabled=True, aspect_ratio=-1.0),
     )
     with pytest.raises(ValueError):
         cfg.validate()
