@@ -1,6 +1,6 @@
 # Model Registry, Experiments, and Training
 
-The model registry, experiment tracking, and training CLI are implemented and available on the `main` branch; they will be included in the upcoming v3.3.0 release. Everything is file-based and stored under the user configuration directory, which keeps project directories clean and makes models reusable across analyses.
+The model registry, experiment tracking, and training CLI shipped in v3.3.0. Everything is file-based and stored under the user configuration directory, which keeps project directories clean and makes models reusable across analyses.
 
 - **Model registry** — a catalog of local `.pt` checkpoints with metadata such as architecture, version, and description.
 - **Experiments** — lightweight records that link a training run to a model ID, hyper-parameters, and final metrics.
