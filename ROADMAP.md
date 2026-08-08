@@ -2,19 +2,14 @@
 
 This document describes where the project is headed and how you can help. For details on the current release, see [`CHANGELOG.md`](CHANGELOG.md). For a per-capability status matrix and how features are switched on, see [`docs/CAPABILITIES.md`](docs/CAPABILITIES.md). For the literature survey backing the DVC/DIC/digital-twin research track below, see [`docs/RESEARCH_FOUNDATION.md`](docs/RESEARCH_FOUNDATION.md).
 
-## Current status — v3.2.0
-
-- Regime-aware classical pipeline (`resolved`, `marginal`, `subvoxel`) is stable.
-- Optional 3D U-Net backend ships with `fiber_unet_v2_full.pt`.
-- Model trained on 2,152 mixed synthetic + real XCT patches.
-- Held-out validation on GF-PA66: Dice ≈ 0.90, IoU ≈ 0.81.
-- CI/CD, documentation, and honest model card are in place.
-
 ## Current status — v3.3.0
 
 - Regime-aware classical pipeline (`resolved`, `marginal`, `subvoxel`) is stable.
-- Optional 3D U-Net backend ships with `fiber_unet_v2_full.pt`.
+- Optional 3D U-Net backend ships with `fiber_unet_v2_full.pt`, trained on 2,152
+  mixed synthetic + real XCT patches. Held-out validation on GF-PA66:
+  Dice ≈ 0.90, IoU ≈ 0.81.
 - Model registry, experiment tracking, and local training CLI are implemented.
+- CI/CD, documentation, and honest model card are in place.
 - **FiberTracer-X foundation model skeleton** is on `main`: synthetic corpus generator,
   shared encoder + task adapters, multi-task trainer, and benchmark harness.
 
@@ -48,8 +43,8 @@ This document describes where the project is headed and how you can help. For de
 
 ### Engineering
 
-- [ ] Add a GitHub Actions release workflow that builds wheels/sdists and attaches artifacts.
-- [ ] Add a separate CI job for ML-backend tests that installs the `ml` extra.
+- [x] Add a GitHub Actions release workflow that builds wheels/sdists and attaches artifacts.
+- [x] Add a separate CI job (`extras-test`) for optional-extra tests, installing the `ml` and `dvc` extras in isolation.
 - [ ] Add a Dockerfile for reproducible CPU/MPS inference.
 - [x] Build an interactive Terminal UI (TUI) with Bun, Ink, and @inkjs/ui for guided analysis, dashboards, model registry, and experiments.
 - [x] Add model registry, experiment tracking, and `fiber-tracer train` CLI for local U-Net training.

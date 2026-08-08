@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Digital Volume Correlation (DVC): local grid-based correlation over a volume pair (`fiber_tracer.correlation.dvc`), wired through config, pipeline, reporting, and the TUI.
+- Digital Image Correlation (DIC): the same correlation applied to 2D image pairs (`fiber_tracer.correlation.dic`), wired through config, pipeline, reporting, CLI, and the TUI.
+- Shared correlation engine (`fiber_tracer.correlation.core`) backing both DVC and DIC; the modality modules are thin re-exports, since a 2D image correlates as a degenerate `(1, H, W)` 3D grid.
+- Per-run noise-floor estimation and convergence-rate gating for correlation results, so non-converged grid nodes are excluded from aggregate displacement and strain statistics rather than silently averaged in (Croom et al. methodology — see `docs/RESEARCH_FOUNDATION.md`).
+- Correlation accuracy benchmarks: a voxelization-fidelity sweep and a cross-tool comparison, documented in `docs/DVC_BENCHMARK.md`.
+- New `dvc` optional extra (`pip install fiber-tracer[dvc]`) providing the `spam` correlation backend; also included in the `all` extra.
 - FiberTracer-X foundation model skeleton: shared 3D encoder + task adapters for segmentation and orientation regression.
 - Synthetic corpus generator (`scripts/generate_synthetic_corpus.py`) producing mixed-architecture XCT patches with domain randomization.
 - `FiberTracerXTrainer` for multi-task synthetic pre-training (segmentation + orientation tensor regression).
