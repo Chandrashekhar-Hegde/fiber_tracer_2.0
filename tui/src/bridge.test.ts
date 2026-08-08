@@ -71,6 +71,7 @@ describe("bridge", () => {
       computeDic: false,
       dicReferencePath: "",
       dicDeformedPath: "",
+      computeTwin: false,
     });
     expect(result.success).toBe(false);
     expect(result.error).toContain("ENOENT");

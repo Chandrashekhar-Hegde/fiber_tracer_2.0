@@ -40,6 +40,7 @@ const DEFAULT_CONFIG: AnalysisConfig = {
   computeDic: false,
   dicReferencePath: "",
   dicDeformedPath: "",
+  computeTwin: false,
 };
 
 export function App() {
