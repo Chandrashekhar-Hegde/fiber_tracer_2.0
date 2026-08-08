@@ -55,6 +55,11 @@ from fiber_tracer.segmentation.classical import (
     segment_connected_components_3d,
     segment_watershed_3d,
 )
+from fiber_tracer.twin.fitting import (
+    effective_modulus_halpin_tsai,
+    fit_twin_parameters,
+    regenerate_twin,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +113,10 @@ class FiberAnalysisPipeline:
             summary["dvc"] = self._run_dvc(out)
         if self.config.dic.enabled:
             summary["dic"] = self._run_dic(out)
+        if self.config.twin.enabled:
+            twin_result = self._run_twin(summary, volume.shape, out)
+            if twin_result is not None:
+                summary["twin"] = twin_result
 
         elapsed = time.perf_counter() - start
         summary["elapsed_seconds"] = elapsed
@@ -250,6 +259,67 @@ class FiberAnalysisPipeline:
         write_csv_report(out / "dic_report.csv", dic_summary)
         write_html_report(out / "dic_report.html", dic_summary)
         return dic_summary
+
+    def _run_twin(
+        self, summary: dict, volume_shape: tuple[int, int, int], out: Path
+    ) -> dict | None:
+        """Fit a digital twin from this run's own resolved-regime summary.
+
+        Unlike _run_dvc/_run_dic, this has no separate reference/deformed
+        input -- it fits from the same summary the regime handler just
+        produced. Only meaningful for the resolved regime, which is the only
+        one that reports per-fiber orientation/diameter; marginal/subvoxel
+        summaries are population-level and are skipped with a warning, not a
+        crash, since regime="auto" may legitimately resolve to either.
+        """
+        if summary.get("regime") != "resolved":
+            logger.warning(
+                f"Digital twin fitting requires the resolved regime, got "
+                f"{summary.get('regime')!r}; skipping (twin.enabled has no effect "
+                "for marginal/subvoxel regimes)."
+            )
+            return None
+
+        twin_config = self.config.twin
+        spacing = (
+            self.config.voxel_spacing_um.z,
+            self.config.voxel_spacing_um.y,
+            self.config.voxel_spacing_um.x,
+        )
+        fitted = fit_twin_parameters(summary, volume_shape=volume_shape)
+        twin_phantom = regenerate_twin(fitted, volume_shape, spacing)
+
+        volume_fraction = (
+            fitted["n_fibers"] * np.pi * (fitted["fiber_diameter_um"] / 2) ** 2 * volume_shape[0]
+        )
+        volume_fraction /= np.prod(volume_shape) * np.prod(spacing)
+        volume_fraction = float(min(volume_fraction, 0.65))  # physically-plausible packing cap
+
+        modulus_gpa = float(
+            effective_modulus_halpin_tsai(
+                volume_fraction,
+                fiber_modulus_gpa=twin_config.fiber_modulus_gpa,
+                matrix_modulus_gpa=twin_config.matrix_modulus_gpa,
+                aspect_ratio=twin_config.aspect_ratio,
+            )
+        )
+
+        twin_summary: dict[str, Any] = {
+            "fitted_n_fibers": fitted["n_fibers"],
+            "fitted_fiber_diameter_um": fitted["fiber_diameter_um"],
+            "fitted_orientation_mode": fitted["orientation_mode"],
+            "fitted_fractional_anisotropy": fitted["fractional_anisotropy"],
+            "twin_n_fibers": len(twin_phantom.orientations),
+            "estimated_volume_fraction": volume_fraction,
+            "effective_modulus_gpa": modulus_gpa,
+            "config": {
+                "fiber_modulus_gpa": twin_config.fiber_modulus_gpa,
+                "matrix_modulus_gpa": twin_config.matrix_modulus_gpa,
+                "aspect_ratio": twin_config.aspect_ratio,
+            },
+        }
+        write_json_report(out / "twin_summary.json", twin_summary)
+        return twin_summary
 
     def _compute_local_directions(
         self,
