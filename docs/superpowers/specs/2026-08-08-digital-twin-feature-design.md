@@ -2,7 +2,7 @@
 
 ## Context
 
-The digital twin spike (`research/digital-twin-spike` branch, `scripts/digital_twin_poc.py`) validated the scope defined in `docs/superpowers/specs/2026-08-07-digital-twin-spike-design.md`: fitting phantom-generator parameters from a resolved-regime summary, regenerating a statistically-matched synthetic volume, and computing an effective modulus via Halpin-Tsai. The round-trip fit passed within documented tolerances after two real bugs were found and fixed/worked around (sphere- vs. cylinder-equivalent diameter; `extract_fiber_paths` failing on most fibers in dense unidirectional bundles, now filed as issue #28). This spec turns that PoC into a real feature, mirroring the DVC/DIC features (PRs #25/#26).
+The digital twin spike (`research/digital-twin-spike` branch, `scripts/digital_twin_poc.py`; its validated functions now ship unchanged in `src/fiber_tracer/twin/fitting.py`) validated the scope defined in `docs/superpowers/specs/2026-08-07-digital-twin-spike-design.md`: fitting phantom-generator parameters from a resolved-regime summary, regenerating a statistically-matched synthetic volume, and computing an effective modulus via Halpin-Tsai. The round-trip fit passed within documented tolerances after two real bugs were found and fixed/worked around (sphere- vs. cylinder-equivalent diameter; `extract_fiber_paths` failing on most fibers in dense unidirectional bundles, now filed as issue #28). This spec turns that PoC into a real feature, mirroring the DVC/DIC features (PRs #25/#26).
 
 ## Design
 

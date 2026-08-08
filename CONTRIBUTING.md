@@ -39,9 +39,14 @@ ruff check .
 black --check .
 pytest tests/
 mypy src/fiber_tracer
+python scripts/check_doc_links.py
 ```
 
 If `black` reports formatting issues, run `black .` to fix them.
+
+`check_doc_links.py` fails if `src/`, a top-level `docs/` page, or a root
+`*.md` cites a doc or script path that does not exist in the repo. See
+[Graduating a spike](#graduating-a-spike) for the mistake it exists to catch.
 
 ## Branch and commit style
 
@@ -60,6 +65,27 @@ If `black` reports formatting issues, run `black .` to fix them.
   ```
 
 - Keep commits focused and atomic.
+
+## Graduating a spike
+
+Research spikes are explored on a `research/*-spike` branch. When a spike
+graduates into a shipped feature, the feature PR must leave `main`
+self-contained:
+
+- **Land the spike's design spec** with the feature PR. Shipped code routinely
+  cites it for the reasoning behind a threshold or an architecture choice, and
+  that citation has to resolve for anyone reading `main`.
+- **Do not land proof-of-concept scripts the feature supersedes.** If the PoC's
+  functions moved into the package, or its checks became real tests, the script
+  is a stale duplicate. Point readers at the shipped code instead.
+- **Never cite a branch from `src/` or a user-facing doc.** Branches get
+  deleted; `main` should not depend on one surviving.
+
+This is worth spelling out because it went wrong three times in a row (DVC,
+DIC, digital twin): each spike branch was worked directly and never opened as
+a PR, so only the follow-up feature PR landed and `main` was left citing spec
+files it did not contain. `scripts/check_doc_links.py` now enforces the
+reference half of this in CI.
 
 ## Pull request process
 
