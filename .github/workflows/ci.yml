@@ -55,6 +55,11 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
+      # spam.DIC imports spam.mesh -> gmsh, which dlopens libGLU.so.1 at import
+      # time. GitHub's headless ubuntu image does not ship it, so the import
+      # fails with OSError before any correlation code runs.
+      - name: Install libGLU (gmsh runtime dependency)
+        run: sudo apt-get update && sudo apt-get install -y libglu1-mesa
       - name: Install with ML and DVC extras
         run: |
           python -m pip install --upgrade pip
