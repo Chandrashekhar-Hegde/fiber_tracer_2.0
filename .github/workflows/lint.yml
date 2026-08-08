@@ -20,3 +20,5 @@ jobs:
         run: ruff check .
       - name: Type check with mypy
         run: mypy src/fiber_tracer
+      - name: Check cited doc and script paths exist
+        run: python scripts/check_doc_links.py

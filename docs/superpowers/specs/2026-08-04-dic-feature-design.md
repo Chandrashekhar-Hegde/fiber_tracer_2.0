@@ -2,7 +2,7 @@
 
 ## Context
 
-The DIC spike (`research/dic-spike` branch, `scripts/dic_poc.py`) validated that `spam.DIC.register` — the exact same function `fiber_tracer.correlation.dvc` already uses for 3D volumes — recovers a known 2D deformation on a slice of the fiber phantom (0.04px displacement error, 0.06% strain error), given a `(1, H, W)`-shaped image. This directly answers epic #20's "how much core is shared with DVC" question: the correlation engine needs zero new algorithm code for 2D. This spec turns that into a real feature, mirroring how the DVC spike became `fiber_tracer.correlation.dvc` (PR #25).
+The DIC spike (`research/dic-spike` branch, `scripts/dic_poc.py`; this validation now lives permanently as the DIC cases in `tests/test_deformation.py`) validated that `spam.DIC.register` — the exact same function `fiber_tracer.correlation.dvc` already uses for 3D volumes — recovers a known 2D deformation on a slice of the fiber phantom (0.04px displacement error, 0.06% strain error), given a `(1, H, W)`-shaped image. This directly answers epic #20's "how much core is shared with DVC" question: the correlation engine needs zero new algorithm code for 2D. This spec turns that into a real feature, mirroring how the DVC spike became `fiber_tracer.correlation.dvc` (PR #25).
 
 ## Design
 
