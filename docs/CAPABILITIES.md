@@ -27,7 +27,7 @@ Status legend: ✅ implemented · ⚠️ partial / not wired up · ❌ absent.
 | Orientation field (structure tensor) | ✅ | `orientation/structure_tensor.py`, `orientation/tensor.py` (marginal/subvoxel regimes) |
 | DVC (3D displacement/strain) | ✅ | `correlation/dvc.py::run_local_dvc`; `dvc.enabled` — see [`DVC_BENCHMARK.md`](DVC_BENCHMARK.md) for accuracy/convergence figures |
 | DIC (2D displacement/strain) | ✅ | `correlation/dic.py::run_local_dic`; `dic.enabled` — shares the engine in `correlation/core.py` with DVC |
-| Digital twin | ❌ | not present; scope undefined for this tool |
+| Digital twin | ✅ | `twin/fitting.py::fit_twin_parameters`; `twin.enabled` — resolved regime only |
 
 ## How switches flow (frontend → backend)
 
@@ -64,6 +64,8 @@ Key switches today:
 | DVC grid/window/convergence tuning | `dvc.node_spacing_voxels`, `dvc.half_window_size_voxels`, `dvc.min_convergence_rate` | (config file) | (config file) |
 | DIC enable + reference/deformed images | `dic.enabled`, `dic.reference_path`, `dic.deformed_path` | (config file) | `computeDic`, `dicReferencePath`, `dicDeformedPath` |
 | DIC grid/window/convergence tuning | `dic.node_spacing_pixels`, `dic.half_window_size_pixels`, `dic.min_convergence_rate` | (config file) | (config file) |
+| Digital twin enable | `twin.enabled` | (config file) | `computeTwin` |
+| Digital twin constituent properties | `twin.fiber_modulus_gpa`, `twin.matrix_modulus_gpa`, `twin.aspect_ratio` | (config file) | (config file) |
 
 ## Roadmap
 
@@ -104,11 +106,19 @@ being the same engine). DVC was preceded by a feasibility spike
 (`docs/superpowers/specs/2026-08-02-dvc-spike-design.md`), DIC by
 `docs/superpowers/specs/2026-08-04-dic-spike-design.md`.
 
-### Research track (spike first)
+### Shipped: Digital twin (epic #21)
 
-See [`RESEARCH_FOUNDATION.md`](RESEARCH_FOUNDATION.md) §10–§11 for digital
-twins and cross-cutting concerns, §12 for how these map to epics #18–#21.
+Fits phantom-generator parameters (fiber count, cross-sectional diameter,
+orientation mode) from a run's own resolved-regime output, regenerates a
+statistically-matched synthetic volume, and estimates an effective modulus
+via Halpin-Tsai (`RESEARCH_FOUNDATION.md` ref 67). Scope is deliberately
+narrow — see `docs/superpowers/specs/2026-08-07-digital-twin-spike-design.md`
+for what's explicitly excluded (CAD/nominal-design reconciliation, DVC/DIC
+deformation coupling, FE mesh export, continuous orientation-tensor fitting).
+Preceded by a scope-definition spike per the epic's own acceptance criteria
+(sign-off before build, not a working-prototype bar like DVC/DIC's spikes).
 
-- **Digital twin** — define what a digital twin means for this tool (e.g. a
-  parametric synthetic-microstructure model fitted to a scan with property/FE
-  export) before any build.
+Known limitation: [issue #28](https://github.com/Chandrashekhar-Hegde/fiber_tracer_2.0/issues/28)
+— `extract_fiber_paths` fails to produce a centerline for most fibers in a
+realistic densely-packed unidirectional bundle, so the twin's diameter fit
+falls back to a less-accurate volume-extent estimate for those fibers.

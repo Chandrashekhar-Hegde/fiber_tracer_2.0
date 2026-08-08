@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from fiber_tracer.cli import main
-from fiber_tracer.config import Config, DICConfig, DVCConfig, VoxelSpacing
+from fiber_tracer.config import Config, DICConfig, DVCConfig, TwinConfig, VoxelSpacing
 from fiber_tracer.io import save_tiff_stack
 from fiber_tracer.pipeline import FiberAnalysisPipeline
 from fiber_tracer.validation.phantoms import generate_fiber_phantom
@@ -544,3 +544,113 @@ def test_dic_config_survives_cli_config_file_round_trip(tmp_path):
     assert (
         out_dir / "dic_summary.json"
     ).exists(), "dic.enabled did not survive cli.py's Config reconstruction"
+
+
+def test_twin_enabled_writes_twin_summary_on_resolved_regime(tmp_path):
+    """twin.enabled=True on a resolved-regime run produces twin_summary.json
+    with sane fitted values.
+    """
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=15,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        orientation_mode="aligned",
+        seed=1,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+        twin=TwinConfig(enabled=True),
+    )
+
+    summary = FiberAnalysisPipeline(config).run()
+
+    assert "twin" in summary
+    assert summary["twin"]["fitted_n_fibers"] > 0
+    assert summary["twin"]["fitted_fiber_diameter_um"] > 0
+    assert summary["twin"]["effective_modulus_gpa"] > 0
+    assert (out_dir / "twin_summary.json").exists()
+
+
+def test_twin_enabled_skips_on_non_resolved_regime(tmp_path):
+    """twin.enabled=True on a regime that resolves to marginal/subvoxel
+    omits the twin section instead of crashing.
+    """
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    # Marginal: ratio = 1.0 / 2.0 = 0.5 (between 0.3 and 3.0).
+    phantom = generate_fiber_phantom(
+        shape=(48, 48, 48),
+        n_fibers=3,
+        fiber_diameter_um=2.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        seed=42,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=2.0,
+        regime="auto",
+        twin=TwinConfig(enabled=True),
+    )
+
+    summary = FiberAnalysisPipeline(config).run()
+
+    assert summary["regime"] == "marginal"
+    assert "twin" not in summary
+    assert not (out_dir / "twin_summary.json").exists()
+
+
+def test_twin_config_survives_cli_config_file_round_trip(tmp_path):
+    """Same regression class as the dvc/dic fields: twin must not be dropped
+    by cli.py's explicit Config(...) reconstruction in _run_pipeline.
+    """
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    out_dir = tmp_path / "out"
+
+    phantom = generate_fiber_phantom(
+        shape=(64, 64, 64),
+        n_fibers=15,
+        fiber_diameter_um=4.0,
+        voxel_spacing_um=(1.0, 1.0, 1.0),
+        orientation_mode="aligned",
+        seed=1,
+    )
+    stack_path = data_dir / "input.tif"
+    save_tiff_stack(stack_path, phantom.volume)
+
+    config = Config(
+        data_path=str(stack_path),
+        output_dir=str(out_dir),
+        voxel_spacing_um=VoxelSpacing(1.0, 1.0, 1.0),
+        fiber_diameter_um=4.0,
+        regime="resolved",
+        twin=TwinConfig(enabled=True),
+    )
+    config_path = tmp_path / "config.yaml"
+    config.save(config_path)
+
+    rc = main(["--config", str(config_path)])
+
+    assert rc == 0
+    assert (
+        out_dir / "twin_summary.json"
+    ).exists(), "twin.enabled did not survive cli.py's Config reconstruction"

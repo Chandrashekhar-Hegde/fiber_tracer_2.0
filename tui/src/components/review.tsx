@@ -34,6 +34,7 @@ export function Review({ config, theme }: ReviewProps) {
           ? ` (reference: ${config.dicReferencePath || "none"}, deformed: ${config.dicDeformedPath || "none"})`
           : ""}
       </Text>
+      <Text color={theme.foreground}>Digital twin: {config.computeTwin ? "on" : "off"}</Text>
       <Text color={theme.success}>Press r to run</Text>
     </Box>
   );

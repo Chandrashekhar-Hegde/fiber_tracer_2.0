@@ -30,6 +30,7 @@ function makeRecord(id: string, status: RunRecord["status"] = "success"): RunRec
       computeDic: false,
       dicReferencePath: "",
       dicDeformedPath: "",
+      computeTwin: false,
     },
     status,
     startedAt: new Date().toISOString(),

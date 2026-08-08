@@ -19,6 +19,7 @@ export interface AnalysisConfig {
   computeDic: boolean;
   dicReferencePath: string;
   dicDeformedPath: string;
+  computeTwin: boolean;
 }
 
 export interface RunRecord {

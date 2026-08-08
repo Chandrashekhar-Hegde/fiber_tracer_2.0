@@ -16,6 +16,7 @@ const TOGGLES: { key: keyof AnalysisConfig; label: string }[] = [
   { key: "computeTda", label: "TDA descriptors" },
   { key: "computeDvc", label: "DVC (digital volume correlation)" },
   { key: "computeDic", label: "DIC (digital image correlation)" },
+  { key: "computeTwin", label: "Digital twin (fitted microstructure + effective modulus)" },
 ];
 
 const FILE_PICKER_KEYS = [
